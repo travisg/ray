@@ -4,7 +4,7 @@ TARGET := ray
 BUILDDIR := build-$(TARGET)
 
 # compiler flags, default libs to link against
-COMPILEFLAGS := -g -O2
+COMPILEFLAGS := -g -O2 -I.
 CFLAGS := $(COMPILEFLAGS)
 CPPFLAGS := $(COMPILEFLAGS)
 ASMFLAGS := $(COMPILEFLAGS)
@@ -23,7 +23,8 @@ ARCH := $(shell uname -m)
 # endif
 
 OBJS := \
-	ray.o
+	ray.o \
+	RenderSurface.o
 
 include lib/math/rules.mk
 

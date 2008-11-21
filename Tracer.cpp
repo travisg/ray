@@ -10,6 +10,9 @@
 
 using Math::Vector3;
 
+std::vector<Sphere *> slist;
+
+
 Tracer::Tracer(RenderSurface &surface)
 :	m_Surface(surface)
 {
@@ -33,46 +36,65 @@ Tracer::~Tracer()
 {
 }
 
-int Tracer::Cast(colorf &color, const Vector3 &ray, const Vector3 &cam, int depth)
+bool Tracer::Cast(colorf &color, const Vector3 &ray, const Vector3 &cam, bool collidetest)
 {
-	std::vector<Sphere *> slist;
-
-	slist.push_back(new Sphere(Vector3(0.0, 0.0, 0.0), 0.25));
-	slist.push_back(new Sphere(Vector3(0.5, 0.0, 0.0), 0.25));
-	slist.push_back(new Sphere(Vector3(0.5, 0.5, 0.0), 0.25));
-	slist.push_back(new Sphere(Vector3(0.5, 0.6, 0.5), 0.10));
 
 	bool hit = false;
 	Vector3 closestPos;
 	Vector3 closestNormal;
+	Sphere *closestSphere;
 
+	// iterate over the list of objects, testing collision and tracking the closest one
 	for (std::vector<Sphere *>::const_iterator i = slist.begin(); i != slist.end(); i++) {
 		Sphere *s = *i;
 
-		Vector3 pos;
-		Vector3 normal;
-		if (s->Intersect(cam, ray, pos, normal)) {
-			if (!hit || (pos - cam).LengthSquared() < (closestPos - cam).LengthSquared()) {
-				closestPos = pos;
-				closestNormal = normal;
+		if (collidetest) {
+			if (s->Intersect(cam, ray)) {
+				// if we're just trying to test a collision, bail with true here
+				return true;
 			}
-			hit = true;
+		} else {
+			Vector3 pos;
+			Vector3 normal;
+			if (s->Intersect(cam, ray, pos, normal)) {
+				if (!hit || (pos - cam).LengthSquared() < (closestPos - cam).LengthSquared()) {
+					closestPos = pos;
+					closestNormal = normal;
+					closestSphere = s;
+				}
+				hit = true;
+			}
 		}
 	}
 
 	// render the closest one
 	if (hit) {
-		float light = Dot(Vector3(0.0, 0.0, 1.0), closestNormal);
+		// cast a ray at the sun
+		Vector3 origin = closestPos;
+		Vector3 ray = Vector3(0.0, 0.0, 1000.0) - origin;
+		ray.Normalize();
 
-		color = light;
-		return 0;
+		colorf c;
+		if (Cast(c, ray, origin, true)) {
+			color = 0;
+		} else {
+			float light = Dot(Vector3(0.0, 0.0, 1.0), closestNormal);
+
+			color = light;
+		}
+		return true;
 	}
 
-	return -1;
+	return false;
 }
 
 void Tracer::Trace()
 {
+	slist.push_back(new Sphere(Vector3(0.0, 0.0, 0.0), 0.25));
+	slist.push_back(new Sphere(Vector3(0.5, 0.0, 0.0), 0.25));
+	slist.push_back(new Sphere(Vector3(0.5, 0.5, 0.0), 0.25));
+	slist.push_back(new Sphere(Vector3(0.5, 0.6, 0.5), 0.10));
+
 	int width = m_Surface.Width();
 	int height = m_Surface.Height();
 
@@ -107,7 +129,7 @@ void Tracer::Trace()
 //			std::cout << "Ray " << ray << std::endl;
 
 			colorf color;
-			if (Cast(color, ray, m_Camera, 1) < 0) {
+			if (Cast(color, ray, m_Camera, false) == false) {
 				// exited the world
 				color = 0;
 //				float angle = Dot(Vector3(0.0, 0.0, 1.0), ray);

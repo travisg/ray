@@ -12,7 +12,7 @@ public:
 	void Trace();
 
 private:
-	int Cast(colorf &color, const Math::Vector3 &ray, const Math::Vector3 &cam, int depth);
+	bool Cast(colorf &color, const Math::Vector3 &ray, const Math::Vector3 &cam, bool collidetest);
 	
 	RenderSurface &m_Surface;
 

@@ -1,6 +1,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <math.h>
 
 #include <Ray.h>
 #include <Tracer.h>
@@ -21,7 +22,7 @@ Tracer::Tracer(RenderSurface &surface)
 		(double)(rand()%900) + 50.0,
     	m_Camera.getz() - (double)(rand()%400));
 #else
-	m_Camera = Math::Vector3(1.0f, 1.0f, -1.0f);
+	m_Camera = Math::Vector3(4.0f, 4.0f, 4.0f);
 	m_Target = Math::Vector3(0.0f, 0.0f, 0.0f);
 #endif
 }
@@ -32,7 +33,38 @@ Tracer::~Tracer()
 
 int Tracer::Cast(colorf &color, const Vector3 &ray, const Vector3 &cam, int depth)
 {
-	
+	// test against the sphere at 0 0 0
+	Vector3 spherepos(0.0, 0.0, 0.0);
+	float sphereradius = 0.25;
+	float sphereradius2 = sphereradius * sphereradius;
+
+	Vector3 oc = spherepos - cam;
+	float l2oc = oc.LengthSquared();
+	float tca = Dot(oc, ray);
+	if (tca < 0) {
+		// points away from the sphere
+		return -1;
+	}
+
+	float l2hc = (sphereradius2 - l2oc) / ray.LengthSquared() + (tca * tca);
+	if (l2hc > 0) {
+		float t = tca - sqrtf(l2hc);
+
+		// calculate position
+		Vector3 pos = cam + ray * t;
+
+		// radius ray
+		Vector3 rad = pos - spherepos;
+		rad.Normalize();
+
+		float light = Dot(Vector3(0.0, 0.0, 1.0), rad);
+
+		color = light;
+
+//		std::cout << "collided " << ray << " t " << t << " pos " << pos << " rad " << rad << std::endl;
+		return 0;
+	}
+
 	return -1;
 }
 

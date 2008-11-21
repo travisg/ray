@@ -1,7 +1,7 @@
 #ifndef __RENDER_SURFACE_H
 #define __RENDER_SURFACE_H
 
-typedef unsigned int color32;
+#include <Color.h>
 
 class RenderSurface {
 public:

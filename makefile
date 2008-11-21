@@ -25,7 +25,8 @@ ARCH := $(shell uname -m)
 OBJS := \
 	ray.o \
 	RenderSurface.o \
-	Tracer.o
+	Tracer.o \
+	Sphere.o
 
 include lib/math/rules.mk
 

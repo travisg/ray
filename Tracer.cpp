@@ -2,9 +2,11 @@
 #include <cstdlib>
 #include <iostream>
 #include <math.h>
+#include <vector>
 
 #include <Ray.h>
 #include <Tracer.h>
+#include <Sphere.h>
 
 using Math::Vector3;
 
@@ -33,35 +35,36 @@ Tracer::~Tracer()
 
 int Tracer::Cast(colorf &color, const Vector3 &ray, const Vector3 &cam, int depth)
 {
-	// test against the sphere at 0 0 0
-	Vector3 spherepos(0.0, 0.0, 0.0);
-	float sphereradius = 0.25;
-	float sphereradius2 = sphereradius * sphereradius;
+	std::vector<Sphere *> slist;
 
-	Vector3 oc = spherepos - cam;
-	float l2oc = oc.LengthSquared();
-	float tca = Dot(oc, ray);
-	if (tca < 0) {
-		// points away from the sphere
-		return -1;
+	slist.push_back(new Sphere(Vector3(0.0, 0.0, 0.0), 0.25));
+	slist.push_back(new Sphere(Vector3(0.5, 0.0, 0.0), 0.25));
+	slist.push_back(new Sphere(Vector3(0.5, 0.5, 0.0), 0.25));
+	slist.push_back(new Sphere(Vector3(0.5, 0.6, 0.5), 0.10));
+
+	bool hit = false;
+	Vector3 closestPos;
+	Vector3 closestNormal;
+
+	for (std::vector<Sphere *>::const_iterator i = slist.begin(); i != slist.end(); i++) {
+		Sphere *s = *i;
+
+		Vector3 pos;
+		Vector3 normal;
+		if (s->Intersect(cam, ray, pos, normal)) {
+			if (!hit || (pos - cam).LengthSquared() < (closestPos - cam).LengthSquared()) {
+				closestPos = pos;
+				closestNormal = normal;
+			}
+			hit = true;
+		}
 	}
 
-	float l2hc = (sphereradius2 - l2oc) / ray.LengthSquared() + (tca * tca);
-	if (l2hc > 0) {
-		float t = tca - sqrtf(l2hc);
-
-		// calculate position
-		Vector3 pos = cam + ray * t;
-
-		// radius ray
-		Vector3 rad = pos - spherepos;
-		rad.Normalize();
-
-		float light = Dot(Vector3(0.0, 0.0, 1.0), rad);
+	// render the closest one
+	if (hit) {
+		float light = Dot(Vector3(0.0, 0.0, 1.0), closestNormal);
 
 		color = light;
-
-//		std::cout << "collided " << ray << " t " << t << " pos " << pos << " rad " << rad << std::endl;
 		return 0;
 	}
 
@@ -106,10 +109,10 @@ void Tracer::Trace()
 			colorf color;
 			if (Cast(color, ray, m_Camera, 1) < 0) {
 				// exited the world
-//				color = 0;
-				float angle = Dot(Vector3(0.0, 0.0, 1.0), ray);
+				color = 0;
+//				float angle = Dot(Vector3(0.0, 0.0, 1.0), ray);
 //				std::cout << "ray " << ray << " dot " << angle << std::endl;
-				color = angle;
+//				color = angle;
 			}
 			m_Surface.SetXY(x, y, color);
 		}

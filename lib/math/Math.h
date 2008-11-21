@@ -1,5 +1,5 @@
-#ifndef __MATH_H
-#define __MATH_H
+#ifndef __MATH_MATH_H
+#define __MATH_MATH_H
 
 //#include <shared/defines.h>
 #include <math/Vector4.h>

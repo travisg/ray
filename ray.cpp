@@ -2,7 +2,6 @@
 //
 
 #include <cstdio>
-#include <values.h>
 
 #include <sdl.h>
 #include <Ray.h>

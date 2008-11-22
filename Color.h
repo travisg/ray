@@ -6,15 +6,20 @@ struct colorf;
 
 struct color32 {
 public:
-	unsigned char r;
-	unsigned char g;
-	unsigned char b;
+	union {		
+		struct {
+			unsigned char r;
+			unsigned char g;
+			unsigned char b;
+		};
+		unsigned int i;
+	};
 
 	color32() {}
 	color32(int c) : r(c), g(c), b(c) {}
 	color32(const colorf &c);
 
-	operator unsigned int() { return ((r << 16) | (g << 8) | (b)); }
+	operator unsigned int() { /*return ((r << 16) | (g << 8) | (b)); */ return i; }
 };
 
 struct colorf {

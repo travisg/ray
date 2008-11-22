@@ -34,7 +34,7 @@ int RenderSurface::WriteTGAFile(std::string filename)
 
 	fp = fopen(filename.c_str(), "w+");
 	if (!fp) {
-		std::cerr << "error writing tga file " << filename << std::endl;
+		std::cerr << "error opening tga file " << filename << std::endl;
 		return -1;
 	}
 

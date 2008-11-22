@@ -12,11 +12,8 @@
 RenderSurface *gRenderSurface;
 SDL_Surface *gScreen;
 
-bool dirty = false;
-int dirty_left_x = MAXINT;
-int dirty_left_y = MAXINT;
-int dirty_right_x = -1;
-int dirty_right_y = -1;
+// track dirty screen
+volatile bool dirty = false;
 
 static void ScreenNotify(int x, int y, color32 color)
 {
@@ -29,15 +26,6 @@ static void ScreenNotify(int x, int y, color32 color)
 	rect.w = 1;
 	SDL_FillRect(gScreen, &rect, color);
 
-//	SDL_UpdateRect(gScreen, x,y,1,1);
-	if (x < dirty_left_x)
-		dirty_left_x = x;
-	if (y < dirty_left_y)
-		dirty_left_y = y;	
-	if (x > dirty_right_x)
-		dirty_right_x = x;
-	if (y > dirty_right_y)
-		dirty_right_y = y;
 	dirty = true;
 }
 
@@ -58,6 +46,32 @@ int SetupSDL()
 	return 0;
 }
 
+int TracerThread(void *data)
+{
+	std::cout << "TracerThread start" << std::endl;
+	
+	Tracer *tracer = new Tracer(*gRenderSurface);
+	tracer->Trace();
+
+	gRenderSurface->WriteTGAFile("foo.tga");
+
+	delete tracer;
+
+	std::cout << "TracerThread end" << std::endl;
+
+	return 0;
+}
+
+Uint32 TimerTick(Uint32 interval, void *param)
+{
+	if (dirty) {
+		SDL_UpdateRect(gScreen, 0, 0, 0, 0);
+		dirty = false;
+	}
+
+	return interval;
+}
+
 int main(int argc, char* argv[])
 {
 	printf("hello\n");
@@ -67,14 +81,13 @@ int main(int argc, char* argv[])
 	gRenderSurface = new RenderSurface(800, 600);
 	SetupSDL();
 
-	Tracer *tracer = new Tracer(*gRenderSurface);
+	SDL_Thread *thread = SDL_CreateThread(&TracerThread, gRenderSurface);
 
+	SDL_AddTimer(100, &TimerTick, NULL);
+
+	// main sdl thread loop
 	SDL_Event event;
 	bool quit = false;
-
-	tracer->Trace();
-
-	gRenderSurface->WriteTGAFile("foo.tga");
 
 	while(!quit) {
 		SDL_WaitEvent(&event);
@@ -89,7 +102,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	delete tracer;
 	delete gRenderSurface;
 
 	return 0;

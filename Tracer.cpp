@@ -12,6 +12,7 @@ using Math::Vector3;
 
 std::vector<Sphere *> slist;
 
+colorf ambient = 0.10f;
 
 Tracer::Tracer(RenderSurface &surface)
 :	m_Surface(surface)
@@ -70,21 +71,22 @@ bool Tracer::Cast(colorf &color, const Vector3 &ray, const Vector3 &cam, bool co
 
 	// render the closest one
 	if (hit) {
-		// cast a ray at the sun
+		// cast a ray at the sun, see if we're in a shadow
 		Vector3 origin = closestPos;
 		Vector3 ray = Vector3(0.0, 0.0, 1000.0) - origin;
 		ray.Normalize();
 
 		colorf c;
-		if (false || Cast(c, ray, origin, true)) {
-			float light = Dot(Vector3(0.0, 0.0, 1.0), closestNormal);
-
-			color = light * 0.20f;
+		if (Cast(c, ray, origin, true)) {
+			color = 0;
 		} else {
 			float light = Dot(Vector3(0.0, 0.0, 1.0), closestNormal);
 
 			color = light;
 		}
+
+		color += ambient;
+		
 		return true;
 	}
 
@@ -111,9 +113,6 @@ void Tracer::Trace()
 
 	std::cout << "Camera " << m_Camera << std::endl;
 	std::cout << "Target " << m_Target << std::endl;
-
-//	Vector3 lin = m_Target - m_Camera;
-//	lin.Normalize();
 
 	m_Target -= m_Camera;
 	m_Target.Normalize();

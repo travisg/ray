@@ -2,6 +2,7 @@
 #define __RENDER_SURFACE_H
 
 #include <Color.h>
+#include <string>
 
 class RenderSurface {
 public:
@@ -15,6 +16,8 @@ public:
 
 	typedef void (*RenderNotify)(int x, int y, color32);
 	void SetNotification(RenderNotify notify);
+
+	int WriteTGAFile(std::string filename);
 
 private:
 	int m_Width;

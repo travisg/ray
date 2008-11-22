@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 
 	srand(time(NULL));
 
-	gRenderSurface = new RenderSurface(800, 800);
+	gRenderSurface = new RenderSurface(800, 600);
 	SetupSDL();
 
 	Tracer *tracer = new Tracer(*gRenderSurface);
@@ -73,6 +73,8 @@ int main(int argc, char* argv[])
 	bool quit = false;
 
 	tracer->Trace();
+
+	gRenderSurface->WriteTGAFile("foo.tga");
 
 	while(!quit) {
 		SDL_WaitEvent(&event);

@@ -77,7 +77,9 @@ bool Tracer::Cast(colorf &color, const Vector3 &ray, const Vector3 &cam, bool co
 
 		colorf c;
 		if (false || Cast(c, ray, origin, true)) {
-			color = 0;
+			float light = Dot(Vector3(0.0, 0.0, 1.0), closestNormal);
+
+			color = light * 0.20f;
 		} else {
 			float light = Dot(Vector3(0.0, 0.0, 1.0), closestNormal);
 

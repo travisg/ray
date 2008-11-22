@@ -93,9 +93,11 @@ int main(int argc, char* argv[])
 		SDL_WaitEvent(&event);
 
 		switch (event.type) {
+#if 0
 			case SDL_KEYDOWN:
 				printf("The %s (0x%x) key was pressed!\n", SDL_GetKeyName(event.key.keysym.sym), event.key.keysym.unicode);
 				break;
+#endif
 			case SDL_QUIT:
 				quit = true;
 				break;

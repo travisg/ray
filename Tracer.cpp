@@ -50,7 +50,7 @@ bool Tracer::Cast(colorf &color, const Ray &ray)
 		Vector3 normal;
 		d->Intersect(ray, pos, normal);
 
-		Shader *s = d->GetShader();
+		boost::shared_ptr<Shader> s = d->GetShader();
 		if (!s) {
 			color = 0;
 		} else {

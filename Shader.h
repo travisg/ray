@@ -3,6 +3,7 @@
 
 #include <Color.h>
 #include <math/Vector3.h>
+#include <boost/shared_ptr.hpp>
 
 class Drawable;
 class Scene;
@@ -21,6 +22,8 @@ public:
 
 	virtual colorf Run(const ShaderArgs &args) = 0;
 };
+
+typedef boost::shared_ptr<Shader> ShaderPtr;
 
 #endif
 

@@ -65,6 +65,7 @@ int TracerThread(void *data)
 	gRenderSurface->WriteTGAFile("foo.tga");
 
 	delete tracer;
+	delete scene;
 
 	std::cout << "TracerThread end" << std::endl;
 
@@ -90,7 +91,7 @@ int main(int argc, char* argv[])
 	gRenderSurface = new RenderSurface(800, 600);
 	SetupSDL();
 
-	SDL_Thread *thread = SDL_CreateThread(&TracerThread, gRenderSurface);
+	SDL_CreateThread(&TracerThread, gRenderSurface);
 
 	SDL_AddTimer(100, &TimerTick, NULL);
 

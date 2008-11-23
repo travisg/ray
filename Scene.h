@@ -18,5 +18,6 @@ private:
 	std::vector<Drawable *> slist;
 };
 
+
 #endif
 

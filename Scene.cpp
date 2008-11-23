@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vector>	
 #include <Scene.h>
 #include <math/Vector3.h>
@@ -9,9 +10,11 @@ using Math::Vector3;
 Scene::Scene()
 {
 #if 1
+	ShaderPtr shader = ShaderPtr(new DefaultShader);
+
 	for (int i=0; i < 100; i++) {
 		Sphere *s = new Sphere(Vector3((rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f), (rand()%200) / 10.0f);
-		s->SetShader(new DefaultShader);
+		s->SetShader(shader);
 		slist.push_back(s);
 	}
 #endif
@@ -24,6 +27,12 @@ Scene::Scene()
 
 Scene::~Scene()
 {
+	// empty our list
+	while(!slist.empty()) {
+		Drawable *d = slist.back();
+		slist.pop_back();
+		delete d;
+	}
 }
 
 const Drawable *Scene::Intersect(const Ray &ray)

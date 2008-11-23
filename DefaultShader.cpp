@@ -6,6 +6,14 @@
 
 using Math::Vector3;
 
+DefaultShader::DefaultShader()
+{
+}
+
+DefaultShader::~DefaultShader()
+{
+}
+
 colorf DefaultShader::Run(const ShaderArgs &args)
 {
 //	std::cout << "DefaultShader Run" << std::endl;

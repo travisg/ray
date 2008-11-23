@@ -5,8 +5,8 @@
 
 class DefaultShader : public Shader {
 public:
-	DefaultShader() {}
-	virtual ~DefaultShader() {}
+	DefaultShader();
+	virtual ~DefaultShader();
 
 	virtual colorf Run(const ShaderArgs &args);
 };

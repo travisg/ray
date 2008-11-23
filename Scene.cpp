@@ -55,9 +55,7 @@ bool Scene::DoesIntersect(const Ray &ray)
 	for (std::vector<Sphere *>::const_iterator i = slist.begin(); i != slist.end(); i++) {
 		Sphere *s = *i;
 
-		Vector3 pos;
-		Vector3 normal;
-		if (s->Intersect(ray, pos, normal)) {
+		if (s->Intersect(ray)) {
 			return true;
 		}
 	}

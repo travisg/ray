@@ -1,6 +1,8 @@
 #ifndef __COLOR_H
 #define __COLOR_H
 
+#include <ostream>
+
 struct color32;
 struct colorf;
 
@@ -19,7 +21,7 @@ public:
 	color32(int c) : r(c), g(c), b(c) {}
 	color32(const colorf &c);
 
-	operator unsigned int() { /*return ((r << 16) | (g << 8) | (b)); */ return i; }
+	operator unsigned int() { return ((r << 16) | (g << 8) | (b)); }
 };
 
 struct colorf {
@@ -29,7 +31,10 @@ public:
 	float b;
 
 	colorf() {}
+	colorf(float _r, float _g, float _b) : r(_r), g(_g), b(_b) {}
 	colorf(float c) : r(c), g(c), b(c) {}
+
+	colorf operator*(float f);
 
 	colorf & operator+=(const colorf &c);
 };
@@ -48,6 +53,17 @@ inline colorf & colorf::operator+=(const colorf &c)
 	b += c.b;
 
 	return *this;
+}
+
+inline colorf colorf::operator*(float f)
+{
+	return colorf(r * f, g * f, b * f);
+}
+
+inline std::ostream &operator<<(std::ostream &os, const colorf &c)
+{
+	os << "< " << c.r << " " << c.g << " " << c.b << " >";
+	return os;
 }
 
 #endif

@@ -1,0 +1,27 @@
+#ifndef __SIMPLE_LIGHT_H
+#define __SIMPLE_LIGHT_H
+
+#include <Light.h>
+#include <Color.h>
+#include <math/Vector3.h>
+
+class SimpleLight : public Light {
+public:
+	SimpleLight() {}
+	SimpleLight(const Math::Vector3 &pos, colorf color, float falloff) :
+		m_Position(pos), m_Color(color), m_Falloff(falloff) {}
+
+	virtual ~SimpleLight() {}
+
+	const Math::Vector3 &GetPos() const { return m_Position; }
+	colorf GetColor() const { return m_Color; }
+	float GetFalloff() const { return m_Falloff; }
+
+private:
+	Math::Vector3 m_Position;
+	colorf m_Color;
+	float m_Falloff;
+};
+
+#endif
+

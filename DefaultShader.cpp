@@ -1,10 +1,13 @@
 #include <DefaultShader.h>
 #include <Scene.h>
 #include <Ray.h>
+#include <SimpleLight.h>
 
 #include <iostream>
 
 using Math::Vector3;
+
+colorf ambient = 0.10f;
 
 DefaultShader::DefaultShader()
 {
@@ -18,19 +21,28 @@ colorf DefaultShader::Run(const ShaderArgs &args)
 {
 //	std::cout << "DefaultShader Run" << std::endl;
 
-	// cast a ray at the sun, see if we're in a shadow
-	Ray ray;
-	ray.origin = args.pos;
-	ray.dir = Vector3(0.0, 0.0, 1000.0) - ray.origin;
-	ray.dir.Normalize();
+	colorf color = 0;
+	std::vector<SimpleLight *> lightList = args.scene->GetLightList();
 
-	colorf color;
-	if (args.scene->DoesIntersect(ray)) {
-		color = 0;
-	} else {
-		float light = Dot(Vector3(0.0, 0.0, 1.0), args.normal);
+	for (std::vector<SimpleLight *>::const_iterator i = lightList.begin(); i != lightList.end(); i++) {
+		const SimpleLight *l = *i;
+
+		// cast a ray at each light, see if we're in a shadow
+		Ray ray;
+		ray.origin = args.pos;
+		ray.dir = l->GetPos() - ray.origin;
+		ray.dir.Normalize();
 	
-		color = light;
+		if (!args.scene->DoesIntersect(ray)) {
+			Vector3 suntosurface = l->GetPos() - args.pos;
+			suntosurface.Normalize();
+		
+			float light = Dot(suntosurface, args.normal);
+
+			// calculate falloff
+
+			color += l->GetColor() * light;
+		}
 	}
 
 	return color;

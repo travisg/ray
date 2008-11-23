@@ -4,6 +4,7 @@
 #include <math/Vector3.h>
 #include <Sphere.h>
 #include <DefaultShader.h>
+#include <SimpleLight.h>
 
 using Math::Vector3;
 
@@ -15,22 +16,26 @@ Scene::Scene()
 	for (int i=0; i < 100; i++) {
 		Sphere *s = new Sphere(Vector3((rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f), (rand()%200) / 10.0f);
 		s->SetShader(shader);
-		slist.push_back(s);
+		m_DrawableList.push_back(s);
 	}
 #endif
 	
-	slist.push_back(new Sphere(Vector3(0.0, 0.0, 0.0), 0.25));
-	slist.push_back(new Sphere(Vector3(0.5, 0.0, 0.0), 0.25));
-	slist.push_back(new Sphere(Vector3(0.5, 0.5, 0.0), 0.25));
-	slist.push_back(new Sphere(Vector3(0.5, 0.6, 0.5), 0.10));
+	m_DrawableList.push_back(new Sphere(Vector3(0.0, 0.0, 0.0), 0.25));
+	m_DrawableList.push_back(new Sphere(Vector3(0.5, 0.0, 0.0), 0.25));
+	m_DrawableList.push_back(new Sphere(Vector3(0.5, 0.5, 0.0), 0.25));
+	m_DrawableList.push_back(new Sphere(Vector3(0.5, 0.6, 0.5), 0.10));
+
+	m_SimpleLightList.push_back(new SimpleLight(Vector3(0.0, 0.0, 100.0), colorf(1.0, 0.0, 0.0), 100));
+	m_SimpleLightList.push_back(new SimpleLight(Vector3(100.0, 0.0, 0.0), colorf(0.0, 1.0, 0.0), 100));
+	m_SimpleLightList.push_back(new SimpleLight(Vector3(0.0, 100.0, 0.0), colorf(0.0, 0.0, 1.0), 100));
 }
 
 Scene::~Scene()
 {
 	// empty our list
-	while(!slist.empty()) {
-		Drawable *d = slist.back();
-		slist.pop_back();
+	while(!m_DrawableList.empty()) {
+		Drawable *d = m_DrawableList.back();
+		m_DrawableList.pop_back();
 		delete d;
 	}
 }
@@ -41,7 +46,7 @@ const Drawable *Scene::Intersect(const Ray &ray)
 	Vector3 closestPos;
 	Drawable *closest = NULL;
 
-	for (std::vector<Drawable *>::const_iterator i = slist.begin(); i != slist.end(); i++) {
+	for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin(); i != m_DrawableList.end(); i++) {
 		Drawable *d = *i;
 
 		Vector3 pos;
@@ -64,7 +69,7 @@ const Drawable *Scene::Intersect(const Ray &ray)
 
 bool Scene::DoesIntersect(const Ray &ray)
 {
-	for (std::vector<Drawable *>::const_iterator i = slist.begin(); i != slist.end(); i++) {
+	for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin(); i != m_DrawableList.end(); i++) {
 		Drawable *d = *i;
 
 		if (d->Intersect(ray)) {

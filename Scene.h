@@ -5,6 +5,7 @@
 
 class Drawable;
 class Ray;
+class SimpleLight;
 
 class Scene {
 public:
@@ -13,9 +14,12 @@ public:
 
 	const Drawable *Intersect(const Ray &ray);
 	bool DoesIntersect(const Ray &ray);
-	
+
+	const std::vector<SimpleLight *> GetLightList() const { return m_SimpleLightList; }
+
 private:
-	std::vector<Drawable *> slist;
+	std::vector<Drawable *> m_DrawableList;;
+	std::vector<SimpleLight *> m_SimpleLightList;
 };
 
 

@@ -13,8 +13,6 @@
 
 using Math::Vector3;
 
-colorf ambient = 0.10f;
-
 Tracer::Tracer(RenderSurface &surface, Scene &scene)
 :	m_Surface(surface),
 	m_Scene(scene)
@@ -62,8 +60,6 @@ bool Tracer::Cast(colorf &color, const Ray &ray)
 			args.normal = normal;
 			color = s->Run(args);
 		}
-
-		color += ambient;
 
 		return true;
 	}

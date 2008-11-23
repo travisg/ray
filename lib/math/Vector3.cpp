@@ -105,7 +105,7 @@ float Dot(const Vector3 &v1, const Vector3 &v2)
 	return (v1.x*v2.x + v1.y*v2.y + v1.z*v2.z);	
 }
 
-Vector3 &Vector3::Normalize()
+void Vector3::Normalize()
 {
 	float lenSquared = LengthSquared();
 
@@ -118,11 +118,9 @@ Vector3 &Vector3::Normalize()
 		y *= invsqrt;
 		z *= invsqrt;
 	}
-
-	return *this;
 }
 
-Vector3 &Vector3::Normalize(float n)
+void Vector3::Normalize(float n)
 {
 	float lenSquared = LengthSquared();
 
@@ -135,8 +133,6 @@ Vector3 &Vector3::Normalize(float n)
 		y *= invsqrt;
 		z *= invsqrt;
 	}
-
-	return *this;
 }
 
 Vector3 Cross(const Vector3 &v1, const Vector3 &v2)

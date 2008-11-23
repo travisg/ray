@@ -21,7 +21,8 @@ colorf DefaultShader::Run(const ShaderArgs &args)
 	// cast a ray at the sun, see if we're in a shadow
 	Ray ray;
 	ray.origin = args.pos;
-	ray.dir = (Vector3(0.0, 0.0, 1000.0) - ray.origin).Normalize();
+	ray.dir = Vector3(0.0, 0.0, 1000.0) - ray.origin;
+	ray.dir.Normalize();
 
 	colorf color;
 	if (args.scene->DoesIntersect(ray)) {

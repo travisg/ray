@@ -104,7 +104,8 @@ void Tracer::Trace()
 			wing.Normalize((x - width / 2.0) * pixpitch);
 			head.Normalize((y - height / 2.0) * pixpitch);
 
-			Math::Vector3 ray = (m_Target + wing + head - m_Camera).Normalize();
+			Math::Vector3 ray = m_Target + wing + head - m_Camera;
+			ray.Normalize();
 
 //			std::cout << "Ray " << ray << std::endl;
 

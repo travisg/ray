@@ -29,7 +29,10 @@ OBJS := \
 	RenderSurface.o \
 	Tracer.o \
 	Sphere.o \
-	Scene.o
+	Scene.o \
+	Drawable.o \
+	Shader.o \
+	DefaultShader.o
 
 include lib/math/rules.mk
 

@@ -2,6 +2,7 @@
 #include <Scene.h>
 #include <math/Vector3.h>
 #include <Sphere.h>
+#include <DefaultShader.h>
 
 using Math::Vector3;
 
@@ -9,7 +10,9 @@ Scene::Scene()
 {
 #if 1
 	for (int i=0; i < 100; i++) {
-		slist.push_back(new Sphere(Vector3((rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f), (rand()%200) / 10.0f));
+		Sphere *s = new Sphere(Vector3((rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f), (rand()%200) / 10.0f);
+		s->SetShader(new DefaultShader);
+		slist.push_back(s);
 	}
 #endif
 	

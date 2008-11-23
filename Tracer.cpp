@@ -9,6 +9,8 @@
 #include <Tracer.h>
 #include <Sphere.h>
 
+#include <Shader.h>
+
 using Math::Vector3;
 
 colorf ambient = 0.10f;
@@ -48,19 +50,17 @@ bool Tracer::Cast(colorf &color, const Ray &ray)
 		Vector3 normal;
 		d->Intersect(ray, pos, normal);
 
-		// cast a ray at the sun, see if we're in a shadow
-		Ray ray;
-		ray.origin = pos;
-		ray.dir = Vector3(0.0, 0.0, 1000.0) - ray.origin;
-		ray.dir.Normalize();
-
-		colorf c;
-		if (m_Scene.DoesIntersect(ray)) {
+		Shader *s = d->GetShader();
+		if (!s) {
 			color = 0;
 		} else {
-			float light = Dot(Vector3(0.0, 0.0, 1.0), normal);
+			ShaderArgs args;
 
-			color = light;
+			args.scene = &m_Scene;
+			args.d = d;
+			args.pos = pos;
+			args.normal = normal;
+			color = s->Run(args);
 		}
 
 		color += ambient;
@@ -87,9 +87,9 @@ void Tracer::Trace()
 
 	std::cout << "Lin " << lin << std::endl;
 
-	int multisample = 1;
+//	int multisample = 1;
 	float pixpitch = 2.0/width;
-	float subpitch = pixpitch / ((float)multisample + 1.0);
+//	float subpitch = pixpitch / ((float)multisample + 1.0);
 
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {

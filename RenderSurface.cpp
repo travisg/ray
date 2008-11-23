@@ -77,5 +77,7 @@ int RenderSurface::WriteTGAFile(std::string filename)
 	}
 
 	fclose(fp);
+
+	return 0;
 }
 

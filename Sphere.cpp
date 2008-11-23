@@ -20,7 +20,7 @@ Sphere::~Sphere()
 {
 }
 
-bool Sphere::Intersect(const Ray &ray)
+bool Sphere::Intersect(const Ray &ray) const
 {
 	float radius2 = m_Radius * m_Radius;
 
@@ -40,7 +40,7 @@ bool Sphere::Intersect(const Ray &ray)
 	return false;
 }
 
-bool Sphere::Intersect(const Ray &ray, Vector3 &pos, Vector3 &normal)
+bool Sphere::Intersect(const Ray &ray, Vector3 &pos, Vector3 &normal) const
 {
 	float radius2 = m_Radius * m_Radius;
 

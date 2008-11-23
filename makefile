@@ -4,7 +4,7 @@ TARGET := ray
 BUILDDIR := build-$(TARGET)
 
 # compiler flags, default libs to link against
-COMPILEFLAGS := -g -O2 -I.
+COMPILEFLAGS := -Wall -g -O2 -I.
 CFLAGS := $(COMPILEFLAGS)
 CPPFLAGS := $(COMPILEFLAGS) -fno-exceptions
 ASMFLAGS := $(COMPILEFLAGS)
@@ -28,7 +28,8 @@ OBJS := \
 	main.o \
 	RenderSurface.o \
 	Tracer.o \
-	Sphere.o
+	Sphere.o \
+	Scene.o
 
 include lib/math/rules.mk
 

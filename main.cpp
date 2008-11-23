@@ -9,6 +9,7 @@
 #include <Ray.h>
 #include <RenderSurface.h>
 #include <Tracer.h>
+#include <Scene.h>
 
 RenderSurface *gRenderSurface;
 SDL_Surface *gScreen;
@@ -52,8 +53,10 @@ int TracerThread(void *data)
 {
 	std::cout << "TracerThread start" << std::endl;
 	time_t start = time(NULL);
+
+	Scene *scene = new Scene();
 	
-	Tracer *tracer = new Tracer(*gRenderSurface);
+	Tracer *tracer = new Tracer(*gRenderSurface, *scene);
 	tracer->Trace();
 
 	start = time(NULL) - start;

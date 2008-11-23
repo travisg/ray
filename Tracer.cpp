@@ -37,7 +37,7 @@ Tracer::~Tracer()
 {
 }
 
-bool Tracer::Cast(colorf &color, const Vector3 &ray, const Vector3 &cam, bool collidetest)
+bool Tracer::Cast(colorf &color, const Ray &ray, bool collidetest)
 {
 
 	bool hit = false;
@@ -50,16 +50,16 @@ bool Tracer::Cast(colorf &color, const Vector3 &ray, const Vector3 &cam, bool co
 		Sphere *s = *i;
 
 		if (collidetest) {
-			if (s->Intersect(cam, ray)) {
+			if (s->Intersect(ray)) {
 				// if we're just trying to test a collision, bail with true here
 				return true;
 			}
 		} else {
 			Vector3 pos;
 			Vector3 normal;
-			if (s->Intersect(cam, ray, pos, normal)) {
+			if (s->Intersect(ray, pos, normal)) {
 //				std::cout << "collision ray " << ray << " pos " << pos << std::endl;
-				if (!hit || (pos - cam).LengthSquared() < (closestPos - cam).LengthSquared()) {
+				if (!hit || (pos - ray.origin).LengthSquared() < (closestPos - ray.origin).LengthSquared()) {
 					closestPos = pos;
 					closestNormal = normal;
 					closestSphere = s;
@@ -72,12 +72,13 @@ bool Tracer::Cast(colorf &color, const Vector3 &ray, const Vector3 &cam, bool co
 	// render the closest one
 	if (hit) {
 		// cast a ray at the sun, see if we're in a shadow
-		Vector3 origin = closestPos;
-		Vector3 ray = Vector3(0.0, 0.0, 1000.0) - origin;
-		ray.Normalize();
+		Ray ray;
+		ray.origin = closestPos;
+		ray.dir = Vector3(0.0, 0.0, 1000.0) - ray.origin;
+		ray.dir.Normalize();
 
 		colorf c;
-		if (Cast(c, ray, origin, true)) {
+		if (Cast(c, ray, true)) {
 			color = 0;
 		} else {
 			float light = Dot(Vector3(0.0, 0.0, 1.0), closestNormal);
@@ -146,7 +147,7 @@ void Tracer::Trace()
 //			std::cout << "Ray " << ray << std::endl;
 
 			colorf color;
-			if (Cast(color, ray, m_Camera, false) == false) {
+			if (Cast(color, Ray(m_Camera, ray), false) == false) {
 				// exited the world
 				color = 0;
 //				float angle = Dot(Vector3(0.0, 0.0, 1.0), ray);

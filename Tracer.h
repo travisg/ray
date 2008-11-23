@@ -2,7 +2,8 @@
 #define __TRACER_H
 
 #include <RenderSurface.h>
-#include <math/Math.h>
+#include <math/Vector3.h>
+#include <Ray.h>
 
 class Tracer {
 public:
@@ -12,7 +13,7 @@ public:
 	void Trace();
 
 private:
-	bool Cast(colorf &color, const Math::Vector3 &ray, const Math::Vector3 &cam, bool collidetest);
+	bool Cast(colorf &color, const Ray &ray, bool collidetest);
 	
 	RenderSurface &m_Surface;
 

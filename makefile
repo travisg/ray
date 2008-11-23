@@ -26,7 +26,6 @@ ARCH := $(shell uname -m)
 
 OBJS := \
 	main.o \
-	ray.o \
 	RenderSurface.o \
 	Tracer.o \
 	Sphere.o

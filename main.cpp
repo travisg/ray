@@ -2,6 +2,7 @@
 //
 
 #include <cstdio>
+#include <iostream>
 #include <time.h>
 
 #include <sdl.h>

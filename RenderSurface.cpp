@@ -8,7 +8,7 @@ RenderSurface::RenderSurface(int width, int height)
 	m_Buffer(0),
 	m_Notify(0)
 {
-	m_Buffer = new color32[width * height];
+	m_Buffer = new colorf[width * height];
 }
 
 RenderSurface::~RenderSurface()
@@ -16,7 +16,7 @@ RenderSurface::~RenderSurface()
 	delete[] m_Buffer;
 }
 
-void RenderSurface::SetXY(int x, int y, color32 color)
+void RenderSurface::SetXY(int x, int y, colorf color)
 {
 	m_Buffer[y * m_Width + x] = color;
 	if (m_Notify)
@@ -70,9 +70,10 @@ int RenderSurface::WriteTGAFile(std::string filename)
 	fwrite(&b, 1, 1, fp);
 
 	for (int i = 0; i < m_Width * m_Height; i++) {
-		fwrite(&m_Buffer[i].b, 1, 1, fp);
-		fwrite(&m_Buffer[i].g, 1, 1, fp);
-		fwrite(&m_Buffer[i].r, 1, 1, fp);
+		color32 c32 = m_Buffer[i];
+		fwrite(&c32.b, 1, 1, fp);
+		fwrite(&c32.g, 1, 1, fp);
+		fwrite(&c32.r, 1, 1, fp);
 	}
 
 	fclose(fp);

@@ -12,9 +12,9 @@ public:
 	int Width() const { return m_Width; }
 	int Height() const { return m_Height; }
 
-	void SetXY(int width, int height, color32 color);
+	void SetXY(int width, int height, colorf color);
 
-	typedef void (*RenderNotify)(int x, int y, color32);
+	typedef void (*RenderNotify)(int x, int y, colorf);
 	void SetNotification(RenderNotify notify);
 
 	int WriteTGAFile(std::string filename);
@@ -22,7 +22,7 @@ public:
 private:
 	int m_Width;
 	int m_Height;
-	color32 *m_Buffer;
+	colorf *m_Buffer;
 	RenderNotify m_Notify;
 };
 

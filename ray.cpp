@@ -14,7 +14,7 @@ SDL_Surface *gScreen;
 // track dirty screen
 volatile bool dirty = false;
 
-static void ScreenNotify(int x, int y, color32 color)
+static void ScreenNotify(int x, int y, colorf color)
 {
 //	printf("notify %d %d %u\n", x, y, color);
 
@@ -23,7 +23,8 @@ static void ScreenNotify(int x, int y, color32 color)
 	rect.y = y;
 	rect.h = 1;
 	rect.w = 1;
-	SDL_FillRect(gScreen, &rect, color);
+	color32 c32 = color;
+	SDL_FillRect(gScreen, &rect, c32);
 
 	dirty = true;
 }

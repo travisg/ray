@@ -25,6 +25,7 @@ ARCH := $(shell uname -m)
 # endif
 
 OBJS := \
+	main.o \
 	ray.o \
 	RenderSurface.o \
 	Tracer.o \

@@ -6,7 +6,7 @@ BUILDDIR := build-$(TARGET)
 # compiler flags, default libs to link against
 COMPILEFLAGS := -g -O2 -I.
 CFLAGS := $(COMPILEFLAGS)
-CPPFLAGS := $(COMPILEFLAGS)
+CPPFLAGS := $(COMPILEFLAGS) -fno-exceptions
 ASMFLAGS := $(COMPILEFLAGS)
 LDFLAGS :=
 LDLIBS := -lSDL -lstdc++

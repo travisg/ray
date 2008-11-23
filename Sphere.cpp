@@ -60,8 +60,7 @@ bool Sphere::Intersect(const Ray &ray, Vector3 &pos, Vector3 &normal) const
 		pos = ray.origin + ray.dir * t;
 
 		// radius ray
-		normal = pos - m_Center;
-		normal.Normalize();
+		normal = (pos - m_Center).Normalize();
 
 		return true;
 	}

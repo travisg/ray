@@ -45,8 +45,8 @@ public:
 	float LengthSquared() const;
 	float Dot(const Vector3 &v) const;
 	friend float Dot(const Vector3 &v1, const Vector3 &v2);
-	void Normalize();
-	void Normalize(float n);
+	Vector3 &Normalize();
+	Vector3 &Normalize(float n);
 
 	friend Vector3 Cross(const Vector3 &v1, const Vector3 &v2);
 

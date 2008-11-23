@@ -40,13 +40,13 @@ Tracer::~Tracer()
 bool Tracer::Cast(colorf &color, const Ray &ray)
 {
 	// tell the scene graph to find an object to intersect
-	const Sphere *s = m_Scene.Intersect(ray);
+	const Drawable *d = m_Scene.Intersect(ray);
 
 	// render the closest one
-	if (s) {
+	if (d) {
 		Vector3 pos;
 		Vector3 normal;
-		s->Intersect(ray, pos, normal);
+		d->Intersect(ray, pos, normal);
 
 		// cast a ray at the sun, see if we're in a shadow
 		Ray ray;

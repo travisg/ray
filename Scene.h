@@ -3,7 +3,7 @@
 
 #include <vector>
 
-class Sphere;
+class Drawable;
 class Ray;
 
 class Scene {
@@ -11,12 +11,11 @@ public:
 	Scene();
 	virtual ~Scene();
 
-	const Sphere *Intersect(const Ray &ray);
+	const Drawable *Intersect(const Ray &ray);
 	bool DoesIntersect(const Ray &ray);
 	
 private:
-	std::vector<Sphere *> slist;
-
+	std::vector<Drawable *> slist;
 };
 
 #endif

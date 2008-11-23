@@ -3,8 +3,9 @@
 
 #include <math/Vector3.h>
 #include <Ray.h>
+#include <Drawable.h>
 
-class Sphere {
+class Sphere : public Drawable {
 public:
 	Sphere();
 	Sphere(const Math::Vector3 &pos, float radius);
@@ -13,8 +14,8 @@ public:
 	void SetPos(const Math::Vector3 &pos) { m_Center = pos; }
 	void SetRadius(float rad) { m_Radius = rad; }
 
-	bool Intersect(const Ray &ray) const;
-	bool Intersect(const Ray &ray, Math::Vector3 &pos, Math::Vector3 &normal) const;
+	virtual bool Intersect(const Ray &ray) const;
+	virtual bool Intersect(const Ray &ray, Math::Vector3 &pos, Math::Vector3 &normal) const;
 
 private:
 	Math::Vector3 m_Center;

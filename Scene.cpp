@@ -23,39 +23,39 @@ Scene::~Scene()
 {
 }
 
-const Sphere *Scene::Intersect(const Ray &ray)
+const Drawable *Scene::Intersect(const Ray &ray)
 {
 	bool hit = false;
 	Vector3 closestPos;
-	Sphere *closestSphere = NULL;
+	Drawable *closest = NULL;
 
-	for (std::vector<Sphere *>::const_iterator i = slist.begin(); i != slist.end(); i++) {
-		Sphere *s = *i;
+	for (std::vector<Drawable *>::const_iterator i = slist.begin(); i != slist.end(); i++) {
+		Drawable *d = *i;
 
 		Vector3 pos;
 		Vector3 normal;
-		if (s->Intersect(ray, pos, normal)) {
+		if (d->Intersect(ray, pos, normal)) {
 //				std::cout << "collision ray " << ray << " pos " << pos << std::endl;
 			if (!hit || (pos - ray.origin).LengthSquared() < (closestPos - ray.origin).LengthSquared()) {
 				closestPos = pos;
-				closestSphere = s;
+				closest = d;
 			}
 			hit = true;
 		}
 	}
 
 	if (hit)
-		return closestSphere;
+		return closest;
 
 	return NULL;
 }
 
 bool Scene::DoesIntersect(const Ray &ray)
 {
-	for (std::vector<Sphere *>::const_iterator i = slist.begin(); i != slist.end(); i++) {
-		Sphere *s = *i;
+	for (std::vector<Drawable *>::const_iterator i = slist.begin(); i != slist.end(); i++) {
+		Drawable *d = *i;
 
-		if (s->Intersect(ray)) {
+		if (d->Intersect(ray)) {
 			return true;
 		}
 	}

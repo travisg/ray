@@ -10,6 +10,8 @@ CPPFLAGS := $(COMPILEFLAGS) -fno-exceptions
 ASMFLAGS := $(COMPILEFLAGS)
 LDFLAGS :=
 LDLIBS := -lSDL -lstdc++
+OBJDUMP := objdump
+CPPFILT := c++filt
 
 UNAME := $(shell uname -s)
 ARCH := $(shell uname -m)
@@ -34,8 +36,13 @@ OBJS := $(addprefix $(BUILDDIR)/,$(OBJS))
 
 DEPS := $(OBJS:.o=.d)
 
+all: $(BUILDDIR)/$(TARGET) $(BUILDDIR)/$(TARGET).lst
+
 $(BUILDDIR)/$(TARGET):  $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDLIBS)
+
+$(BUILDDIR)/$(TARGET).lst: $(BUILDDIR)/$(TARGET)
+	$(OBJDUMP) -d $< | $(CPPFILT) > $@
 
 clean:
 	rm -f $(OBJS) $(DEPS) $(TARGET)

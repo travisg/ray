@@ -3,7 +3,7 @@
 
 #include <Light.h>
 #include <Color.h>
-#include <math/Vector3.h>
+#include <libmath/Vector3.h>
 
 class SimpleLight : public Light {
 public:

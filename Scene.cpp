@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>	
 #include <Scene.h>
-#include <math/Vector3.h>
+#include <libmath/Vector3.h>
 #include <Sphere.h>
 #include <DefaultShader.h>
 #include <SimpleLight.h>

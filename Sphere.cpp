@@ -2,7 +2,7 @@
 #include <math.h>
 
 #include <Sphere.h>
-#include <math/Math.h>
+#include <libmath/Math.h>
 
 using Math::Vector3;
 

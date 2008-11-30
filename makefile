@@ -34,7 +34,7 @@ OBJS := \
 	Shader.o \
 	DefaultShader.o
 
-include lib/math/rules.mk
+include libmath/rules.mk
 
 OBJS := $(addprefix $(BUILDDIR)/,$(OBJS))
 

@@ -1,7 +1,7 @@
 #ifndef __SPHERE_H
 #define __SPHERE_H
 
-#include <math/Vector3.h>
+#include <libmath/Vector3.h>
 #include <Ray.h>
 #include <Drawable.h>
 

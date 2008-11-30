@@ -2,7 +2,7 @@
 #define __TRACER_H
 
 #include <RenderSurface.h>
-#include <math/Vector3.h>
+#include <libmath/Vector3.h>
 #include <Ray.h>
 
 class Scene;

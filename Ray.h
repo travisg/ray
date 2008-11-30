@@ -1,7 +1,7 @@
 #ifndef __RAY_H
 #define __RAY_H
 
-#include <math/Vector3.h>
+#include <libmath/Vector3.h>
 
 struct Ray {
 	Ray() {}

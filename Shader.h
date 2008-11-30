@@ -2,7 +2,7 @@
 #define __SHADER_H
 
 #include <Color.h>
-#include <math/Vector3.h>
+#include <libmath/Vector3.h>
 #include <boost/shared_ptr.hpp>
 
 class Drawable;

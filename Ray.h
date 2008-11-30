@@ -5,10 +5,10 @@
 
 struct Ray {
 	Ray() {}
-	Ray(const Math::Vector3 &_origin, const Math::Vector3 &_dir) : origin(_origin), dir(_dir) {}
+	Ray(const Math::Vector3f &_origin, const Math::Vector3f &_dir) : origin(_origin), dir(_dir) {}
 
-	Math::Vector3 origin;
-	Math::Vector3 dir;
+	Math::Vector3f origin;
+	Math::Vector3f dir;
 };
 
 #endif

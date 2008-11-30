@@ -12,7 +12,7 @@ public:
 	virtual ~Drawable();
 
 	virtual bool Intersect(const Ray &ray) const = 0;
-	virtual bool Intersect(const Ray &ray, Math::Vector3 &pos, Math::Vector3 &normal) const = 0;
+	virtual bool Intersect(const Ray &ray, Math::Vector3f &pos, Math::Vector3f &normal) const = 0;
 
 	void SetShader(ShaderPtr s) { m_Shader = s; }
 	ShaderPtr GetShader() const { return m_Shader; }

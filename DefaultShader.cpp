@@ -5,7 +5,7 @@
 
 #include <iostream>
 
-using Math::Vector3;
+using Math::Vector3f;
 
 colorf ambient = 0.10f;
 
@@ -34,7 +34,7 @@ colorf DefaultShader::Run(const ShaderArgs &args)
 		ray.dir.Normalize();
 	
 		if (!args.scene->DoesIntersect(ray)) {
-			Vector3 suntosurface = l->GetPos() - args.pos;
+			Vector3f suntosurface = l->GetPos() - args.pos;
 			suntosurface.Normalize();
 		
 			float light = Dot(suntosurface, args.normal);

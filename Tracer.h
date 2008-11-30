@@ -19,8 +19,8 @@ private:
 	
 	RenderSurface &m_Surface;
 
-	Math::Vector3 m_Camera;
-	Math::Vector3 m_Target;
+	Math::Vector3f m_Camera;
+	Math::Vector3f m_Target;
 
 	Scene &m_Scene;
 };

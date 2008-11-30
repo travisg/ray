@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
 
 	srand(time(NULL));
 
-	gRenderSurface = new RenderSurface(800, 600);
+	gRenderSurface = new RenderSurface(1600, 1200);
 	SetupSDL();
 
 	SDL_CreateThread(&TracerThread, gRenderSurface);

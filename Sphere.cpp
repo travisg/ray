@@ -4,13 +4,13 @@
 #include <Sphere.h>
 #include <libmath/Math.h>
 
-using Math::Vector3;
+using Math::Vector3f;
 
 Sphere::Sphere()
 {
 }
 
-Sphere::Sphere(const Math::Vector3 &pos, float radius)
+Sphere::Sphere(const Math::Vector3f &pos, float radius)
 :	m_Center(pos),
 	m_Radius(radius)
 {
@@ -24,7 +24,7 @@ bool Sphere::Intersect(const Ray &ray) const
 {
 	float radius2 = m_Radius * m_Radius;
 
-	Vector3 oc = m_Center - ray.origin;
+	Vector3f oc = m_Center - ray.origin;
 	float tca = Dot(oc, ray.dir);
 	if (tca < 0) {
 		// points away from the sphere
@@ -40,11 +40,11 @@ bool Sphere::Intersect(const Ray &ray) const
 	return false;
 }
 
-bool Sphere::Intersect(const Ray &ray, Vector3 &pos, Vector3 &normal) const
+bool Sphere::Intersect(const Ray &ray, Vector3f &pos, Vector3f &normal) const
 {
 	float radius2 = m_Radius * m_Radius;
 
-	Vector3 oc = m_Center - ray.origin;
+	Vector3f oc = m_Center - ray.origin;
 	float tca = Dot(oc, ray.dir);
 	if (tca < 0) {
 		// points away from the sphere

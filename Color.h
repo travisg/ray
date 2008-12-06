@@ -26,15 +26,15 @@ public:
 
 struct colorf {
 public:
-	float r;
-	float g;
-	float b;
+	double r;
+	double g;
+	double b;
 
 	colorf() {}
-	colorf(float _r, float _g, float _b) : r(_r), g(_g), b(_b) {}
-	colorf(float c) : r(c), g(c), b(c) {}
+	colorf(double _r, double _g, double _b) : r(_r), g(_g), b(_b) {}
+	colorf(double c) : r(c), g(c), b(c) {}
 
-	colorf operator*(float f);
+	colorf operator*(double f);
 
 	colorf & operator+=(const colorf &c);
 };
@@ -55,7 +55,7 @@ inline colorf & colorf::operator+=(const colorf &c)
 	return *this;
 }
 
-inline colorf colorf::operator*(float f)
+inline colorf colorf::operator*(double f)
 {
 	return colorf(r * f, g * f, b * f);
 }

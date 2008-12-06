@@ -11,8 +11,8 @@ class Scene;
 struct ShaderArgs {
 	Scene *scene;
 	const Drawable *d;
-	Math::Vector3f pos;
-	Math::Vector3f normal;
+	Math::Vector3d pos;
+	Math::Vector3d normal;
 };
 
 class Shader {

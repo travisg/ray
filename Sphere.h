@@ -8,17 +8,17 @@
 class Sphere : public Drawable {
 public:
 	Sphere();
-	Sphere(const Math::Vector3f &pos, float radius);
+	Sphere(const Math::Vector3d &pos, float radius);
 	virtual ~Sphere();
 
-	void SetPos(const Math::Vector3f &pos) { m_Center = pos; }
+	void SetPos(const Math::Vector3d &pos) { m_Center = pos; }
 	void SetRadius(float rad) { m_Radius = rad; }
 
 	virtual bool Intersect(const Ray &ray) const;
-	virtual bool Intersect(const Ray &ray, Math::Vector3f &pos, Math::Vector3f &normal) const;
+	virtual bool Intersect(const Ray &ray, Math::Vector3d &pos, Math::Vector3d &normal) const;
 
 private:
-	Math::Vector3f m_Center;
+	Math::Vector3d m_Center;
 	float m_Radius;
 };
 

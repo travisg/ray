@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <math.h>
 
-#include <Sphere.h>
+#include <drawables/Sphere.h>
 #include <libmath/Math.h>
 
 using Math::Vector3d;

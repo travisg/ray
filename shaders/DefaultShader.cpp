@@ -1,9 +1,9 @@
-#include <DefaultShader.h>
+#include <iostream>
+
 #include <Scene.h>
 #include <Ray.h>
-#include <SimpleLight.h>
-
-#include <iostream>
+#include <lights/SimpleLight.h>
+#include "DefaultShader.h"
 
 using Math::Vector3d;
 

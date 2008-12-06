@@ -1,7 +1,7 @@
 #ifndef __SIMPLE_LIGHT_H
 #define __SIMPLE_LIGHT_H
 
-#include <Light.h>
+#include "Light.h"
 #include <Color.h>
 #include <libmath/Vector3.h>
 

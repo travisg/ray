@@ -1,7 +1,7 @@
 #ifndef __DEFAULT_SHADER_H
 #define __DEFAULT_SHADER_H
 
-#include <Shader.h>
+#include "Shader.h"
 
 class DefaultShader : public Shader {
 public:

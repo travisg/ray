@@ -3,7 +3,7 @@
 
 #include <libmath/Vector3.h>
 #include <Ray.h>
-#include <Drawable.h>
+#include <drawables/Drawable.h>
 
 class Sphere : public Drawable {
 public:

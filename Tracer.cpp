@@ -7,9 +7,9 @@
 #include <Scene.h>
 #include <Ray.h>
 #include <Tracer.h>
-#include <Sphere.h>
+#include <drawables/Sphere.h>
 
-#include <Shader.h>
+#include <shaders/Shader.h>
 
 using Math::Vector3d;
 

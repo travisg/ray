@@ -2,9 +2,9 @@
 #include <vector>	
 #include <Scene.h>
 #include <libmath/Vector3.h>
-#include <Sphere.h>
-#include <DefaultShader.h>
-#include <SimpleLight.h>
+#include <drawables/Sphere.h>
+#include <shaders/DefaultShader.h>
+#include <lights/SimpleLight.h>
 
 using Math::Vector3d;
 

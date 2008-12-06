@@ -2,7 +2,7 @@
 #define __DRAWABLE_H
 
 #include <libmath/Vector3.h>
-#include <Shader.h>
+#include <shaders/Shader.h>
 
 class Ray;
 

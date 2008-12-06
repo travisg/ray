@@ -28,12 +28,11 @@ OBJS := \
 	main.o \
 	RenderSurface.o \
 	Tracer.o \
-	Sphere.o \
 	Scene.o \
-	Drawable.o \
-	Shader.o \
-	DefaultShader.o
 
+include drawables/rules.mk
+include lights/rules.mk
+include shaders/rules.mk
 include libmath/rules.mk
 
 OBJS := $(addprefix $(BUILDDIR)/,$(OBJS))

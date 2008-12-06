@@ -6,7 +6,7 @@
 
 using Math::Vector3d;
 
-Sphere::Sphere(const Math::Vector3d &pos, float radius)
+Sphere::Sphere(const Math::Vector3d &pos, double radius)
 :	m_Center(pos),
 	m_Radius(radius)
 {
@@ -18,17 +18,17 @@ Sphere::~Sphere()
 
 bool Sphere::Intersect(const Ray &ray) const
 {
-	float radius2 = m_Radius * m_Radius;
+	double radius2 = m_Radius * m_Radius;
 
 	Vector3d oc = m_Center - ray.origin;
-	float tca = Dot(oc, ray.dir);
+	double tca = Dot(oc, ray.dir);
 	if (tca < 0) {
 		// points away from the sphere
 		return false;
 	}
 
-	float l2oc = oc.LengthSquared();
-	float l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
+	double l2oc = oc.LengthSquared();
+	double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
 	if (l2hc > 0) {
 		return true;
 	}
@@ -38,19 +38,19 @@ bool Sphere::Intersect(const Ray &ray) const
 
 bool Sphere::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const
 {
-	float radius2 = m_Radius * m_Radius;
+	double radius2 = m_Radius * m_Radius;
 
 	Vector3d oc = m_Center - ray.origin;
-	float tca = Dot(oc, ray.dir);
+	double tca = Dot(oc, ray.dir);
 	if (tca < 0) {
 		// points away from the sphere
 		return false;
 	}
 
-	float l2oc = oc.LengthSquared();
-	float l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
+	double l2oc = oc.LengthSquared();
+	double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
 	if (l2hc > 0) {
-		float t = tca - sqrtf(l2hc);
+		double t = tca - sqrt(l2hc);
 
 		// calculate position
 		pos = ray.origin + ray.dir * t;

@@ -43,7 +43,7 @@ Scene::~Scene()
 const Drawable *Scene::Intersect(const Ray &ray)
 {
 	bool hit = false;
-	Vector3d closestPos;
+	Vector3d closestPos = 0;
 	Drawable *closest = NULL;
 
 	for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin(); i != m_DrawableList.end(); i++) {

@@ -29,6 +29,8 @@ Tracer::Tracer(RenderSurface &surface, Scene &scene)
     	m_Camera.getz() - (double)(rand()%400));
 #else
 	m_Camera = Math::Vector3d(80.0f, 80.0f, 80.0f);
+//	m_Camera = Math::Vector3d(80.0f, 80.0f, 10.0f);
+
 	m_Target = Math::Vector3d(0.0f, 0.0f, 0.0f);
 #endif
 }

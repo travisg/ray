@@ -3,6 +3,7 @@
 #include <Scene.h>
 #include <libmath/Vector3.h>
 #include <drawables/Sphere.h>
+#include <drawables/Plane.h>
 #include <shaders/DefaultShader.h>
 #include <lights/SimpleLight.h>
 
@@ -10,9 +11,8 @@ using Math::Vector3d;
 
 Scene::Scene()
 {
-#if 1
 	ShaderPtr shader = ShaderPtr(new DefaultShader);
-
+#if 1
 	for (int i=0; i < 100; i++) {
 		Sphere *s = new Sphere(Vector3d((rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f), (rand()%200) / 10.0f);
 		s->SetShader(shader);
@@ -20,14 +20,18 @@ Scene::Scene()
 	}
 #endif
 	
-	m_DrawableList.push_back(new Sphere(Vector3d(0.0, 0.0, 0.0), 0.25));
-	m_DrawableList.push_back(new Sphere(Vector3d(0.5, 0.0, 0.0), 0.25));
-	m_DrawableList.push_back(new Sphere(Vector3d(0.5, 0.5, 0.0), 0.25));
-	m_DrawableList.push_back(new Sphere(Vector3d(0.5, 0.6, 0.5), 0.10));
+	Sphere *s = new Sphere(Vector3d(0.0, 0.0, 0.0), 50.0);
+	s->SetShader(shader);
+	m_DrawableList.push_back(s);
+
+	Plane *p = new Plane(Ray(Vector3d(0.0, 0.0, -100.0), Vector3d(0.0, 0.0, 1.0)));
+	p->SetShader(shader);
+	m_DrawableList.push_back(p);
 
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 0.0, 100.0), colorf(1.0, 0.0, 0.0), 100));
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(100.0, 0.0, 0.0), colorf(0.0, 1.0, 0.0), 100));
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 100.0, 0.0), colorf(0.0, 0.0, 1.0), 100));
+	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 60.0, 60.0), colorf(1.0, 1.0, 1.0), 100));
 }
 
 Scene::~Scene()
@@ -74,6 +78,22 @@ bool Scene::DoesIntersect(const Ray &ray)
 
 		if (d->Intersect(ray)) {
 			return true;
+		}
+	}
+
+	return false;
+}
+
+bool Scene::DoesIntersect(const Ray &ray, double maxDistance)
+{
+	for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin(); i != m_DrawableList.end(); i++) {
+		Drawable *d = *i;
+
+		Vector3d pos;
+		Vector3d normal;
+		if (d->Intersect(ray, pos, normal)) {
+			if ((ray.origin - pos).Length() < maxDistance)
+				return true;
 		}
 	}
 

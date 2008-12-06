@@ -7,7 +7,6 @@
 
 class Sphere : public Drawable {
 public:
-	Sphere();
 	Sphere(const Math::Vector3d &pos, float radius);
 	virtual ~Sphere();
 

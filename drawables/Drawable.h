@@ -7,8 +7,10 @@
 class Ray;
 
 class Drawable {
-public:
+protected:
 	Drawable();
+
+public:
 	virtual ~Drawable();
 
 	virtual bool Intersect(const Ray &ray) const = 0;

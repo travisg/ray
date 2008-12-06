@@ -6,10 +6,6 @@
 
 using Math::Vector3d;
 
-Sphere::Sphere()
-{
-}
-
 Sphere::Sphere(const Math::Vector3d &pos, float radius)
 :	m_Center(pos),
 	m_Radius(radius)

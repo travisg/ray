@@ -33,7 +33,7 @@ colorf DefaultShader::Run(const ShaderArgs &args)
 		ray.dir = l->GetPos() - ray.origin;
 		ray.dir.Normalize();
 	
-		if (!args.scene->DoesIntersect(ray)) {
+		if (!args.scene->DoesIntersect(ray, (ray.origin - l->GetPos()).Length())) {
 			Vector3d suntosurface = l->GetPos() - args.pos;
 			suntosurface.Normalize();
 		

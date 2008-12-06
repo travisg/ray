@@ -14,6 +14,7 @@ public:
 
 	const Drawable *Intersect(const Ray &ray);
 	bool DoesIntersect(const Ray &ray);
+	bool DoesIntersect(const Ray &ray, double maxDistance);
 
 	const std::vector<SimpleLight *> GetLightList() const { return m_SimpleLightList; }
 

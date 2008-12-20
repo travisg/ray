@@ -20,10 +20,10 @@ void RenderSurface::SetXY(int x, int y, colorf color)
 {
 	m_Buffer[y * m_Width + x] = color;
 	if (m_Notify)
-		m_Notify(x, y, color);
+		m_Notify->RenderNotify(x, y, color);
 }
 
-void RenderSurface::SetNotification(RenderNotify notify)
+void RenderSurface::SetNotification(RenderSurfaceNotifyReceiver *notify)
 {
 	m_Notify = notify;
 }

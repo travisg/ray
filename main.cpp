@@ -10,27 +10,10 @@
 #include <RenderSurface.h>
 #include <Tracer.h>
 #include <Scene.h>
+#include <DisplayWindow.h>
 
 RenderSurface *gRenderSurface;
-SDL_Surface *gScreen;
-
-// track dirty screen
-volatile bool dirty = false;
-
-static void ScreenNotify(int x, int y, colorf color)
-{
-//	printf("notify %d %d %u\n", x, y, color);
-
-	SDL_Rect rect;
-	rect.x = x;
-	rect.y = y;
-	rect.h = 1;
-	rect.w = 1;
-	color32 c32 = color;
-	SDL_FillRect(gScreen, &rect, c32);
-
-	dirty = true;
-}
+DisplayWindow *gWindow;
 
 int SetupSDL()
 {
@@ -38,13 +21,6 @@ int SetupSDL()
 
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
 	SDL_EnableUNICODE(1);
-
-	gScreen = SDL_SetVideoMode(gRenderSurface->Width(), gRenderSurface->Height(), 32, SDL_SWSURFACE);
-	SDL_UpdateRect(gScreen, 0,0,0,0); // Update entire surface
-
-	SDL_WM_SetCaption("Ray","ray");
-
-	gRenderSurface->SetNotification(ScreenNotify);
 
 	return 0;
 }
@@ -72,28 +48,21 @@ int TracerThread(void *data)
 	return 0;
 }
 
-Uint32 TimerTick(Uint32 interval, void *param)
-{
-	if (dirty) {
-		SDL_UpdateRect(gScreen, 0, 0, 0, 0);
-		dirty = false;
-	}
-
-	return interval;
-}
-
 int main(int argc, char* argv[])
 {
 	printf("hello\n");
 
 	srand(time(NULL));
 
-	gRenderSurface = new RenderSurface(1600, 1200);
 	SetupSDL();
 
-	SDL_CreateThread(&TracerThread, gRenderSurface);
+	gRenderSurface = new RenderSurface(1600, 1200);
 
-	SDL_AddTimer(100, &TimerTick, NULL);
+	gWindow = new DisplayWindow(gRenderSurface->Width(), gRenderSurface->Height());
+	gWindow->SetRenderSurface(*gRenderSurface);
+	gWindow->CreateWindow();
+
+	SDL_CreateThread(&TracerThread, gRenderSurface);
 
 	// main sdl thread loop
 	SDL_Event event;
@@ -118,5 +87,4 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
-
 

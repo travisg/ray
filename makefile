@@ -4,7 +4,7 @@ TARGET := ray
 BUILDDIR := build-$(TARGET)
 
 # compiler flags, default libs to link against
-COMPILEFLAGS := -Wall -g -O2 -I.
+COMPILEFLAGS := -Wall -g -O2 -I. -DBOOST_NO_EXCEPTIONS=1
 CFLAGS := $(COMPILEFLAGS)
 CPPFLAGS := $(COMPILEFLAGS) -fno-exceptions
 ASMFLAGS := $(COMPILEFLAGS)
@@ -26,6 +26,7 @@ ARCH := $(shell uname -m)
 
 OBJS := \
 	main.o \
+	DisplayWindow.o \
 	RenderSurface.o \
 	Tracer.o \
 	Scene.o \

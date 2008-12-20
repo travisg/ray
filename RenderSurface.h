@@ -4,6 +4,8 @@
 #include <Color.h>
 #include <string>
 
+
+
 class RenderSurface {
 public:
 	RenderSurface(int width, int height);
@@ -14,17 +16,21 @@ public:
 
 	void SetXY(int width, int height, colorf color);
 
-	typedef void (*RenderNotify)(int x, int y, colorf);
-	void SetNotification(RenderNotify notify);
+	class RenderSurfaceNotifyReceiver {
+	public:
+		virtual ~RenderSurfaceNotifyReceiver() {}
+		virtual void RenderNotify(int width, int height, colorf color) = 0;
+	};
 
+	void SetNotification(RenderSurfaceNotifyReceiver *notify);
+	
 	int WriteTGAFile(std::string filename);
 
 private:
 	int m_Width;
 	int m_Height;
 	colorf *m_Buffer;
-	RenderNotify m_Notify;
+	RenderSurfaceNotifyReceiver *m_Notify;
 };
-
 
 #endif

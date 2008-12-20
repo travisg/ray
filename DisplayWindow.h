@@ -17,16 +17,19 @@ public:
 	int Width() const { return m_Width; }
 	int Height() const { return m_Height; }
 
-	virtual void RenderNotify(int x, int y, colorf);
+	virtual void RenderNotify(int x, int y);
 
 	void Tick();
 
 private:
+	void SurfaceBlit();
+
 	int m_Width;
 	int m_Height;
 	RenderSurface *m_Surface;
 
 	SDL_Surface *m_Screen;
+	SDL_Surface *m_SrcSurface;
 	volatile bool m_Dirty;
 };
 

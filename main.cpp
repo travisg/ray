@@ -56,9 +56,9 @@ int main(int argc, char* argv[])
 
 	SetupSDL();
 
-	gRenderSurface = new RenderSurface(1600, 1200);
+	gRenderSurface = new RenderSurface(800, 600);
 
-	gWindow = new DisplayWindow(gRenderSurface->Width(), gRenderSurface->Height());
+	gWindow = new DisplayWindow(800, 600);
 	gWindow->SetRenderSurface(*gRenderSurface);
 	gWindow->CreateWindow();
 

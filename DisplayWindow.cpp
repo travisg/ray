@@ -2,6 +2,8 @@
 #include "RenderSurface.h"
 #include <iostream>
 #include <boost/bind.hpp>
+#include <sys/time.h>
+#include <time.h>
 #include <sdl.h>
 
 DisplayWindow::DisplayWindow(int width, int height)
@@ -35,7 +37,7 @@ int DisplayWindow::CreateWindow()
 
 	SDL_WM_SetCaption("Ray","ray");
 
-	SDL_AddTimer(100, &TimerTick, this);
+	SDL_AddTimer(1000, &TimerTick, this);
 
 	m_SrcSurface = SDL_CreateRGBSurface(SDL_SWSURFACE,  
 		m_Surface->Width(), m_Surface->Height(), 32, 
@@ -64,37 +66,20 @@ void DisplayWindow::RenderNotify(int x, int y)
 	SDL_FillRect(m_Screen, &rect, c32);
 #endif
 	m_Dirty = true;
+	SDL_LockSurface(m_SrcSurface);
+	color32 c32 = m_Surface->GetXY(x, y);
+	((uint32_t *)m_SrcSurface->pixels)[y * m_Surface->Width() + x] = c32;							
+	SDL_UnlockSurface(m_SrcSurface);
 }
 
 void DisplayWindow::SurfaceBlit()
 {
-	if (m_Surface->Width() == m_Width && m_Surface->Height() == m_Height) {
-		// 1:1 blit
-		SDL_LockSurface(m_Screen);
-		for (int x = 0; x < m_Width; x++) {
-			for (int y = 0; y < m_Height; y++) {
-				color32 c32 = m_Surface->GetXY(x, y);
-				((uint32_t *)m_Screen->pixels)[y * m_Width + x] = c32;
-			}
-		}
-		SDL_UnlockSurface(m_Screen);
-	} else {
-		SDL_LockSurface(m_SrcSurface);
-		for (int x = 0; x < m_Surface->Width(); x++) {
-			for (int y = 0; y < m_Surface->Height(); y++) {
-				color32 c32 = m_Surface->GetXY(x, y);
-				((uint32_t *)m_SrcSurface->pixels)[y * m_Surface->Width() + x] = c32;							
-			}
-		}
-		SDL_UnlockSurface(m_SrcSurface);
+	// scale between them
+	SDL_Rect srcrect = { 0, 0, m_Surface->Width(), m_Surface->Height() };
+	SDL_Rect dstrect = { 0, 0, m_Width, m_Height };
+	SDL_SoftStretch(m_SrcSurface, &srcrect, m_Screen, &dstrect); 
 
-		// scale between them
-		SDL_Rect srcrect = { 0, 0, m_Surface->Width(), m_Surface->Height() };
-		SDL_Rect dstrect = { 0, 0, m_Width, m_Height };
-		SDL_SoftStretch(m_SrcSurface, &srcrect, m_Screen, &dstrect); 
-
-		printf("src %d %d dest %d %d\n", m_Surface->Width(), m_Surface->Height(), m_Width, m_Height);
-	}
+//	printf("src %d %d dest %d %d\n", m_Surface->Width(), m_Surface->Height(), m_Width, m_Height);
 }
 
 void DisplayWindow::Tick()

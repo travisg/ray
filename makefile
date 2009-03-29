@@ -40,13 +40,16 @@ OBJS := $(addprefix $(BUILDDIR)/,$(OBJS))
 
 DEPS := $(OBJS:.o=.d)
 
-all: $(BUILDDIR)/$(TARGET) $(BUILDDIR)/$(TARGET).lst
+all: $(BUILDDIR)/$(TARGET) $(BUILDDIR)/$(TARGET).lst $(BUILDDIR)/$(TARGET).debug.lst
 
 $(BUILDDIR)/$(TARGET):  $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDLIBS)
 
 $(BUILDDIR)/$(TARGET).lst: $(BUILDDIR)/$(TARGET)
 	$(OBJDUMP) -d $< | $(CPPFILT) > $@
+
+$(BUILDDIR)/$(TARGET).debug.lst: $(BUILDDIR)/$(TARGET)
+	$(OBJDUMP) -S $< | $(CPPFILT) > $@
 
 clean:
 	rm -f $(OBJS) $(DEPS) $(TARGET)

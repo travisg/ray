@@ -4,12 +4,13 @@
 #include <RenderSurface.h>
 #include <libmath/Vector3.h>
 #include <Ray.h>
+#include <TraceMaster.h>
 
 class Scene;
 
 class Tracer {
 public:
-	Tracer(RenderSurface &surface, Scene &scene);
+	Tracer(RenderSurface &surface, Scene &scene, TraceMaster &master);
 	virtual ~Tracer();
 
 	void Trace();
@@ -23,6 +24,7 @@ private:
 	Math::Vector3d m_Target;
 
 	Scene &m_Scene;
+	TraceMaster &m_Master;
 };
 
 #endif

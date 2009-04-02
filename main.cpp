@@ -14,6 +14,8 @@
 
 RenderSurface *gRenderSurface;
 DisplayWindow *gWindow;
+Scene *gScene;
+TraceMaster *gTraceMaster;
 
 int SetupSDL()
 {
@@ -30,18 +32,13 @@ int TracerThread(void *data)
 	std::cout << "TracerThread start" << std::endl;
 	time_t start = time(NULL);
 
-	Scene *scene = new Scene();
-	
-	Tracer *tracer = new Tracer(*gRenderSurface, *scene);
+	Tracer *tracer = new Tracer(*gRenderSurface, *gScene, *gTraceMaster);
 	tracer->Trace();
 
 	start = time(NULL) - start;
 	std::cout << "trace end, took " << start << " seconds" << std::endl;
 
-	gRenderSurface->WriteTGAFile("foo.tga");
-
 	delete tracer;
-	delete scene;
 
 	std::cout << "TracerThread end" << std::endl;
 
@@ -62,7 +59,16 @@ int main(int argc, char* argv[])
 	gWindow->SetRenderSurface(*gRenderSurface);
 	gWindow->CreateWindow();
 
-	SDL_CreateThread(&TracerThread, gRenderSurface);
+	/* create the scene */
+	gScene = new Scene();
+
+	/* create a tracemaster */
+	gTraceMaster = new TraceMaster(*gRenderSurface);
+	
+	SDL_CreateThread(&TracerThread, NULL);
+	SDL_CreateThread(&TracerThread, NULL);
+	SDL_CreateThread(&TracerThread, NULL);
+	SDL_CreateThread(&TracerThread, NULL);
 
 	// main sdl thread loop
 	SDL_Event event;
@@ -78,10 +84,13 @@ int main(int argc, char* argv[])
 				break;
 #endif
 			case SDL_QUIT:
+				std::cout << "SDL_QUIT\n";
 				quit = true;
 				break;
 		}
 	}
+
+	gRenderSurface->WriteTGAFile("foo.tga");
 
 	delete gRenderSurface;
 

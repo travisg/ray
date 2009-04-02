@@ -29,6 +29,7 @@ OBJS := \
 	DisplayWindow.o \
 	RenderSurface.o \
 	Tracer.o \
+	TraceMaster.o \
 	Scene.o \
 
 include drawables/rules.mk

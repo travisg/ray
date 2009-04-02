@@ -30,6 +30,7 @@ private:
 
 	SDL_Surface *m_Screen;
 	SDL_Surface *m_SrcSurface;
+	SDL_mutex *m_Lock;
 	volatile bool m_Dirty;
 };
 

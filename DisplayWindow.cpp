@@ -14,11 +14,13 @@ DisplayWindow::DisplayWindow(int width, int height)
 	m_SrcSurface(0),
 	m_Dirty(false)
 {
+	m_Lock = SDL_CreateMutex();
 }
 
 DisplayWindow::~DisplayWindow()
 {
 	SDL_FreeSurface(m_SrcSurface);
+	SDL_DestroyMutex(m_Lock);
 }
 
 static Uint32 TimerTick(Uint32 interval, void *param)
@@ -56,20 +58,16 @@ void DisplayWindow::SetRenderSurface(RenderSurface &surface)
 
 void DisplayWindow::RenderNotify(int x, int y)
 {
-#if 0
-	SDL_Rect rect;
-	rect.x = x;
-	rect.y = y;
-	rect.h = 1;
-	rect.w = 1;
-	color32 c32 = m_Surface->GetXY(x, y);
-	SDL_FillRect(m_Screen, &rect, c32);
-#endif
-	m_Dirty = true;
+	SDL_LockMutex(m_Lock);
+
 	SDL_LockSurface(m_SrcSurface);
 	color32 c32 = m_Surface->GetXY(x, y);
 	((uint32_t *)m_SrcSurface->pixels)[y * m_Surface->Width() + x] = c32;							
 	SDL_UnlockSurface(m_SrcSurface);
+
+	m_Dirty = true;
+
+	SDL_UnlockMutex(m_Lock);
 }
 
 void DisplayWindow::SurfaceBlit()
@@ -77,7 +75,9 @@ void DisplayWindow::SurfaceBlit()
 	// scale between them
 	SDL_Rect srcrect = { 0, 0, m_Surface->Width(), m_Surface->Height() };
 	SDL_Rect dstrect = { 0, 0, m_Width, m_Height };
+	SDL_LockSurface(m_SrcSurface);
 	SDL_SoftStretch(m_SrcSurface, &srcrect, m_Screen, &dstrect); 
+	SDL_UnlockSurface(m_SrcSurface);
 
 //	printf("src %d %d dest %d %d\n", m_Surface->Width(), m_Surface->Height(), m_Width, m_Height);
 }
@@ -85,9 +85,9 @@ void DisplayWindow::SurfaceBlit()
 void DisplayWindow::Tick()
 {
 	if (m_Dirty) {
+		m_Dirty = false;
 		SurfaceBlit();
 		SDL_UpdateRect(m_Screen, 0, 0, 0, 0);
-		m_Dirty = false;
 	}
 }
 

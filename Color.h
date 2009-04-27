@@ -3,9 +3,6 @@
 
 #include <ostream>
 
-// XXX
-#include <xmmintrin.h>
-
 struct color32;
 struct colorf;
 
@@ -44,13 +41,9 @@ public:
 
 inline color32::color32(const colorf &c) 
 {
-#if 0 && (defined__SSE__)
-	r = g = b = 0;
-#else
 	r = (c.r < 0.0f) ? 0 : ((c.r > 1.0f) ? 255 : ((unsigned char)(255.0 * c.r)));
 	g = (c.g < 0.0f) ? 0 : ((c.g > 1.0f) ? 255 : ((unsigned char)(255.0 * c.g)));
 	b = (c.b < 0.0f) ? 0 : ((c.b > 1.0f) ? 255 : ((unsigned char)(255.0 * c.b)));
-#endif
 }
 
 inline colorf & colorf::operator+=(const colorf &c)

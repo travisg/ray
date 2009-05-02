@@ -4,7 +4,7 @@ TARGET := ray
 BUILDDIR := build-$(TARGET)
 
 # compiler flags, default libs to link against
-COMPILEFLAGS := -Wall -g -O2 -I. -DBOOST_NO_EXCEPTIONS=1
+COMPILEFLAGS := -Wall -g -O2 -I. -DBOOST_NO_EXCEPTIONS=1 -march=native
 CFLAGS := $(COMPILEFLAGS)
 CPPFLAGS := $(COMPILEFLAGS) -fno-exceptions
 ASMFLAGS := $(COMPILEFLAGS)

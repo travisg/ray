@@ -90,9 +90,17 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	/* super cheezy mechanism to try to kill all the tracer threads */
+	gTraceMaster->Halt();
+	sleep(1);
+
+	std::cout << "writing output file..." << std::flush;
 	gRenderSurface->WriteTGAFile("foo.tga");
+	std::cout << "done" << std::endl;
 
 	delete gRenderSurface;
+	delete gTraceMaster;
+	delete gScene;
 
 	return 0;
 }

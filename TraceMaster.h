@@ -31,10 +31,13 @@ public:
 
 	int m_Nextx, m_Nexty;
 
+	void Halt();
+
 	SDL_mutex *m_Lock;
 
 private:
 	RenderSurface &m_Surface;
+	bool m_Halt;
 };
 
 #endif

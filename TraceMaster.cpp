@@ -5,7 +5,8 @@
 #define WORKUNITSIZE 16
 
 TraceMaster::TraceMaster(RenderSurface &surface)
-:	m_Surface(surface)
+:	m_Surface(surface),
+	m_Halt(false)
 {
 	m_Nextx = 0;
 	m_Nexty = 0;
@@ -20,6 +21,9 @@ TraceMaster::~TraceMaster()
 
 int TraceMaster::GetWorkUnit(TraceWorkUnit &unit)
 {
+	if (m_Halt)
+		return -1;
+
 	if (m_Nexty >= m_Surface.Height())
 		return -1;
 
@@ -73,5 +77,10 @@ int TraceMaster::ReturnWorkUnit(TraceWorkUnit &unit)
 	SDL_UnlockMutex(m_Lock);
 
 	return 0;
+}
+
+void TraceMaster::Halt()
+{
+	m_Halt = true;
 }
 

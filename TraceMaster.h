@@ -2,6 +2,7 @@
 #define __TRACEMASTER_H
 
 #include <RenderSurface.h>
+#include "sdl.h"
 
 struct SDL_mutex;
 
@@ -26,19 +27,51 @@ public:
 	TraceMaster(RenderSurface &surface);
 	virtual ~TraceMaster();
 
-	int GetWorkUnit(TraceWorkUnit &);
-	int ReturnWorkUnit(TraceWorkUnit &);
-
-	int m_Nextx, m_Nexty;
+	virtual int GetWorkUnit(TraceWorkUnit &) = 0;
+	virtual int ReturnWorkUnit(TraceWorkUnit &) = 0;
 
 	void Halt();
 
-	SDL_mutex *m_Lock;
+protected:
+	void Lock() { SDL_LockMutex(m_Lock); }
+	void Unlock() { SDL_UnlockMutex(m_Lock); }
+	bool IsHalted() const { return m_Halt; }
+	RenderSurface &GetSurface() { return m_Surface; }
 
 private:
+	SDL_mutex *m_Lock;
+
 	RenderSurface &m_Surface;
 	bool m_Halt;
 };
+
+// simple tracemaster that breaks the work into chunks and hands them out in order
+class TraceMasterSimple : public TraceMaster {
+public:
+	TraceMasterSimple(RenderSurface &surface);
+	virtual ~TraceMasterSimple();
+
+	virtual int GetWorkUnit(TraceWorkUnit &);
+	virtual int ReturnWorkUnit(TraceWorkUnit &);
+
+private:
+	int m_Nextx, m_Nexty;
+};
+
+class TraceMasterRandom : public TraceMaster {
+public:
+	TraceMasterRandom(RenderSurface &surface);
+	virtual ~TraceMasterRandom();
+
+	virtual int GetWorkUnit(TraceWorkUnit &);
+	virtual int ReturnWorkUnit(TraceWorkUnit &);
+
+private:
+	bool *m_Bitmap;
+	int m_Count;
+};
+
+
 
 #endif
 

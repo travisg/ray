@@ -63,12 +63,11 @@ int main(int argc, char* argv[])
 	gScene = new Scene();
 
 	/* create a tracemaster */
-	gTraceMaster = new TraceMaster(*gRenderSurface);
-	
-	SDL_CreateThread(&TracerThread, NULL);
-	SDL_CreateThread(&TracerThread, NULL);
-	SDL_CreateThread(&TracerThread, NULL);
-	SDL_CreateThread(&TracerThread, NULL);
+	gTraceMaster = new TraceMasterSimple(*gRenderSurface);
+//	gTraceMaster = new TraceMasterRandom(*gRenderSurface);
+
+	for (int i = 0; i < 4; i++)
+		SDL_CreateThread(&TracerThread, NULL);
 
 	// main sdl thread loop
 	SDL_Event event;

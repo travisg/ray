@@ -3,16 +3,6 @@ include macros.mk
 TARGET := ray
 BUILDDIR := build-$(TARGET)
 
-# compiler flags, default libs to link against
-COMPILEFLAGS := -Wall -g -O2 -I. -DBOOST_NO_EXCEPTIONS=1 -march=native
-CFLAGS := $(COMPILEFLAGS)
-CPPFLAGS := $(COMPILEFLAGS) -fno-exceptions
-ASMFLAGS := $(COMPILEFLAGS)
-LDFLAGS :=
-LDLIBS := -lSDL -lstdc++
-OBJDUMP := objdump
-CPPFILT := c++filt
-
 UNAME := $(shell uname -s)
 ARCH := $(shell uname -m)
 
@@ -23,6 +13,38 @@ ARCH := $(shell uname -m)
 # ifeq ($(UNAME),Darwin)
 # ...
 # endif
+
+# Darwin (Mac OS X)
+ifeq ($(UNAME),Darwin)
+COMPILEFLAGS += -DASM_LEADING_UNDERSCORES=1 -mdynamic-no-pic -fast -I/sw/include -I/opt/local/include
+LDLIBS += -framework Cocoa -L/sw/lib -L/opt/local/lib -lSDLmain
+endif
+
+# linux
+ifeq ($(UNAME),Linux)
+COMPILEFLAGS += -march=native
+ifeq ($(ARCH),ppc)
+COMPILEFLAGS += -fno-pic -mregnames
+COMPILEFLAGS += -mcpu=7450
+endif
+ifeq ($(ARCH),ppc64)
+COMPILEFLAGS += -mregnames -fno-pic
+COMPILEFLAGS += -mcpu=970
+endif
+ifeq ($(ARCH),x86_64)
+#COMPILEFLAGS += -march=k8
+endif
+endif
+
+# compiler flags, default libs to link against
+COMPILEFLAGS += -Wall -g -O2 -I.
+CFLAGS += $(COMPILEFLAGS)
+CPPFLAGS += $(COMPILEFLAGS) -fno-exceptions
+ASMFLAGS += $(COMPILEFLAGS)
+LDFLAGS +=
+LDLIBS += -lSDL -lstdc++
+OBJDUMP := objdump
+CPPFILT := c++filt
 
 OBJS := \
 	main.o \

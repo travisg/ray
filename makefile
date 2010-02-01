@@ -68,11 +68,19 @@ all: $(BUILDDIR)/$(TARGET) $(BUILDDIR)/$(TARGET).lst $(BUILDDIR)/$(TARGET).debug
 $(BUILDDIR)/$(TARGET):  $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDLIBS)
 
+ifeq ($(UNAME),Darwin)
+$(BUILDDIR)/$(TARGET).lst: $(BUILDDIR)/$(TARGET)
+	otool -Vt $< | $(CPPFILT) > $@
+
+$(BUILDDIR)/$(TARGET).debug.lst: $(BUILDDIR)/$(TARGET)
+	otool -Vt $< | $(CPPFILT) > $@
+else
 $(BUILDDIR)/$(TARGET).lst: $(BUILDDIR)/$(TARGET)
 	$(OBJDUMP) -d $< | $(CPPFILT) > $@
 
 $(BUILDDIR)/$(TARGET).debug.lst: $(BUILDDIR)/$(TARGET)
 	$(OBJDUMP) -S $< | $(CPPFILT) > $@
+endif
 
 clean:
 	rm -f $(OBJS) $(DEPS) $(TARGET)

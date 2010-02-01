@@ -2,11 +2,30 @@
 #include <iostream>
 #include <RenderSurface.h>
 
+struct OutHeader {
+	uint32_t magic;
+	uint32_t width;
+	uint32_t height;
+};
+
+enum RayDataType {
+	TYPE_NULL = 0,
+	TYPE_PIXEL,
+	TYPE_EOF,
+};
+
+struct RayDataPixel {
+	uint32_t x;
+	uint32_t y;
+	float r, g, b;
+};
+
 RenderSurface::RenderSurface(int width, int height)
 :	m_Width(width),
 	m_Height(height),
 	m_Buffer(0),
-	m_Notify(0)
+	m_Notify(0),
+	m_fp(0)
 {
 	m_Buffer = new colorf[width * height];
 }
@@ -14,6 +33,31 @@ RenderSurface::RenderSurface(int width, int height)
 RenderSurface::~RenderSurface()
 {
 	delete[] m_Buffer;
+
+	if (m_fp) {
+		// write EOF token
+		uint32_t type = TYPE_EOF;
+		fwrite(&type, sizeof(type), 1, m_fp);
+
+		fclose(m_fp);
+	}
+}
+
+int RenderSurface::OpenOutFile(const std::string &name)
+{
+	m_fp = fopen(name.c_str(), "wb+");
+	if (!m_fp)
+		return -1;
+
+	OutHeader header;
+
+	header.magic = 'RAY1';
+	header.width = m_Width;
+	header.height = m_Height;
+
+	fwrite(&header, sizeof(header), 1, m_fp);
+
+	return 0;
 }
 
 void RenderSurface::SetXY(int x, int y, colorf color)
@@ -21,6 +65,21 @@ void RenderSurface::SetXY(int x, int y, colorf color)
 	m_Buffer[y * m_Width + x] = color;
 	if (m_Notify)
 		m_Notify->RenderNotify(x, y);
+
+	// write a pixel packet
+	if (m_fp) {
+		uint32_t type = TYPE_PIXEL;
+
+		fwrite(&type, sizeof(type), 1, m_fp);
+
+		RayDataPixel pixel;
+		pixel.x = x;
+		pixel.y = y;
+		pixel.r = color.r;
+		pixel.g = color.g;
+		pixel.b = color.b;
+		fwrite(&pixel, sizeof(pixel), 1, m_fp);
+	}
 }
 
 void RenderSurface::SetNotification(RenderSurfaceNotifyReceiver *notify)

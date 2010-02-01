@@ -55,6 +55,8 @@ int main(int argc, char* argv[])
 
 	gRenderSurface = new RenderSurface(800, 600);
 
+	gRenderSurface->OpenOutFile("out.ray");
+
 	gWindow = new DisplayWindow(800, 600);
 	gWindow->SetRenderSurface(*gRenderSurface);
 	gWindow->CreateWindow();

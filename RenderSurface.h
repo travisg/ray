@@ -9,6 +9,8 @@ public:
 	RenderSurface(int width, int height);
 	virtual ~RenderSurface();
 
+	int OpenOutFile(const std::string &name);
+
 	int Width() const { return m_Width; }
 	int Height() const { return m_Height; }
 
@@ -30,6 +32,7 @@ private:
 	int m_Height;
 	colorf *m_Buffer;
 	RenderSurfaceNotifyReceiver *m_Notify;
+	FILE *m_fp;
 };
 
 #endif

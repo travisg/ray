@@ -64,6 +64,7 @@ OBJS := $(addprefix $(BUILDDIR)/,$(OBJS))
 DEPS := $(OBJS:.o=.d)
 
 all: $(BUILDDIR)/$(TARGET) $(BUILDDIR)/$(TARGET).lst $(BUILDDIR)/$(TARGET).debug.lst
+	$(MAKE) -C rayview
 
 $(BUILDDIR)/$(TARGET):  $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LDLIBS)
@@ -84,6 +85,7 @@ endif
 
 clean:
 	rm -f $(OBJS) $(DEPS) $(TARGET)
+	$(MAKE) -C rayview clean
 
 spotless:
 	rm -rf build-*

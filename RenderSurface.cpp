@@ -2,23 +2,7 @@
 #include <iostream>
 #include <RenderSurface.h>
 
-struct OutHeader {
-	uint32_t magic;
-	uint32_t width;
-	uint32_t height;
-};
-
-enum RayDataType {
-	TYPE_NULL = 0,
-	TYPE_PIXEL,
-	TYPE_EOF,
-};
-
-struct RayDataPixel {
-	uint32_t x;
-	uint32_t y;
-	float r, g, b;
-};
+#include <RayFile.h>
 
 RenderSurface::RenderSurface(int width, int height)
 :	m_Width(width),
@@ -49,9 +33,9 @@ int RenderSurface::OpenOutFile(const std::string &name)
 	if (!m_fp)
 		return -1;
 
-	OutHeader header;
+	RayHeader header;
 
-	header.magic = 'RAY1';
+	header.magic = RAY_HEADER_MAGIC;
 	header.width = m_Width;
 	header.height = m_Height;
 

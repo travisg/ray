@@ -53,7 +53,7 @@ void DisplayWindow::SetRenderSurface(RenderSurface &surface)
 	m_Surface = &surface;
 
 	// set the callback
-	surface.SetNotification(this);
+//	surface.SetNotification(this);
 }
 
 void DisplayWindow::RenderNotify(int x, int y)

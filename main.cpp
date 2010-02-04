@@ -53,13 +53,13 @@ int main(int argc, char* argv[])
 
 	SetupSDL();
 
-	gRenderSurface = new RenderSurface(800, 600);
+	gRenderSurface = new RenderSurface(3200, 1600);
 
 	gRenderSurface->OpenOutFile("out.ray");
 
-	gWindow = new DisplayWindow(800, 600);
-	gWindow->SetRenderSurface(*gRenderSurface);
-	gWindow->CreateWindow();
+//	gWindow = new DisplayWindow(800, 600);
+//	gWindow->SetRenderSurface(*gRenderSurface);
+//	gWindow->CreateWindow();
 
 	/* create the scene */
 	gScene = new Scene();
@@ -95,9 +95,9 @@ int main(int argc, char* argv[])
 	gTraceMaster->Halt();
 	sleep(1);
 
-	std::cout << "writing output file..." << std::flush;
-	gRenderSurface->WriteTGAFile("foo.tga");
-	std::cout << "done" << std::endl;
+//	std::cout << "writing output file..." << std::flush;
+//	gRenderSurface->WriteTGAFile("foo.tga");
+//	std::cout << "done" << std::endl;
 
 	delete gRenderSurface;
 	delete gTraceMaster;

@@ -31,11 +31,14 @@ public:
 	virtual int ReturnWorkUnit(TraceWorkUnit &) = 0;
 
 	void Halt();
+	void WaitForDone();
 
 protected:
 	void Lock() { SDL_LockMutex(m_Lock); }
 	void Unlock() { SDL_UnlockMutex(m_Lock); }
 	bool IsHalted() const { return m_Halt; }
+	bool Isdone() const { return m_Done; }
+	void SetDone() { m_Done = true; }
 	RenderSurface &GetSurface() { return m_Surface; }
 
 private:
@@ -43,6 +46,7 @@ private:
 
 	RenderSurface &m_Surface;
 	bool m_Halt;
+	bool m_Done;
 };
 
 // simple tracemaster that breaks the work into chunks and hands them out in order
@@ -56,6 +60,8 @@ public:
 
 private:
 	int m_Nextx, m_Nexty;
+	bool m_IssuedLast;
+	int m_PendingCount;
 };
 
 class TraceMasterRandom : public TraceMaster {
@@ -69,6 +75,7 @@ public:
 private:
 	bool *m_Bitmap;
 	int m_Count;
+	int m_PendingCount;
 };
 
 

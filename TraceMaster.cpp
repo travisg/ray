@@ -2,11 +2,12 @@
 #include "TraceMaster.h"
 #include "sdl.h"
 
-#define WORKUNITSIZE 16
+#define WORKUNITSIZE 128
 
 TraceMaster::TraceMaster(RenderSurface &surface)
 :	m_Surface(surface),
-	m_Halt(false)
+	m_Halt(false),
+	m_Done(false)
 {
 	m_Lock = SDL_CreateMutex();
 }
@@ -19,13 +20,23 @@ TraceMaster::~TraceMaster()
 void TraceMaster::Halt()
 {
 	m_Halt = true;
+	m_Done = true;
+}
+
+void TraceMaster::WaitForDone()
+{
+	// XXX make better
+	while (!m_Done)
+		sleep(1);
 }
 
 // simple tracer
 TraceMasterSimple::TraceMasterSimple(RenderSurface &surface)
 :	TraceMaster(surface),
 	m_Nextx(0),
-	m_Nexty(0)
+	m_Nexty(0),
+	m_IssuedLast(false),
+	m_PendingCount(0)
 {
 }
 
@@ -35,13 +46,10 @@ TraceMasterSimple::~TraceMasterSimple()
 
 int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit)
 {
-	if (IsHalted())
+	if (IsHalted() || m_IssuedLast)
 		return -1;
 
 	RenderSurface &surface = GetSurface();
-
-	if (m_Nexty >= surface.Height())
-		return -1;
 
 	Lock();
 	
@@ -51,12 +59,17 @@ int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit)
 	unit.endx = unit.startx + WORKUNITSIZE - 1;
 	unit.endy = unit.starty + WORKUNITSIZE - 1;
 
+	m_PendingCount++;
+
 	/* move to the next block */
 	m_Nextx += WORKUNITSIZE;
 	if (m_Nextx >= surface.Width()) {
 		m_Nextx = 0;
 		m_Nexty += WORKUNITSIZE;
 	}
+
+	if (m_Nexty >= surface.Height())
+		m_IssuedLast = true;
 
 	Unlock();
 
@@ -90,6 +103,10 @@ int TraceMasterSimple::ReturnWorkUnit(TraceWorkUnit &unit)
 		}
 	}
 
+	m_PendingCount--;
+	if (m_IssuedLast && m_PendingCount == 0)
+		SetDone();
+
 	Unlock();
 
 	return 0;
@@ -97,7 +114,8 @@ int TraceMasterSimple::ReturnWorkUnit(TraceWorkUnit &unit)
 
 // random Tracer
 TraceMasterRandom::TraceMasterRandom(RenderSurface &surface)
-:	TraceMaster(surface)
+:	TraceMaster(surface),
+	m_PendingCount(0)
 {
 	m_Count = surface.Width() * surface.Height() / (WORKUNITSIZE * WORKUNITSIZE);
 	m_Bitmap = new bool[m_Count];
@@ -140,6 +158,8 @@ int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit)
 		}
 	}
 
+	m_PendingCount++;
+
 	Unlock();
 
 	/* trim the result */
@@ -172,6 +192,10 @@ int TraceMasterRandom::ReturnWorkUnit(TraceWorkUnit &unit)
 			c++;
 		}
 	}
+
+	m_PendingCount--;
+	if (m_Count == 0 && m_PendingCount == 0)
+		SetDone();
 
 	Unlock();
 

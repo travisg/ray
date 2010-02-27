@@ -37,6 +37,11 @@ endif
 endif
 
 # compiler flags, default libs to link against
+ifneq ($(WITH_PROFILE),)
+COMPILEFLAGS += -pg
+LDFLAGS += -pg
+endif
+
 COMPILEFLAGS += -Wall -g -O2 -I.
 CFLAGS += $(COMPILEFLAGS)
 CPPFLAGS += $(COMPILEFLAGS) -fno-exceptions

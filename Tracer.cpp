@@ -75,8 +75,8 @@ void Tracer::Trace()
 	int width = m_Surface.Width();
 	int height = m_Surface.Height();
 
-	std::cout << "Camera " << m_Camera << std::endl;
-	std::cout << "Target " << m_Target << std::endl;
+//	std::cout << "Camera " << m_Camera << std::endl;
+//	std::cout << "Target " << m_Target << std::endl;
 
 	m_Target -= m_Camera;
 	m_Target.Normalize();
@@ -84,7 +84,7 @@ void Tracer::Trace()
 
 	Vector3d lin = m_Target - m_Camera;
 
-	std::cout << "Lin " << lin << std::endl;
+//	std::cout << "Lin " << lin << std::endl;
 
 //	int multisample = 1;
 	float pixpitch = 2.0/width;

@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <iostream>
 #include <RenderSurface.h>
+#include <inttypes.h>
 
 #include <RayFile.h>
 

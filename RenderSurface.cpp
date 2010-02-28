@@ -7,18 +7,23 @@
 
 RenderSurface::RenderSurface(int width, int height)
 :	m_Width(width),
-	m_Height(height),
-	m_Buffer(0),
-	m_Notify(0),
-	m_fp(0)
+	m_Height(height)
 {
-	m_Buffer = new colorf[width * height];
 }
 
 RenderSurface::~RenderSurface()
 {
-	delete[] m_Buffer;
+}
 
+RenderSurfaceFile::RenderSurfaceFile(int width, int height, const std::string &filename)
+:	RenderSurface(width, height),
+	m_fp(NULL)
+{
+	OpenOutFile(filename);
+}
+
+RenderSurfaceFile::~RenderSurfaceFile()
+{
 	if (m_fp) {
 		// write EOF token
 		uint32_t type = TYPE_EOF;
@@ -28,7 +33,7 @@ RenderSurface::~RenderSurface()
 	}
 }
 
-int RenderSurface::OpenOutFile(const std::string &name)
+int RenderSurfaceFile::OpenOutFile(const std::string &name)
 {
 	m_fp = fopen(name.c_str(), "wb+");
 	if (!m_fp)
@@ -37,20 +42,16 @@ int RenderSurface::OpenOutFile(const std::string &name)
 	RayHeader header;
 
 	header.magic = RAY_HEADER_MAGIC;
-	header.width = m_Width;
-	header.height = m_Height;
+	header.width = Width();
+	header.height = Height();
 
 	fwrite(&header, sizeof(header), 1, m_fp);
 
 	return 0;
 }
 
-void RenderSurface::SetXY(int x, int y, colorf color)
+void RenderSurfaceFile::SetXY(int x, int y, colorf color)
 {
-	m_Buffer[y * m_Width + x] = color;
-	if (m_Notify)
-		m_Notify->RenderNotify(x, y);
-
 	// write a pixel packet
 	if (m_fp) {
 		uint32_t type = TYPE_PIXEL;
@@ -67,6 +68,7 @@ void RenderSurface::SetXY(int x, int y, colorf color)
 	}
 }
 
+#if 0
 void RenderSurface::SetNotification(RenderSurfaceNotifyReceiver *notify)
 {
 	m_Notify = notify;
@@ -124,4 +126,4 @@ int RenderSurface::WriteTGAFile(std::string filename)
 
 	return 0;
 }
-
+#endif

@@ -9,14 +9,15 @@ public:
 	RenderSurface(int width, int height);
 	virtual ~RenderSurface();
 
-	int OpenOutFile(const std::string &name);
+//	int OpenOutFile(const std::string &name);
 
 	int Width() const { return m_Width; }
 	int Height() const { return m_Height; }
 
-	void SetXY(int x, int y, colorf color);
-	colorf GetXY(int x, int y) const { return m_Buffer[y * m_Width + x]; }
+	virtual void SetXY(int x, int y, colorf color) = 0;
+//	colorf GetXY(int x, int y) const { return m_Buffer[y * m_Width + x]; }
 
+#if 0
 	class RenderSurfaceNotifyReceiver {
 	public:
 		virtual ~RenderSurfaceNotifyReceiver() {}
@@ -26,12 +27,26 @@ public:
 	void SetNotification(RenderSurfaceNotifyReceiver *notify);
 	
 	int WriteTGAFile(std::string filename);
+#endif
 
 private:
 	int m_Width;
 	int m_Height;
-	colorf *m_Buffer;
-	RenderSurfaceNotifyReceiver *m_Notify;
+//	colorf *m_Buffer;
+//	RenderSurfaceNotifyReceiver *m_Notify;
+//	FILE *m_fp;
+};
+
+class RenderSurfaceFile : public RenderSurface {
+public:
+	RenderSurfaceFile(int width, int height, const std::string &filename);
+	virtual ~RenderSurfaceFile();
+
+	virtual void SetXY(int x, int y, colorf color);
+
+private:
+	int OpenOutFile(const std::string &name);
+
 	FILE *m_fp;
 };
 

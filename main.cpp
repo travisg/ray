@@ -7,10 +7,8 @@
 #include <RenderSurface.h>
 #include <Tracer.h>
 #include <Scene.h>
-#include <DisplayWindow.h>
 
 RenderSurface *gRenderSurface;
-DisplayWindow *gWindow;
 Scene *gScene;
 TraceMaster *gTraceMaster;
 
@@ -52,9 +50,10 @@ int main(int argc, char* argv[])
 
 //	gRenderSurface = new RenderSurface(3200 * 2, 1600 * 2);
 //	gRenderSurface = new RenderSurface(3200, 1600);
-	gRenderSurface = new RenderSurface(800, 600);
+//	gRenderSurface = new RenderSurface(800, 600);
+	gRenderSurface = new RenderSurfaceFile(800, 600, "out.ray");
 
-	gRenderSurface->OpenOutFile("out.ray");
+//	gRenderSurface->OpenOutFile("out.ray");
 
 //	gWindow = new DisplayWindow(800, 600);
 //	gWindow->SetRenderSurface(*gRenderSurface);

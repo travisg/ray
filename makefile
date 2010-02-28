@@ -42,7 +42,7 @@ COMPILEFLAGS += -pg
 LDFLAGS += -pg
 endif
 
-COMPILEFLAGS += -Wall -g -O2 -I.
+COMPILEFLAGS += -Wall -g -O2 -I. -Wno-multichar
 CFLAGS += $(COMPILEFLAGS)
 CPPFLAGS += $(COMPILEFLAGS) -fno-exceptions
 ASMFLAGS += $(COMPILEFLAGS)
@@ -53,7 +53,6 @@ CPPFILT := c++filt
 
 OBJS := \
 	main.o \
-	DisplayWindow.o \
 	RenderSurface.o \
 	Tracer.o \
 	TraceMaster.o \

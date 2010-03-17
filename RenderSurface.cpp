@@ -67,6 +67,32 @@ void RenderSurfaceFile::SetXY(int x, int y, colorf color)
 	}
 }
 
+void RenderSurfaceFile::SetXYRun(int x, int y, int count, const colorf *color)
+{
+//	std::cout << __PRETTY_FUNCTION__ << " " << x << " " << y << " " << count << std::endl;
+	if (m_fp) {
+		uint32_t type = TYPE_PIXEL_RUN;
+
+		fwrite(&type, sizeof(type), 1, m_fp);
+
+		size_t buflen = sizeof(RayDataPixel) + sizeof(float) * 3 * count;
+		char *buf = new char[buflen];
+		RayDataPixelRun *run = (RayDataPixelRun *)buf;
+
+		run->x = x;
+		run->y = y;
+		run->length = count;
+		for (int i = 0; i < count; i++) {
+			run->val[i*3] = color[i].r;
+			run->val[i*3+1] = color[i].g;
+			run->val[i*3+2] = color[i].b;
+		}
+		fwrite(run, buflen, 1, m_fp);
+
+		delete[] buf;
+	}
+}
+
 #if 0
 void RenderSurface::SetNotification(RenderSurfaceNotifyReceiver *notify)
 {

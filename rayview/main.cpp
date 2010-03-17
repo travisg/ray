@@ -103,6 +103,28 @@ int ReaderThread(void *data)
 				SDL_UnlockSurface(surface);
 				break;
 			}
+			case TYPE_PIXEL_RUN: {
+				RayDataPixelRun run;
+
+				if (ReadData(&run, sizeof(run)) < 0)
+					goto done;
+
+//				printf("pixel run data: x %d y %d, len %d\n", run.x, run.y, run.length);
+
+				for (int i = 0; i < run.length; i++) {
+					float c[3];
+					if (ReadData(&c, sizeof(c)) < 0)
+						goto done;
+
+					colorf cf(c[0], c[1], c[2]);
+					color32 c32 = cf;
+
+					SDL_LockSurface(surface);
+					((uint32_t *)surface->pixels)[run.y * inwidth + run.x + i] = c32;							
+					SDL_UnlockSurface(surface);
+				}		
+				break;
+			}
 			case TYPE_EOF:
 				goto done;
 			case TYPE_NULL:

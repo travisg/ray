@@ -96,11 +96,10 @@ int TraceMasterSimple::ReturnWorkUnit(TraceWorkUnit &unit)
 	Lock();
 
 //	std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << " " << unit.endy << std::endl;
-	for (int x = unit.startx; x <= unit.endx; x++) {
-		for (int y = unit.starty; y <= unit.endy; y++) {
-			GetSurface().SetXY(x, y, *c);
-			c++;
-		}
+	for (int y = unit.starty; y <= unit.endy; y++) {
+		int runlen = unit.endx + 1 - unit.startx;
+		GetSurface().SetXYRun(unit.startx, y, runlen, c);
+		c += runlen;
 	}
 
 	m_PendingCount--;

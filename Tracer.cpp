@@ -93,10 +93,8 @@ void Tracer::Trace()
 	TraceWorkUnit unit;
 	unit.result = 0;
 	while (m_Master.GetWorkUnit(unit) >= 0) {
-		colorf *result = unit.result;
-		
-		for (int x = unit.startx; x <= unit.endx; x++) {
-			for (int y = unit.starty; y <= unit.endy; y++) {
+		for (int y = unit.starty; y <= unit.endy; y++) {
+			for (int x = unit.startx; x <= unit.endx; x++) {
 				Vector3d wing(lin.gety(), -lin.getx(), 0);
 
 		//			std::cout << "wing " << wing << std::endl;
@@ -121,8 +119,7 @@ void Tracer::Trace()
 		//				std::cout << "ray " << ray << " dot " << angle << std::endl;
 		//				color = angle;
 				}
-				*result = color;
-				result++;
+				unit.SetResult(x, y, color);
 			}
 		}
 

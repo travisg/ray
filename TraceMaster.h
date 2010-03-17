@@ -15,11 +15,14 @@ struct TraceWorkUnit {
 
 	/* some accessors */
 	void SetResult(int x, int y, colorf c) {
-		result[(y - starty) * (endx - startx) + (x - startx)] = c;
+		result[(y - starty) * Width() + (x - startx)] = c;
+	}
+	colorf GetResult(int x, int y) {
+		return result[(y - starty) * Width() + (x - startx)];
 	}
 
-	int Width() const { return endx - startx; }
-	int Height() const { return endy - starty; }
+	int Width() const { return endx + 1 - startx; }
+	int Height() const { return endy + 1 - starty; }
 };
 
 class TraceMaster {

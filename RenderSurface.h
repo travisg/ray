@@ -15,6 +15,7 @@ public:
 	int Height() const { return m_Height; }
 
 	virtual void SetXY(int x, int y, colorf color) = 0;
+	virtual void SetXYRun(int x, int y, int count, const colorf *color) = 0;
 //	colorf GetXY(int x, int y) const { return m_Buffer[y * m_Width + x]; }
 
 #if 0
@@ -39,13 +40,15 @@ private:
 
 class RenderSurfaceFile : public RenderSurface {
 public:
-	RenderSurfaceFile(int width, int height, const std::string &filename);
+	RenderSurfaceFile(int width, int height);
 	virtual ~RenderSurfaceFile();
 
+	int OpenOutFile(const std::string &name);
+
 	virtual void SetXY(int x, int y, colorf color);
+	virtual void SetXYRun(int x, int y, int count, const colorf *color);
 
 private:
-	int OpenOutFile(const std::string &name);
 
 	FILE *m_fp;
 };

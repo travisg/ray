@@ -68,6 +68,7 @@ OBJS := $(addprefix $(BUILDDIR)/,$(OBJS))
 DEPS := $(OBJS:.o=.d)
 
 all: $(BUILDDIR)/$(TARGET) $(BUILDDIR)/$(TARGET).lst $(BUILDDIR)/$(TARGET).debug.lst
+	ln -sf $(BUILDDIR)/$(TARGET)
 	$(MAKE) -C rayview
 
 $(BUILDDIR)/$(TARGET):  $(OBJS)

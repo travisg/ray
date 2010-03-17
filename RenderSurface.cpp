@@ -15,11 +15,10 @@ RenderSurface::~RenderSurface()
 {
 }
 
-RenderSurfaceFile::RenderSurfaceFile(int width, int height, const std::string &filename)
+RenderSurfaceFile::RenderSurfaceFile(int width, int height)
 :	RenderSurface(width, height),
 	m_fp(NULL)
 {
-	OpenOutFile(filename);
 }
 
 RenderSurfaceFile::~RenderSurfaceFile()

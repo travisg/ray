@@ -48,12 +48,12 @@ int main(int argc, char* argv[])
 
 	SetupSDL();
 
-//	gRenderSurface = new RenderSurface(3200 * 2, 1600 * 2);
-//	gRenderSurface = new RenderSurface(3200, 1600);
-//	gRenderSurface = new RenderSurface(800, 600);
-	gRenderSurface = new RenderSurfaceFile(800, 600, "out.ray");
+//	gRenderSurface = new RenderSurfaceFile(3200 * 16, 1600 * 16);
+//	gRenderSurface = new RenderSurfaceFile(3200, 1600);
+//	gRenderSurface = new RenderSurfaceFile(800, 600);
+	gRenderSurface = new RenderSurfaceFile(800, 600);
 
-//	gRenderSurface->OpenOutFile("out.ray");
+	(dynamic_cast<RenderSurfaceFile *>(gRenderSurface))->OpenOutFile("out.ray");
 
 //	gWindow = new DisplayWindow(800, 600);
 //	gWindow->SetRenderSurface(*gRenderSurface);

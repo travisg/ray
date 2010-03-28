@@ -17,80 +17,39 @@ RenderSurface::~RenderSurface()
 
 RenderSurfaceFile::RenderSurfaceFile(int width, int height)
 :	RenderSurface(width, height),
-	m_fp(NULL)
+	m_file(NULL)
 {
 }
 
 RenderSurfaceFile::~RenderSurfaceFile()
 {
-	if (m_fp) {
-		// write EOF token
-		uint32_t type = TYPE_EOF;
-		fwrite(&type, sizeof(type), 1, m_fp);
-
-		fclose(m_fp);
+	if (m_file) {
+		m_file->Close();
+		delete m_file;
 	}
 }
 
 int RenderSurfaceFile::OpenOutFile(const std::string &name)
 {
-	m_fp = fopen(name.c_str(), "wb+");
-	if (!m_fp)
-		return -1;
+	if (m_file) {
+		m_file->Close();
+		delete m_file;
+	}
 
-	RayHeader header;
-
-	header.magic = RAY_HEADER_MAGIC;
-	header.width = Width();
-	header.height = Height();
-
-	fwrite(&header, sizeof(header), 1, m_fp);
-
-	return 0;
+	m_file = new RayFile();
+	return m_file->OpenWrite(name, Width(), Height());
 }
 
 void RenderSurfaceFile::SetXY(int x, int y, colorf color)
 {
-	// write a pixel packet
-	if (m_fp) {
-		uint32_t type = TYPE_PIXEL;
-
-		fwrite(&type, sizeof(type), 1, m_fp);
-
-		RayDataPixel pixel;
-		pixel.x = x;
-		pixel.y = y;
-		pixel.r = color.r;
-		pixel.g = color.g;
-		pixel.b = color.b;
-		fwrite(&pixel, sizeof(pixel), 1, m_fp);
-	}
+	if (m_file)
+		m_file->SetXY(x, y, color);
 }
 
 void RenderSurfaceFile::SetXYRun(int x, int y, int count, const colorf *color)
 {
-//	std::cout << __PRETTY_FUNCTION__ << " " << x << " " << y << " " << count << std::endl;
-	if (m_fp) {
-		uint32_t type = TYPE_PIXEL_RUN;
-
-		fwrite(&type, sizeof(type), 1, m_fp);
-
-		size_t buflen = sizeof(RayDataPixel) + sizeof(float) * 3 * count;
-		char *buf = new char[buflen];
-		RayDataPixelRun *run = (RayDataPixelRun *)buf;
-
-		run->x = x;
-		run->y = y;
-		run->length = count;
-		for (int i = 0; i < count; i++) {
-			run->val[i*3] = color[i].r;
-			run->val[i*3+1] = color[i].g;
-			run->val[i*3+2] = color[i].b;
-		}
-		fwrite(run, buflen, 1, m_fp);
-
-		delete[] buf;
-	}
+	if (m_file)
+		m_file->SetXYRun(x, y, count, color);
 }
 
 #if 0

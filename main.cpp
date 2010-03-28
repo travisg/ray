@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 	gTraceMaster = new TraceMasterSimple(*gRenderSurface);
 //	gTraceMaster = new TraceMasterRandom(*gRenderSurface);
 
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 8; i++)
 		SDL_CreateThread(&TracerThread, NULL);
 
 	gTraceMaster->WaitForDone();

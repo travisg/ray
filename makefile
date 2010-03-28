@@ -54,6 +54,7 @@ CPPFILT := c++filt
 OBJS := \
 	main.o \
 	RenderSurface.o \
+	RayFile.o \
 	Tracer.o \
 	TraceMaster.o \
 	Scene.o \

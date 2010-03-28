@@ -38,6 +38,8 @@ private:
 //	FILE *m_fp;
 };
 
+class RayFile;
+
 class RenderSurfaceFile : public RenderSurface {
 public:
 	RenderSurfaceFile(int width, int height);
@@ -49,8 +51,7 @@ public:
 	virtual void SetXYRun(int x, int y, int count, const colorf *color);
 
 private:
-
-	FILE *m_fp;
+	RayFile *m_file;
 };
 
 #endif

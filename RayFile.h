@@ -51,6 +51,7 @@ public:
 	/* write routines */
 	void SetXY(int x, int y, colorf color);
 	void SetXYRun(int x, int y, int count, const colorf *color);
+	void SetXYRun(int x, int y, int count, const float *color);
 
 	/* read routines */
 	int ReadIntoBuffer(float *buf); // up to the caller to make sure it's big enough

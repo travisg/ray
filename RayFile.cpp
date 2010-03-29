@@ -41,6 +41,8 @@ int RayFile::Open(const std::string &name)
 	m_width = header.width;
 	m_height = header.height;
 
+//	std::cout << __PRETTY_FUNCTION__ << " width " << m_width << " height " << m_height << std::endl;
+
 	return 0;
 }
 
@@ -65,6 +67,8 @@ int RayFile::OpenWrite(const std::string &name, uint32_t width, uint32_t height)
 	header.height = m_height;
 
 	fwrite(&header, sizeof(header), 1, m_fp);
+
+//	std::cout << __PRETTY_FUNCTION__ << " width " << m_width << " height " << m_height << std::endl;
 
 	return 0;
 }
@@ -123,6 +127,32 @@ void RayFile::SetXYRun(int x, int y, int count, const colorf *color)
 			colors[0] = color[i].r;
 			colors[1] = color[i].g;
 			colors[2] = color[i].b;
+			fwrite(colors, sizeof(colors), 1, m_fp);
+		}
+	}
+}
+
+void RayFile::SetXYRun(int x, int y, int count, const float *color)
+{
+//	std::cout << __PRETTY_FUNCTION__ << " " << x << " " << y << " " << count << std::endl;
+	if (m_fp && m_write) {
+		uint32_t type = TYPE_PIXEL_RUN;
+
+		fwrite(&type, sizeof(type), 1, m_fp);
+
+		RayDataPixelRun run;
+
+		run.x = x;
+		run.y = y;
+		run.length = count;
+		fwrite(&run, sizeof(run), 1, m_fp);
+
+		float colors[3];
+
+		for (int i = 0; i < count; i++) {
+			colors[0] = color[i*3];
+			colors[1] = color[i*3+1];
+			colors[2] = color[i*3+2];
 			fwrite(colors, sizeof(colors), 1, m_fp);
 		}
 	}

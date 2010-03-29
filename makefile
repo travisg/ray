@@ -1,7 +1,7 @@
 include macros.mk
 include host.mk
 
-TARGETS := ray rayview ray2tga
+TARGETS := ray rayview ray2tga raysplit
 
 all: $(addsuffix .do,$(TARGETS))
 
@@ -49,6 +49,15 @@ TARGET := ray2tga
 
 OBJS := \
 	ray2tga.o \
+	RayFile.o
+
+include compile.mk
+
+# raysplit
+TARGET := raysplit
+
+OBJS := \
+	raysplit.o \
 	RayFile.o
 
 include compile.mk

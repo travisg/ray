@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	rc = file.ConvertToTGA(argv[2]);
+	rc = ConvertToTGA(file, argv[2]);
 	if (rc < 0) {
 		std::cerr << "error outputting file " << argv[2] << std::endl;
 		return 1;

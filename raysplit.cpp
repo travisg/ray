@@ -37,24 +37,15 @@ int main(int argc, char **argv)
 		std::cerr << " invalid X or Y argument" << std::endl;
 		return 1;
 	}
-	
-	// read in the input file into a memory mapped file
-	int fd = open((argv[1] + std::string(".float")).c_str(), O_CREAT | O_RDWR | O_TRUNC, 0644);
-	int64_t len = file.GetPixelCount() * 3;
 
-	rc = ftruncate(fd, len * sizeof(float));
+	float *buf;
+	uint64_t len;
+	rc = ReadIntoMmap(file, (argv[1] + std::string(".float")).c_str(), &buf, &len);
 	if (rc < 0) {
-		std::cout << rc << " " << errno << " " << strerror(errno) << std::endl;
+		std::cerr << "failed to mmap file" << std::endl;
 		return 1;
 	}
-
-	float *buf = (float *)mmap(NULL, len * sizeof(float), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-
-	std::cout << "converting " << argv[1] << " to pure float array" << std::endl;
-	if (file.ReadIntoBuffer(buf) < 0) {
-		return -1;
-	}
-
+	
 	printf("sizex %d sizey %d\n", sizex, sizey);
 	for (int y = 0; y < file.Height(); y += sizey) {
 		// see how much we can actually do in this chunk
@@ -85,9 +76,7 @@ int main(int argc, char **argv)
 	}
 
 	/* close it all down */
-	munmap(buf, len * sizeof(float));
-	close(fd);
-	file.Close();
+	munmap(buf, len);
 
 	return 0;
 }

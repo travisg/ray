@@ -56,16 +56,23 @@ public:
 	/* read routines */
 	int ReadIntoBuffer(float *buf); // up to the caller to make sure it's big enough
 
+		// return a pointer to a mmapped file
+
 	/* read the file in, parsing it, calling back on every pixel */
 	int Parse(int (*callback)(RayFile &, void *, int x, int y, const float rgb[3]), void *arg);
 
-	/* TGA */
-	int ConvertToTGA(const std::string &filename);
 
 private:
 	FILE *m_fp;
 	bool m_write;
 	uint32_t m_width, m_height;
 };
+
+/* support routines */
+
+int ReadIntoMmap(RayFile &file, const std::string &mmapfile, float **buf, uint64_t *len);
+
+/* TGA */
+int ConvertToTGA(RayFile &file, const std::string &filename);
 
 #endif

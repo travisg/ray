@@ -1,6 +1,10 @@
 #include <iostream>
 #include "RayFile.h"
 
+#include <sys/mman.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 
 RayFile::RayFile()
 :	m_fp(NULL),
@@ -166,22 +170,6 @@ static int ReadData(FILE *fp, void *_buf, size_t len)
 	return len;
 }
 
-static int BufferCallback(RayFile &file, void *_buf, int x, int y, const float rgb[3])
-{
-	float *buf = (float *)_buf;
-
-	buf[(y * file.Width() + x) * 3] = rgb[0];
-	buf[(y * file.Width() + x) * 3 + 1] = rgb[1];
-	buf[(y * file.Width() + x) * 3 + 2] = rgb[2];
-
-	return 0;
-}
-
-int RayFile::ReadIntoBuffer(float *buf)
-{
-	return Parse(&BufferCallback, (void *)buf);
-}
-
 int RayFile::Parse(int (*callback)(RayFile &ray, void *, int x, int y, const float rgb[3]), void *arg)
 {
 	if (!m_fp || m_write)
@@ -241,6 +229,62 @@ done:
 
 }
 
+static int BufferCallback(RayFile &file, void *_buf, int x, int y, const float rgb[3])
+{
+	float *buf = (float *)_buf;
+
+	buf[(y * file.Width() + x) * 3] = rgb[0];
+	buf[(y * file.Width() + x) * 3 + 1] = rgb[1];
+	buf[(y * file.Width() + x) * 3 + 2] = rgb[2];
+
+	return 0;
+}
+
+int RayFile::ReadIntoBuffer(float *buf)
+{
+	return Parse(&BufferCallback, (void *)buf);
+}
+
+int ReadIntoMmap(RayFile &file, const std::string &mmapfile, float **buf, uint64_t *len)
+{
+	// read in the input file into a memory mapped file
+	int fd = open(mmapfile.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0644);
+	if (fd < 0)
+		return -1;
+
+	*len = file.GetPixelCount() * 3;
+
+	int rc = ftruncate(fd, *len * sizeof(float));
+	if (rc < 0) {
+		goto err;
+	}
+
+	*buf = (float *)mmap(NULL, *len * sizeof(float), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	if (!buf) {
+		goto err;
+	}
+
+//	std::cout << "converting " << argv[1] << " to pure float array" << std::endl;
+	if (file.ReadIntoBuffer(*buf) < 0) {
+		goto err1;
+	}
+
+	munmap(buf, *len);
+	close(fd);
+	return 0;
+
+err1:
+	munmap(buf, *len);
+err:
+	close(fd);
+
+	return -1;
+}
+
+// ***************
+// TGA support
+// ***************
+
 struct TGACallbackArgs
 {
 	FILE *fp;
@@ -270,7 +314,7 @@ static int TGACallback(RayFile &file, void *_buf, int x, int y, const float rgb[
 	return 0;
 }
 
-int RayFile::ConvertToTGA(const std::string &filename)
+int ConvertToTGA(RayFile &file, const std::string &filename)
 {
 	FILE *fp;
 
@@ -302,9 +346,9 @@ int RayFile::ConvertToTGA(const std::string &filename)
 	fwrite(&s, 2, 1, fp);
 	s = 0; // ystart
 	fwrite(&s, 2, 1, fp);
-	s = Width(); // width
+	s = file.Width(); // width
 	fwrite(&s, 2, 1, fp);
-	s = Height(); // height
+	s = file.Height(); // height
 	fwrite(&s, 2, 1, fp);
 	b = 24; // bits per pixel - 24
 	fwrite(&b, 1, 1, fp);
@@ -317,7 +361,7 @@ int RayFile::ConvertToTGA(const std::string &filename)
 	args.dataOffset = ftell(fp);
 	args.lastOffset = args.dataOffset;
 
-	Parse(&TGACallback, (void *)&args);
+	file.Parse(&TGACallback, (void *)&args);
 
 	fclose(fp);
 

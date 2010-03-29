@@ -45,6 +45,8 @@ public:
 
 	/* query */
 	uint64_t GetPixelCount() const { return m_width * m_height; }
+	uint32_t Width() const { return m_width; }
+	uint32_t Height() const { return m_height; }
 
 	/* write routines */
 	void SetXY(int x, int y, colorf color);
@@ -53,8 +55,11 @@ public:
 	/* read routines */
 	int ReadIntoBuffer(float *buf); // up to the caller to make sure it's big enough
 
-	/* read the file in, parsing it, calling back on every color */
-	int Parse(int (*callback)(void *, int x, int y, const float rgb[3]), void *arg);
+	/* read the file in, parsing it, calling back on every pixel */
+	int Parse(int (*callback)(RayFile &, void *, int x, int y, const float rgb[3]), void *arg);
+
+	/* TGA */
+	int ConvertToTGA(const std::string &filename);
 
 private:
 	FILE *m_fp;

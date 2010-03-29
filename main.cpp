@@ -49,9 +49,9 @@ int main(int argc, char* argv[])
 	SetupSDL();
 
 //	gRenderSurface = new RenderSurfaceFile(3200 * 16, 1600 * 16);
-//	gRenderSurface = new RenderSurfaceFile(3200, 1600);
+	gRenderSurface = new RenderSurfaceFile(3200, 1600);
 //	gRenderSurface = new RenderSurfaceFile(800, 600);
-	gRenderSurface = new RenderSurfaceFile(800, 600);
+//	gRenderSurface = new RenderSurfaceFile(800, 600);
 
 	(dynamic_cast<RenderSurfaceFile *>(gRenderSurface))->OpenOutFile("out.ray");
 

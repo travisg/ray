@@ -136,36 +136,23 @@ static int ReadData(FILE *fp, void *_buf, size_t len)
 	return len;
 }
 
-struct BufferReadStruct {
-	float *buf;
-	int width, height;
-};
-
-static int BufferCallback(void *buf, int x, int y, const float rgb[3])
+static int BufferCallback(RayFile &file, void *_buf, int x, int y, const float rgb[3])
 {
-	BufferReadStruct *s = (BufferReadStruct *)buf;
+	float *buf = (float *)_buf;
 
-//	std::cout << "buf " << buf << " " << x << " " << y << std::endl;
-
-	s->buf[(y * s->width + x) * 3] = rgb[0];
-	s->buf[(y * s->width + x) * 3 + 1] = rgb[1];
-	s->buf[(y * s->width + x) * 3 + 2] = rgb[2];
+	buf[(y * file.Width() + x) * 3] = rgb[0];
+	buf[(y * file.Width() + x) * 3 + 1] = rgb[1];
+	buf[(y * file.Width() + x) * 3 + 2] = rgb[2];
 
 	return 0;
 }
 
 int RayFile::ReadIntoBuffer(float *buf)
 {
-	BufferReadStruct s;
-
-	s.buf = buf;
-	s.width = m_width;
-	s.height = m_height;
-
-	return Parse(&BufferCallback, &s);
+	return Parse(&BufferCallback, (void *)buf);
 }
 
-int RayFile::Parse(int (*callback)(void *, int x, int y, const float rgb[3]), void *arg)
+int RayFile::Parse(int (*callback)(RayFile &ray, void *, int x, int y, const float rgb[3]), void *arg)
 {
 	if (!m_fp || m_write)
 		return -1;
@@ -187,7 +174,8 @@ int RayFile::Parse(int (*callback)(void *, int x, int y, const float rgb[3]), vo
 //				printf("pixel data: x %d y %d, r %f g %f b %f\n", pixel.x, pixel.y, pixel.r, pixel.g, pixel.b);
 
 				float rgb[3] = { pixel.r, pixel.g, pixel.b };
-				callback(arg, pixel.x, pixel.y, rgb);
+				if (callback(*this, arg, pixel.x, pixel.y, rgb) < 0)
+					return -1;
 				break;
 			}
 			case TYPE_PIXEL_RUN: {
@@ -203,7 +191,8 @@ int RayFile::Parse(int (*callback)(void *, int x, int y, const float rgb[3]), vo
 					if (ReadData(m_fp, &c, sizeof(c)) < 0)
 						goto done;
 
-					callback(arg, run.x + i, run.y, c);
+					if (callback(*this, arg, run.x + i, run.y, c) < 0)
+						return -1;
 				}		
 				break;
 			}
@@ -220,6 +209,89 @@ done:
 
 	return 0;
 
+}
+
+struct TGACallbackArgs
+{
+	FILE *fp;
+	long dataOffset;
+	long lastOffset;
+};
+
+static int TGACallback(RayFile &file, void *_buf, int x, int y, const float rgb[3])
+{
+	TGACallbackArgs *args = (TGACallbackArgs *)_buf;
+
+	long seekto = args->dataOffset + (y * file.Width() + x) * 3;
+
+	if (seekto != args->lastOffset) {
+		fseek(args->fp, seekto, SEEK_SET);
+		args->lastOffset = seekto;
+	}
+
+	color32 c32 = color32(colorf(rgb[0], rgb[1], rgb[2]));
+
+	fwrite(&c32.b, 1, 1, args->fp);
+	fwrite(&c32.g, 1, 1, args->fp);
+	fwrite(&c32.r, 1, 1, args->fp);
+
+	args->lastOffset += 3;
+
+	return 0;
+}
+
+int RayFile::ConvertToTGA(const std::string &filename)
+{
+	FILE *fp;
+
+	fp = fopen(filename.c_str(), "w+");
+	if (!fp) {
+		std::cerr << "error opening tga file " << filename << std::endl;
+		return -1;
+	}
+
+	// TGA header
+	unsigned char b;
+	unsigned short s;
+
+	b = 0; // identsize - none
+	fwrite(&b, 1, 1, fp);
+	b = 0; // colormaptype - none
+	fwrite(&b, 1, 1, fp);
+	b = 2; // imagetype - rgb
+	fwrite(&b, 1, 1, fp);
+
+	s = 0; // colormapstart - none
+	fwrite(&s, 2, 1, fp);
+	s = 0; // colormaplength - none
+	fwrite(&s, 2, 1, fp);
+	b = 0; // colormapbits - none
+	fwrite(&b, 1, 1, fp);
+
+	s = 0; // xstart
+	fwrite(&s, 2, 1, fp);
+	s = 0; // ystart
+	fwrite(&s, 2, 1, fp);
+	s = Width(); // width
+	fwrite(&s, 2, 1, fp);
+	s = Height(); // height
+	fwrite(&s, 2, 1, fp);
+	b = 24; // bits per pixel - 24
+	fwrite(&b, 1, 1, fp);
+	b = (1<<5); // descriptor bits - upper left
+	fwrite(&b, 1, 1, fp);
+
+	TGACallbackArgs args;
+
+	args.fp = fp;
+	args.dataOffset = ftell(fp);
+	args.lastOffset = args.dataOffset;
+
+	Parse(&TGACallback, (void *)&args);
+
+	fclose(fp);
+
+	return 0;
 }
 
 

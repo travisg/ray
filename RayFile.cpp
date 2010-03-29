@@ -110,21 +110,21 @@ void RayFile::SetXYRun(int x, int y, int count, const colorf *color)
 
 		fwrite(&type, sizeof(type), 1, m_fp);
 
-		size_t buflen = sizeof(RayDataPixel) + sizeof(float) * 3 * count;
-		char *buf = new char[buflen];
-		RayDataPixelRun *run = (RayDataPixelRun *)buf;
+		RayDataPixelRun run;
 
-		run->x = x;
-		run->y = y;
-		run->length = count;
+		run.x = x;
+		run.y = y;
+		run.length = count;
+		fwrite(&run, sizeof(run), 1, m_fp);
+
+		float colors[3];
+
 		for (int i = 0; i < count; i++) {
-			run->val[i*3] = color[i].r;
-			run->val[i*3+1] = color[i].g;
-			run->val[i*3+2] = color[i].b;
+			colors[0] = color[i].r;
+			colors[1] = color[i].g;
+			colors[2] = color[i].b;
+			fwrite(colors, sizeof(colors), 1, m_fp);
 		}
-		fwrite(run, buflen, 1, m_fp);
-
-		delete[] buf;
 	}
 }
 
@@ -136,12 +136,39 @@ static int ReadData(FILE *fp, void *_buf, size_t len)
 	return len;
 }
 
+struct BufferReadStruct {
+	float *buf;
+	int width, height;
+};
+
+static int BufferCallback(void *buf, int x, int y, const float rgb[3])
+{
+	BufferReadStruct *s = (BufferReadStruct *)buf;
+
+//	std::cout << "buf " << buf << " " << x << " " << y << std::endl;
+
+	s->buf[(y * s->width + x) * 3] = rgb[0];
+	s->buf[(y * s->width + x) * 3 + 1] = rgb[1];
+	s->buf[(y * s->width + x) * 3 + 2] = rgb[2];
+
+	return 0;
+}
+
 int RayFile::ReadIntoBuffer(float *buf)
+{
+	BufferReadStruct s;
+
+	s.buf = buf;
+	s.width = m_width;
+	s.height = m_height;
+
+	return Parse(&BufferCallback, &s);
+}
+
+int RayFile::Parse(int (*callback)(void *, int x, int y, const float rgb[3]), void *arg)
 {
 	if (!m_fp || m_write)
 		return -1;
-
-	std::cout << __PRETTY_FUNCTION__ << " reading " << GetPixelCount() * sizeof(float) * 3 << " bytes into buffer at " << buf << std::endl;	
 
 	for (;;) {
 		uint32_t type;
@@ -159,9 +186,8 @@ int RayFile::ReadIntoBuffer(float *buf)
 
 //				printf("pixel data: x %d y %d, r %f g %f b %f\n", pixel.x, pixel.y, pixel.r, pixel.g, pixel.b);
 
-				buf[(pixel.y * m_width + pixel.x) * 3] = pixel.r;
-				buf[(pixel.y * m_width + pixel.x) * 3 + 1] = pixel.g;
-				buf[(pixel.y * m_width + pixel.x) * 3 + 2] = pixel.b;
+				float rgb[3] = { pixel.r, pixel.g, pixel.b };
+				callback(arg, pixel.x, pixel.y, rgb);
 				break;
 			}
 			case TYPE_PIXEL_RUN: {
@@ -172,14 +198,12 @@ int RayFile::ReadIntoBuffer(float *buf)
 
 //				printf("pixel run data: x %d y %d, len %d\n", run.x, run.y, run.length);
 
-				for (int i = 0; i < run.length; i++) {
+				for (unsigned int i = 0; i < run.length; i++) {
 					float c[3];
 					if (ReadData(m_fp, &c, sizeof(c)) < 0)
 						goto done;
 
-					buf[(run.y * m_width + run.x + i) * 3] = c[0];
-					buf[(run.y * m_width + run.x + i) * 3 + 1] = c[1];
-					buf[(run.y * m_width + run.x + i) * 3 + 2] = c[2];
+					callback(arg, run.x + i, run.y, c);
 				}		
 				break;
 			}

@@ -53,6 +53,9 @@ public:
 	/* read routines */
 	int ReadIntoBuffer(float *buf); // up to the caller to make sure it's big enough
 
+	/* read the file in, parsing it, calling back on every color */
+	int Parse(int (*callback)(void *, int x, int y, const float rgb[3]), void *arg);
+
 private:
 	FILE *m_fp;
 	bool m_write;

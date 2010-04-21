@@ -91,7 +91,6 @@ void Tracer::Trace()
 //	float subpitch = pixpitch / ((float)multisample + 1.0);
 
 	TraceWorkUnit unit;
-	unit.result = 0;
 	while (m_Master.GetWorkUnit(unit) >= 0) {
 		for (int y = unit.starty; y <= unit.endy; y++) {
 			for (int x = unit.startx; x <= unit.endx; x++) {

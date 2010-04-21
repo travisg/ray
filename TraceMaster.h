@@ -7,6 +7,9 @@
 struct SDL_mutex;
 
 struct TraceWorkUnit {
+	TraceWorkUnit() : startx(0), starty(0), endx(0), endy(0), result(0) {}
+	~TraceWorkUnit() { if (result) delete[] result; }
+
 	int startx, starty;
 	int endx, endy;
 

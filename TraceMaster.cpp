@@ -51,6 +51,9 @@ int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit)
 
 	RenderSurface &surface = GetSurface();
 
+	int oldwidth = unit.Width();
+	int oldheight = unit.Height();
+
 	Lock();
 	
 	/* dish out another unit, row first */
@@ -82,9 +85,13 @@ int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit)
 	}
 
 	/* allocate a new result array */
-	if (unit.result)
+	if (unit.result && (oldwidth != unit.Width() || oldheight != unit.Height())) {
 		delete[] unit.result;
-	unit.result = new colorf[WORKUNITSIZE * WORKUNITSIZE];
+		unit.result = 0;
+	}
+
+	if (!unit.result)
+		unit.result = new colorf[WORKUNITSIZE * WORKUNITSIZE];
 
 	return 0;
 }

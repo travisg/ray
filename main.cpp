@@ -12,6 +12,13 @@ RenderSurface *gRenderSurface;
 Scene *gScene;
 TraceMaster *gTraceMaster;
 
+#include <boost/program_options/option.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/variables_map.hpp>
+#include <boost/program_options/parsers.hpp>
+
+namespace po = boost::program_options;
+
 int SetupSDL()
 {
 	atexit(SDL_Quit);
@@ -42,22 +49,38 @@ int TracerThread(void *data)
 
 int main(int argc, char* argv[])
 {
-	printf("hello\n");
-
 	srand(time(NULL));
 
 	SetupSDL();
 
-//	gRenderSurface = new RenderSurfaceFile(3200 * 16, 1600 * 16);
-	gRenderSurface = new RenderSurfaceFile(3200, 1600);
-//	gRenderSurface = new RenderSurfaceFile(800, 600);
-//	gRenderSurface = new RenderSurfaceFile(800, 600);
+	int xres, yres, cpus;
+	std::string outfile;
 
-	(dynamic_cast<RenderSurfaceFile *>(gRenderSurface))->OpenOutFile("out.ray");
+	// deal with options
+	po::options_description desc("Allowed options");
+	desc.add_options()
+		("help,h", "help message")
+		("xres", po::value<int>(&xres)->default_value(800), "x resolution")
+		("yres", po::value<int>(&yres)->default_value(600), "y resolution")
+		("cpus,c", po::value<int>(&cpus)->default_value(8), "number cpus")
+		("out,o", po::value<std::string>(&outfile)->default_value(std::string("out.ray")), "output file")
+	;
 
-//	gWindow = new DisplayWindow(800, 600);
-//	gWindow->SetRenderSurface(*gRenderSurface);
-//	gWindow->CreateWindow();
+	po::variables_map vm;
+	po::store(po::parse_command_line(argc, argv, desc), vm);
+	po::notify(vm);
+
+	if (vm.count("help")) {
+		std::cout << desc << std::endl;
+		return 1;
+	}
+
+	printf("xres %d yres %d cpus %d\n", xres, yres, cpus);
+	std::cout << "outfile " << outfile << std::endl;
+
+	gRenderSurface = new RenderSurfaceFile(xres, yres);
+
+	(dynamic_cast<RenderSurfaceFile *>(gRenderSurface))->OpenOutFile(outfile);
 
 	/* create the scene */
 	gScene = new Scene();
@@ -66,7 +89,7 @@ int main(int argc, char* argv[])
 	gTraceMaster = new TraceMasterSimple(*gRenderSurface);
 //	gTraceMaster = new TraceMasterRandom(*gRenderSurface);
 
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < cpus; i++)
 		SDL_CreateThread(&TracerThread, NULL);
 
 	gTraceMaster->WaitForDone();

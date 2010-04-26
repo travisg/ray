@@ -14,10 +14,10 @@ endif
 
 COMPILEFLAGS += -Wall -g -O2 -I. -Wno-multichar
 CFLAGS += $(COMPILEFLAGS)
-CPPFLAGS += $(COMPILEFLAGS) -fno-exceptions
+CPPFLAGS += $(COMPILEFLAGS)
 ASMFLAGS += $(COMPILEFLAGS)
 LDFLAGS +=
-LDLIBS += -lSDL -lstdc++
+LDLIBS += -lSDL -lstdc++ -lboost_program_options-mt
 OBJDUMP := objdump
 CPPFILT := c++filt
 

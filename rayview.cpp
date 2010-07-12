@@ -12,9 +12,12 @@
 #include <RayFile.h>
 #include <Color.h>
 
+static SDL_mutex *lock;
 static SDL_Surface *screen;
+static SDL_TimerID timer;
 static int width = 800;
 static int height = 600;
+static bool resized = false;
 static int fd;
 
 static int inwidth, inheight;
@@ -22,15 +25,27 @@ static int inwidth, inheight;
 static SDL_Surface *surface;
 static bool dirty = false;
 
-static Uint32 TimerTick(Uint32 interval, void *param)
+static void WindowUpdate()
 {
+	SDL_LockMutex(lock);
+	if (resized) {
+		resized = false;
+		SDL_SetVideoMode(width, height, 32, SDL_SWSURFACE | SDL_RESIZABLE);
+	}
+
 	SDL_Rect srcrect = { 0, 0, inwidth, inheight };
 	SDL_Rect dstrect = { 0, 0, width, height };
 	SDL_LockSurface(surface);
 	SDL_SoftStretch(surface, &srcrect, screen, &dstrect); 
 	SDL_UnlockSurface(surface);
+	SDL_UnlockMutex(lock);
 
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
+}
+
+static Uint32 TimerTick(Uint32 interval, void *param)
+{
+	WindowUpdate();
 
 	return interval;
 }
@@ -42,17 +57,19 @@ int SetupSDL()
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
 	SDL_EnableUNICODE(1);
 
+	lock = SDL_CreateMutex();
+
 	return 0;
 }
 
 int OpenWindow()
 {
-	screen = SDL_SetVideoMode(width, height, 32, SDL_SWSURFACE);
+	screen = SDL_SetVideoMode(width, height, 32, SDL_SWSURFACE | SDL_RESIZABLE);
 	SDL_UpdateRect(screen, 0,0,0,0); // Update entire surface
 
 	SDL_WM_SetCaption("Ray","ray");
 
-	SDL_AddTimer(1000, &TimerTick, NULL);
+	timer = SDL_AddTimer(1000, &TimerTick, NULL);
 }
 
 int ReadData(void *_buf, size_t len)
@@ -67,7 +84,7 @@ int ReadData(void *_buf, size_t len)
 			return r;
 
 		if (r != toread) {
-			printf("read %d, toread %d\n", read, toread);
+//			printf("read %d, toread %d\n", read, toread);
 			usleep(100000);
 		}
 		
@@ -136,6 +153,12 @@ int ReaderThread(void *data)
 done:
 	printf("hit EOF\n");
 
+	// stop the timer
+	SDL_RemoveTimer(timer);
+
+	// one last window update
+	WindowUpdate();
+
 	return 0;
 }
 
@@ -164,6 +187,11 @@ int main(int argc, char* argv[])
 	inheight = header.height;
 	printf("input x y: %d %d\n", inwidth, inheight);
 
+	if (inwidth <= 2048 && inheight <= 1600) {
+		width = inwidth;
+		height = inheight;
+	}
+
 	SetupSDL();
 
 	// create the intermediate surface
@@ -183,11 +211,14 @@ int main(int argc, char* argv[])
 		SDL_WaitEvent(&event);
 
 		switch (event.type) {
-#if 0
-			case SDL_KEYDOWN:
-				printf("The %s (0x%x) key was pressed!\n", SDL_GetKeyName(event.key.keysym.sym), event.key.keysym.unicode);
+			case SDL_VIDEORESIZE:
+				SDL_LockMutex(lock);
+				width = event.resize.w;
+				height = event.resize.h;
+				resized = true;
+				SDL_UnlockMutex(lock);
+				WindowUpdate();
 				break;
-#endif
 			case SDL_QUIT:
 				std::cout << "SDL_QUIT\n";
 				quit = true;

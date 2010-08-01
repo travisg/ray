@@ -20,6 +20,7 @@ LDFLAGS +=
 LDLIBS += -lstdc++ -lboost_program_options-mt -lboost_thread-mt
 OBJDUMP := objdump
 CPPFILT := c++filt
+ALLOBJS :=
 
 OBJS := \
 	main.o \
@@ -69,6 +70,3 @@ spotless:
 
 clean: $(addprefix clean-,$(TARGETS))
 
-ifeq ($(filter $(MAKECMDGOALS), clean), )
--include $(DEPS)
-endif

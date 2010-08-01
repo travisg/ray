@@ -1,6 +1,5 @@
 #include <iostream>
 #include "TraceMaster.h"
-#include "sdl.h"
 
 #define WORKUNITSIZE 128
 
@@ -9,12 +8,10 @@ TraceMaster::TraceMaster(RenderSurface &surface)
 	m_Halt(false),
 	m_Done(false)
 {
-	m_Lock = SDL_CreateMutex();
 }
 
 TraceMaster::~TraceMaster()
 {
-	SDL_DestroyMutex(m_Lock);
 }
 
 void TraceMaster::Halt()

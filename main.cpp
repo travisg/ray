@@ -2,7 +2,6 @@
 #include <iostream>
 #include <time.h>
 
-#include <sdl.h>
 #include <Ray.h>
 #include <RenderSurface.h>
 #include <Tracer.h>
@@ -16,20 +15,11 @@ TraceMaster *gTraceMaster;
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 #include <boost/program_options/parsers.hpp>
+#include <boost/thread.hpp>
 
 namespace po = boost::program_options;
 
-int SetupSDL()
-{
-	atexit(SDL_Quit);
-
-	SDL_Init(SDL_INIT_TIMER);
-	SDL_EnableUNICODE(1);
-
-	return 0;
-}
-
-int TracerThread(void *data)
+int TracerThread()
 {
 	std::cout << "TracerThread start" << std::endl;
 	time_t start = time(NULL);
@@ -50,8 +40,6 @@ int TracerThread(void *data)
 int main(int argc, char* argv[])
 {
 	srand(time(NULL));
-
-	SetupSDL();
 
 	int xres, yres, cpus;
 	std::string outfile;
@@ -89,8 +77,16 @@ int main(int argc, char* argv[])
 	gTraceMaster = new TraceMasterSimple(*gRenderSurface);
 //	gTraceMaster = new TraceMasterRandom(*gRenderSurface);
 
-	for (int i = 0; i < cpus; i++)
-		SDL_CreateThread(&TracerThread, NULL);
+	boost::thread **threads = new boost::thread *[cpus];
+	for (int i = 0; i < cpus; i++) {
+		threads[i] = new boost::thread(&TracerThread);
+	}
+
+	// wait for them to complete
+	for (int i = 0; i < cpus; i++) {
+		std::cout << "waiting for thread " << i << " to finish" << std::endl;
+		threads[i]->join();
+	}
 
 	gTraceMaster->WaitForDone();
 

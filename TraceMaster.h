@@ -2,9 +2,7 @@
 #define __TRACEMASTER_H
 
 #include <RenderSurface.h>
-#include "sdl.h"
-
-struct SDL_mutex;
+#include <boost/thread/mutex.hpp>
 
 struct TraceWorkUnit {
 	TraceWorkUnit() : startx(0), starty(0), endx(0), endy(0), result(0) {}
@@ -40,15 +38,15 @@ public:
 	void WaitForDone();
 
 protected:
-	void Lock() { SDL_LockMutex(m_Lock); }
-	void Unlock() { SDL_UnlockMutex(m_Lock); }
+	void Lock() { m_Lock.lock(); }
+	void Unlock() { m_Lock.unlock(); }
 	bool IsHalted() const { return m_Halt; }
 	bool Isdone() const { return m_Done; }
 	void SetDone() { m_Done = true; }
 	RenderSurface &GetSurface() { return m_Surface; }
 
 private:
-	SDL_mutex *m_Lock;
+	boost::mutex m_Lock;
 
 	RenderSurface &m_Surface;
 	bool m_Halt;

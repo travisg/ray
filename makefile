@@ -17,7 +17,7 @@ CFLAGS += $(COMPILEFLAGS)
 CPPFLAGS += $(COMPILEFLAGS)
 ASMFLAGS += $(COMPILEFLAGS)
 LDFLAGS +=
-LDLIBS += -lSDL -lstdc++ -lboost_program_options-mt
+LDLIBS += -lstdc++ -lboost_program_options-mt -lboost_thread-mt
 OBJDUMP := objdump
 CPPFILT := c++filt
 
@@ -38,6 +38,8 @@ include compile.mk
 
 # rayview
 TARGET := rayview
+
+LDLIBS += -lSDL
 
 OBJS := \
 	rayview.o

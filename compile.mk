@@ -54,6 +54,10 @@ clean-$(TARGET):
 	rm -f $(TARGET)
 	rm -f $(OBJS-$(TARGET)) $(DEPS-$(TARGET))
 
-TARGET :=
+#$(warning DEPS-$(TARGET) = $(DEPS-$(TARGET)))
+ifeq ($(filter $(MAKECMDGOALS), clean), )
+-include $(DEPS-$(TARGET))
+endif
 
+TARGET :=
 

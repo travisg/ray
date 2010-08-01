@@ -21,16 +21,32 @@ Scene::Scene()
 #endif
 	
 	Sphere *s = new Sphere(Vector3d(0.0, 0.0, 0.0), 50.0);
-	s->SetShader(shader);
+	{
+		DefaultShader *ds = new DefaultShader;
+		ds->SetShinyness(0.0f);
+		s->SetShader(ShaderPtr(ds));
+	}
 	m_DrawableList.push_back(s);
 
-	Plane *p = new Plane(Ray(Vector3d(0.0, 0.0, -100.0), Vector3d(0.0, 0.0, 1.0)));
-	p->SetShader(shader);
+	Plane *p = new Plane(Ray(Vector3d(0.0, 0.0, -50.0), Vector3d(0.0, 0.0, 1.0)));
+	{
+		DefaultShader *ds = new DefaultShader;
+		ds->SetShinyness(0.2f);
+		p->SetShader(ShaderPtr(ds));
+	}
+	m_DrawableList.push_back(p);
+
+	p = new Plane(Ray(Vector3d(-10.0, 0.0, 0.0), Vector3d(1.0, 0.0, 0.0)));
+	{
+		DefaultShader *ds = new DefaultShader;
+		ds->SetShinyness(0.0f);
+		p->SetShader(ShaderPtr(ds));
+	}
 	m_DrawableList.push_back(p);
 
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 0.0, 100.0), colorf(1.0, 0.0, 0.0), 100));
-	m_SimpleLightList.push_back(new SimpleLight(Vector3d(100.0, 0.0, 0.0), colorf(0.0, 1.0, 0.0), 100));
-	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 100.0, 0.0), colorf(0.0, 0.0, 1.0), 100));
+	m_SimpleLightList.push_back(new SimpleLight(Vector3d(100.0, 0.0, 5.0), colorf(0.0, 1.0, 0.0), 100));
+	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 100.0, 5.0), colorf(0.0, 0.0, 1.0), 100));
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 60.0, 60.0), colorf(1.0, 1.0, 1.0), 100));
 }
 

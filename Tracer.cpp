@@ -58,7 +58,9 @@ bool Tracer::Cast(colorf &color, const Ray &ray)
 			ShaderArgs args;
 
 			args.scene = &m_Scene;
+			args.tracer = this;
 			args.d = d;
+			args.ray = &ray;
 			args.pos = pos;
 			args.normal = normal;
 			color = s->Run(args);

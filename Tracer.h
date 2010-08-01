@@ -14,10 +14,9 @@ public:
 	virtual ~Tracer();
 
 	void Trace();
+	bool Cast(colorf &color, const Ray &ray);
 
 private:
-	bool Cast(colorf &color, const Ray &ray);
-	
 	RenderSurface &m_Surface;
 
 	Math::Vector3d m_Camera;

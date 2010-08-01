@@ -7,10 +7,14 @@
 
 class Drawable;
 class Scene;
+class Tracer;
+class Ray;
 
 struct ShaderArgs {
 	Scene *scene;
+	Tracer *tracer;
 	const Drawable *d;
+	const Ray *ray;
 	Math::Vector3d pos;
 	Math::Vector3d normal;
 };

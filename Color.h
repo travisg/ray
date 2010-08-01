@@ -35,8 +35,10 @@ public:
 	colorf(double c) : r(c), g(c), b(c) {}
 
 	colorf operator*(double f);
+	colorf operator*(const colorf &c);
 
 	colorf & operator+=(const colorf &c);
+	colorf & operator*=(double f);
 };
 
 inline color32::color32(const colorf &c) 
@@ -55,9 +57,23 @@ inline colorf & colorf::operator+=(const colorf &c)
 	return *this;
 }
 
+inline colorf & colorf::operator*=(double f)
+{
+	r *= f;
+	g *= f;
+	b *= f;
+
+	return *this;
+}
+
 inline colorf colorf::operator*(double f)
 {
 	return colorf(r * f, g * f, b * f);
+}
+
+inline colorf colorf::operator*(const colorf &c)
+{
+	return colorf(r * c.r, g * c.g, b * c.b);
 }
 
 inline std::ostream &operator<<(std::ostream &os, const colorf &c)

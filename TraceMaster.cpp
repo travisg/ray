@@ -142,8 +142,8 @@ int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit)
 	Lock();
 
 	for (;;) {
-		uint x = rand() % (surface.Width() / WORKUNITSIZE);
-		uint y = rand() % (surface.Height() / WORKUNITSIZE);
+		unsigned int x = rand() % (surface.Width() / WORKUNITSIZE);
+		unsigned int y = rand() % (surface.Height() / WORKUNITSIZE);
 
 		if (m_Bitmap[y * (surface.Width() / WORKUNITSIZE) + x] == false) {
 			m_Bitmap[y * (surface.Width() / WORKUNITSIZE) + x] = true;

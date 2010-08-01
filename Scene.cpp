@@ -11,11 +11,12 @@ using Math::Vector3d;
 
 Scene::Scene()
 {
-	ShaderPtr shader = ShaderPtr(new DefaultShader);
 #if 1
 	for (int i=0; i < 100; i++) {
-		Sphere *s = new Sphere(Vector3d((rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f), (rand()%200) / 10.0f);
-		s->SetShader(shader);
+		DefaultShader *ds = new DefaultShader;
+		Sphere *s = new Sphere(Vector3d((rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f, (rand()%1000 - 500) / 10.0f), (rand()%200) / 10.0f + 1.0f);
+		ds->SetDiffuseColor(colorf::RandColor());
+		s->SetShader(ShaderPtr(ds));
 		m_DrawableList.push_back(s);
 	}
 #endif
@@ -36,7 +37,7 @@ Scene::Scene()
 	}
 	m_DrawableList.push_back(p);
 
-	p = new Plane(Ray(Vector3d(-10.0, 0.0, 0.0), Vector3d(1.0, 0.0, 0.0)));
+	p = new Plane(Ray(Vector3d(-50.0, 0.0, 0.0), Vector3d(1.0, 0.0, 0.0)));
 	{
 		DefaultShader *ds = new DefaultShader;
 		ds->SetShinyness(0.0f);

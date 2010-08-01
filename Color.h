@@ -2,6 +2,7 @@
 #define __COLOR_H
 
 #include <ostream>
+#include <cstdlib>
 
 struct color32;
 struct colorf;
@@ -39,6 +40,8 @@ public:
 
 	colorf & operator+=(const colorf &c);
 	colorf & operator*=(double f);
+	
+	static colorf RandColor();
 };
 
 inline color32::color32(const colorf &c) 
@@ -80,6 +83,11 @@ inline std::ostream &operator<<(std::ostream &os, const colorf &c)
 {
 	os << "< " << c.r << " " << c.g << " " << c.b << " >";
 	return os;
+}
+
+inline colorf colorf::RandColor()
+{
+	return colorf(std::rand() / (float)RAND_MAX, std::rand() / (float)RAND_MAX, std::rand() / (float)RAND_MAX);
 }
 
 #endif

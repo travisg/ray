@@ -12,7 +12,10 @@
 #include <RayFile.h>
 #include <Color.h>
 
-static SDL_mutex *lock;
+#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+
+static boost::mutex lock;
 static SDL_Surface *screen;
 static SDL_TimerID timer;
 static int width = 800;
@@ -27,7 +30,7 @@ static bool dirty = false;
 
 static void WindowUpdate()
 {
-	SDL_LockMutex(lock);
+	lock.lock();
 	if (resized) {
 		resized = false;
 		SDL_SetVideoMode(width, height, 32, SDL_SWSURFACE | SDL_RESIZABLE);
@@ -38,7 +41,7 @@ static void WindowUpdate()
 	SDL_LockSurface(surface);
 	SDL_SoftStretch(surface, &srcrect, screen, &dstrect); 
 	SDL_UnlockSurface(surface);
-	SDL_UnlockMutex(lock);
+	lock.unlock();
 
 	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
@@ -56,8 +59,6 @@ int SetupSDL()
 
 	SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
 	SDL_EnableUNICODE(1);
-
-	lock = SDL_CreateMutex();
 
 	return 0;
 }
@@ -94,7 +95,7 @@ int ReadData(void *_buf, size_t len)
 	return pos;
 }
 
-int ReaderThread(void *data)
+int ReaderThread()
 {
 	for (;;) {
 		uint32_t type;
@@ -199,7 +200,7 @@ int main(int argc, char* argv[])
 			0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
 
 	// start the reader thread
-	SDL_CreateThread(&ReaderThread, NULL);
+	boost::thread reader(&ReaderThread);
 
 	OpenWindow();
 
@@ -212,11 +213,11 @@ int main(int argc, char* argv[])
 
 		switch (event.type) {
 			case SDL_VIDEORESIZE:
-				SDL_LockMutex(lock);
+				lock.lock();
 				width = event.resize.w;
 				height = event.resize.h;
 				resized = true;
-				SDL_UnlockMutex(lock);
+				lock.unlock();
 				WindowUpdate();
 				break;
 			case SDL_QUIT:

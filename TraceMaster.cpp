@@ -5,7 +5,6 @@
 
 TraceMaster::TraceMaster(RenderSurface &surface)
 :	m_Surface(surface),
-	m_Halt(false),
 	m_Done(false)
 {
 }
@@ -14,17 +13,18 @@ TraceMaster::~TraceMaster()
 {
 }
 
-void TraceMaster::Halt()
+void TraceMaster::SetDone()
 {
-	m_Halt = true;
 	m_Done = true;
+	m_DoneCond.notify_all();
 }
 
 void TraceMaster::WaitForDone()
 {
-	// XXX make better
-	while (!m_Done)
-		sleep(1);
+	boost::unique_lock<boost::mutex> lock(m_Lock);
+	while (!m_Done) {
+		m_DoneCond.wait(lock);
+	}
 }
 
 // simple tracer
@@ -43,7 +43,7 @@ TraceMasterSimple::~TraceMasterSimple()
 
 int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit)
 {
-	if (IsHalted() || m_IssuedLast)
+	if (m_IssuedLast)
 		return -1;
 
 	RenderSurface &surface = GetSurface();
@@ -134,9 +134,6 @@ TraceMasterRandom::~TraceMasterRandom()
 
 int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit)
 {
-	if (IsHalted())
-		return -1;
-
 	RenderSurface &surface = GetSurface();
 
 	if (m_Count == 0)

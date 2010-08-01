@@ -21,7 +21,7 @@ namespace po = boost::program_options;
 
 int TracerThread()
 {
-	std::cout << "TracerThread start" << std::endl;
+//	std::cout << "TracerThread start" << std::endl;
 	time_t start = time(NULL);
 
 	Tracer *tracer = new Tracer(*gRenderSurface, *gScene, *gTraceMaster);
@@ -32,7 +32,7 @@ int TracerThread()
 
 	delete tracer;
 
-	std::cout << "TracerThread end" << std::endl;
+//	std::cout << "TracerThread end" << std::endl;
 
 	return 0;
 }
@@ -82,17 +82,21 @@ int main(int argc, char* argv[])
 		threads[i] = new boost::thread(&TracerThread);
 	}
 
-	// wait for them to complete
-	for (int i = 0; i < cpus; i++) {
-		std::cout << "waiting for thread " << i << " to finish" << std::endl;
-		threads[i]->join();
-	}
-
+	// wait for the trace master to quit handing out work units
 	gTraceMaster->WaitForDone();
+
+	// wait for the worker threads to complete
+	std::cout << "waiting for worker threads to shut down" << std::endl;
+	for (int i = 0; i < cpus; i++) {
+		threads[i]->join();
+		delete threads[i];
+	}
 
 //	std::cout << "writing output file..." << std::flush;
 //	gRenderSurface->WriteTGAFile("foo.tga");
 //	std::cout << "done" << std::endl;
+
+	std::cout << "shutting down" << std::endl;
 
 	delete gRenderSurface;
 	delete gTraceMaster;

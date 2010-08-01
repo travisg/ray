@@ -3,6 +3,7 @@
 
 #include <RenderSurface.h>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
 
 struct TraceWorkUnit {
 	TraceWorkUnit() : startx(0), starty(0), endx(0), endy(0), result(0) {}
@@ -34,22 +35,20 @@ public:
 	virtual int GetWorkUnit(TraceWorkUnit &) = 0;
 	virtual int ReturnWorkUnit(TraceWorkUnit &) = 0;
 
-	void Halt();
 	void WaitForDone();
 
 protected:
 	void Lock() { m_Lock.lock(); }
 	void Unlock() { m_Lock.unlock(); }
-	bool IsHalted() const { return m_Halt; }
 	bool Isdone() const { return m_Done; }
-	void SetDone() { m_Done = true; }
+	void SetDone();
 	RenderSurface &GetSurface() { return m_Surface; }
 
 private:
 	boost::mutex m_Lock;
+	boost::condition_variable m_DoneCond;
 
 	RenderSurface &m_Surface;
-	bool m_Halt;
 	bool m_Done;
 };
 

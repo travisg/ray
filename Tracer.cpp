@@ -16,7 +16,8 @@ using Math::Vector3d;
 Tracer::Tracer(RenderSurface &surface, Scene &scene, TraceMaster &tracemaster)
 :	m_Surface(surface),
 	m_Scene(scene),
-	m_Master(tracemaster)
+	m_Master(tracemaster),
+	m_Depth(0)
 {
 #if 0
 	m_Camera = Math::Vector3d(
@@ -29,7 +30,7 @@ Tracer::Tracer(RenderSurface &surface, Scene &scene, TraceMaster &tracemaster)
 		(double)(rand()%900) + 50.0,
     	m_Camera.getz() - (double)(rand()%400));
 #else
-	m_Camera = Math::Vector3d(80.0f, 80.0f, 80.0f);
+	m_Camera = Math::Vector3d(30.0f, 50.0f, 10.0f);
 //	m_Camera = Math::Vector3d(80.0f, 80.0f, 10.0f);
 
 	m_Target = Math::Vector3d(0.0f, 0.0f, 0.0f);
@@ -42,6 +43,9 @@ Tracer::~Tracer()
 
 bool Tracer::Cast(colorf &color, const Ray &ray)
 {
+	if (m_Depth == kMaxTraceDepth)
+		return false;
+
 	// tell the scene graph to find an object to intersect
 	const Drawable *d = m_Scene.Intersect(ray);
 
@@ -63,7 +67,10 @@ bool Tracer::Cast(colorf &color, const Ray &ray)
 			args.ray = &ray;
 			args.pos = pos;
 			args.normal = normal;
+
+			m_Depth++; // track the level of recursion
 			color = s->Run(args);
+			m_Depth--;
 		}
 
 		return true;

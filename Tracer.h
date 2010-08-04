@@ -24,6 +24,10 @@ private:
 
 	Scene &m_Scene;
 	TraceMaster &m_Master;
+
+	int m_Depth;
+
+	static const int kMaxTraceDepth = 16;
 };
 
 #endif

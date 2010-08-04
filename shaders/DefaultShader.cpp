@@ -22,7 +22,7 @@ colorf DefaultShader::Run(const ShaderArgs &args)
 {
 //	std::cout << "DefaultShader Run" << std::endl;
 
-	colorf color = 0.0;
+	colorf color = args.scene->GetAmbientLight();
 	std::vector<SimpleLight *> lightList = args.scene->GetLightList();
 
 	for (std::vector<SimpleLight *>::const_iterator i = lightList.begin(); i != lightList.end(); i++) {

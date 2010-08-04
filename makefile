@@ -9,7 +9,7 @@ TARGET := ray
 
 # Darwin (Mac OS X)
 ifeq ($(UNAME),Darwin)
-LDLIBS += -framework Cocoa -L/sw/lib -L/opt/local/lib -lSDLmain
+LDLIBS += -framework Cocoa -L/opt/local/lib -lSDLmain
 endif
 
 COMPILEFLAGS += -Wall -g -O2 -I. -Wno-multichar

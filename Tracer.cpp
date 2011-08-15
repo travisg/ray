@@ -19,22 +19,6 @@ Tracer::Tracer(RenderSurface &surface, Scene &scene, TraceMaster &tracemaster)
 	m_Master(tracemaster),
 	m_Depth(0)
 {
-#if 0
-	m_Camera = Math::Vector3d(
-		(double)(rand()%900) + 50.0,
-		(double)(rand()%900) + 50.0,
-		100.0);
-
-	m_Target = Math::Vector3d(
-		(double)(rand()%900) + 50.0,
-		(double)(rand()%900) + 50.0,
-    	m_Camera.getz() - (double)(rand()%400));
-#else
-	m_Camera = Math::Vector3d(30.0f, 50.0f, 10.0f);
-//	m_Camera = Math::Vector3d(80.0f, 80.0f, 10.0f);
-
-	m_Target = Math::Vector3d(0.0f, 0.0f, 0.0f);
-#endif
 }
 
 Tracer::~Tracer()
@@ -87,11 +71,12 @@ void Tracer::Trace()
 //	std::cout << "Camera " << m_Camera << std::endl;
 //	std::cout << "Target " << m_Target << std::endl;
 
-	m_Target -= m_Camera;
-	m_Target.Normalize();
-	m_Target += m_Camera;
+	Math::Vector3d target = m_Scene.GetTarget();
+	target -= m_Scene.GetCamera();
+	target.Normalize();
+	target += m_Scene.GetCamera();
 
-	Vector3d lin = m_Target - m_Camera;
+	Vector3d lin = target - m_Scene.GetCamera();
 
 //	std::cout << "Lin " << lin << std::endl;
 
@@ -114,13 +99,13 @@ void Tracer::Trace()
 				wing.Normalize((x - width / 2.0) * pixpitch);
 				head.Normalize((y - height / 2.0) * pixpitch);
 
-				Math::Vector3d ray = m_Target + wing + head - m_Camera;
+				Math::Vector3d ray = target + wing + head - m_Scene.GetCamera();
 				ray.Normalize();
 
 		//			std::cout << "Ray " << ray << std::endl;
 
 				colorf color;
-				if (Cast(color, Ray(m_Camera, ray)) == false) {
+				if (Cast(color, Ray(m_Scene.GetCamera(), ray)) == false) {
 					// exited the world
 					color = 0;
 		//				float angle = Dot(Vector3d(0.0, 0.0, 1.0), ray);

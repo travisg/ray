@@ -19,9 +19,6 @@ public:
 private:
 	RenderSurface &m_Surface;
 
-	Math::Vector3d m_Camera;
-	Math::Vector3d m_Target;
-
 	Scene &m_Scene;
 	TraceMaster &m_Master;
 

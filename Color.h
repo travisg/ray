@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <cstdlib>
+#include <libmath/Random.h>
 
 struct color32;
 struct colorf;
@@ -22,7 +23,12 @@ public:
 	color32(int c) : r(c), g(c), b(c) {}
 	color32(const colorf &c);
 
-	operator unsigned int() { return ((r << 16) | (g << 8) | (b)); }
+	operator unsigned int() { return xrgb(); }
+
+	unsigned int xrgb() { return ((r << 16) | (g << 8) | (b)); }
+	unsigned int xbgr() { return ((b << 16) | (g << 8) | (r)); }
+	unsigned int rgbx() { return ((r << 24) | (g << 16) | (b << 8)); }
+	unsigned int bgrx() { return ((b << 24) | (g << 16) | (r << 8)); }
 };
 
 struct colorf {
@@ -87,7 +93,7 @@ inline std::ostream &operator<<(std::ostream &os, const colorf &c)
 
 inline colorf colorf::RandColor()
 {
-	return colorf(std::rand() / (float)RAND_MAX, std::rand() / (float)RAND_MAX, std::rand() / (float)RAND_MAX);
+	return colorf(Math::Random(), Math::Random(), Math::Random());
 }
 
 #endif

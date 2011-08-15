@@ -117,7 +117,7 @@ int ReaderThread()
 				color32 c32 = cf;
 
 				SDL_LockSurface(surface);
-				((uint32_t *)surface->pixels)[pixel.y * inwidth + pixel.x] = c32;							
+				((uint32_t *)surface->pixels)[pixel.y * inwidth + pixel.x] = c32.bgrx();							
 				SDL_UnlockSurface(surface);
 				break;
 			}
@@ -138,7 +138,7 @@ int ReaderThread()
 					color32 c32 = cf;
 
 					SDL_LockSurface(surface);
-					((uint32_t *)surface->pixels)[run.y * inwidth + run.x + i] = c32;							
+					((uint32_t *)surface->pixels)[run.y * inwidth + run.x + i] = c32.bgrx();							
 					SDL_UnlockSurface(surface);
 				}		
 				break;

@@ -24,6 +24,13 @@ int main(int argc, char **argv)
 
 	RayFile file;
 
+	std::string inname(argv[1]);
+	printf("infile = %s\n", inname.c_str());
+
+	size_t outpos = inname.find_last_of("/\\");
+	std::string outname = inname.substr(outpos + 1);
+	printf("outfile = %s\n", outname.c_str());
+
 	int rc = file.Open(argv[1]);
 	if (rc < 0) {
 		std::cerr << "error opening file " << argv[1] << std::endl;
@@ -40,7 +47,7 @@ int main(int argc, char **argv)
 
 	float *buf;
 	uint64_t len;
-	rc = ReadIntoMmap(file, (argv[1] + std::string(".float")).c_str(), &buf, &len);
+	rc = ReadIntoMmap(file, outname + ".float", &buf, &len);
 	if (rc < 0) {
 		std::cerr << "failed to mmap file" << std::endl;
 		return 1;
@@ -61,7 +68,7 @@ int main(int argc, char **argv)
 				runx = file.Width() - x;
 
 			char name[512];
-			snprintf(name, sizeof(name), "%s-%d.%d", argv[1], x, y);
+			snprintf(name, sizeof(name), "%s-%d.%d", outname.c_str(), x, y);
 
 			printf("outputting %s: size %dx%d, x %d y %d\n", name, runx, runy, x, y);
 

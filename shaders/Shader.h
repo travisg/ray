@@ -8,7 +8,7 @@
 class Drawable;
 class Scene;
 class Tracer;
-class Ray;
+struct Ray;
 
 struct ShaderArgs {
 	Scene *scene;

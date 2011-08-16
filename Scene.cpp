@@ -104,11 +104,17 @@ Scene::Scene()
 
 Scene::~Scene()
 {
-	// empty our list
+	// empty our lists
 	while(!m_DrawableList.empty()) {
 		Drawable *d = m_DrawableList.back();
 		m_DrawableList.pop_back();
 		delete d;
+	}
+
+	while(!m_SimpleLightList.empty()) {
+		SimpleLight *l = m_SimpleLightList.back();
+		m_SimpleLightList.pop_back();
+		delete l;
 	}
 }
 

@@ -91,6 +91,7 @@ int main(int argc, char* argv[])
 		threads[i]->join();
 		delete threads[i];
 	}
+	delete[] threads;
 
 //	std::cout << "writing output file..." << std::flush;
 //	gRenderSurface->WriteTGAFile("foo.tga");
@@ -98,9 +99,9 @@ int main(int argc, char* argv[])
 
 	std::cout << "shutting down" << std::endl;
 
-	delete gRenderSurface;
 	delete gTraceMaster;
 	delete gScene;
+	delete gRenderSurface;
 
 	return 0;
 }

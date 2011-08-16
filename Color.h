@@ -10,14 +10,9 @@ struct colorf;
 
 struct color32 {
 public:
-	union {		
-		struct {
-			unsigned char r;
-			unsigned char g;
-			unsigned char b;
-		};
-		unsigned int i;
-	};
+	unsigned char r;
+	unsigned char g;
+	unsigned char b;
 
 	color32() {}
 	color32(int c) : r(c), g(c), b(c) {}

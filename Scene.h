@@ -6,7 +6,7 @@
 #include <libmath/Vector3.h>
 
 class Drawable;
-class Ray;
+struct Ray;
 class SimpleLight;
 
 class Scene {

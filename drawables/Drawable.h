@@ -4,7 +4,7 @@
 #include <libmath/Vector3.h>
 #include <shaders/Shader.h>
 
-class Ray;
+struct Ray;
 
 class Drawable {
 protected:

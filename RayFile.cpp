@@ -133,6 +133,7 @@ void RayFile::SetXYRun(int x, int y, int count, const colorf *color)
 			colors[2] = color[i].b;
 			fwrite(colors, sizeof(colors), 1, m_fp);
 		}
+		fflush(m_fp);
 	}
 }
 

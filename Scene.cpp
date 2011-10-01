@@ -57,7 +57,7 @@ Scene::Scene()
 
 	m_AmbientLight = colorf(0.0f, 0.0f, 0.0f);
 	{
-		Sphere *s = new Sphere(Vector3d(0.0, 0.0, 0.0), 8.0);
+		Sphere *s = new Sphere(Vector3d(10.0, 10.0, 10.0), 8.0);
 		{
 			DefaultShader *ds = new DefaultShader;
 			ds->SetShinyness(0.8f);
@@ -68,35 +68,38 @@ Scene::Scene()
 
 	// bottom
 	{
-		Plane *p = new Plane(Ray(Vector3d(0.0, 0.0, -10.0), Vector3d(0.0, 0.0, 1.0)));
+		Plane *p = new Plane(Ray(Vector3d(0.0, 0.0, 0.0), Vector3d(0.0, 0.0, 1.0)));
 		DefaultShader *ds = new DefaultShader;
 		ds->SetDiffuseColor(colorf(1.0, 0.2, 0.2));
+		ds->SetShinyness(0.5f);
 		p->SetShader(ShaderPtr(ds));
 		m_DrawableList.push_back(p);
 	}
 	{
-		Plane *p = new Plane(Ray(Vector3d(0.0, -10.0, 0.0), Vector3d(0.0, 1.0, 0.0)));
+		Plane *p = new Plane(Ray(Vector3d(0.0, 0.0, 0.0), Vector3d(0.0, 1.0, 0.0)));
 		DefaultShader *ds = new DefaultShader;
 		ds->SetDiffuseColor(colorf(0.2, 1.0, 0.2));
+		ds->SetShinyness(0.5f);
 		p->SetShader(ShaderPtr(ds));
 		m_DrawableList.push_back(p);
 	}
 	// back
 	{
-		Plane *p = new Plane(Ray(Vector3d(-10.0, 0.0, 0.0), Vector3d(1.0, 0.0, 0.0)));
+		Plane *p = new Plane(Ray(Vector3d(0.0, 0.0, 0.0), Vector3d(1.0, 0.0, 0.0)));
 		DefaultShader *ds = new DefaultShader;
 		ds->SetDiffuseColor(colorf(0.2, 0.2, 1.0));
+		ds->SetShinyness(0.5f);
 		p->SetShader(ShaderPtr(ds));
 		m_DrawableList.push_back(p);
 	}
 
-	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 0.0, 100.0), colorf(1.0, 0.0, 0.0), 100));
-	m_SimpleLightList.push_back(new SimpleLight(Vector3d(100.0, 0.0, 5.0), colorf(0.0, 1.0, 0.0), 100));
-	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 100.0, 5.0), colorf(0.0, 0.0, 1.0), 100));
-	m_SimpleLightList.push_back(new SimpleLight(Vector3d(5.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
+//	m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0, 1.0, 100.0), colorf(1.0, 0.0, 0.0), 100));
+//	m_SimpleLightList.push_back(new SimpleLight(Vector3d(100.0, 1.0, 5.0), colorf(0.0, 1.0, 0.0), 100));
+//	m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0, 100.0, 5.0), colorf(0.0, 0.0, 1.0), 100));
+	m_SimpleLightList.push_back(new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
 #endif
 
-	m_Camera = Math::Vector3d(30.0f, 50.0f, 10.0f);
+	m_Camera = Math::Vector3d(30.0f, 30.0f, 10.0f);
 //	m_Camera = Math::Vector3d(80.0f, 80.0f, 10.0f);
 
 	m_Target = Math::Vector3d(0.0f, 0.0f, 0.0f);

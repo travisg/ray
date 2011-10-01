@@ -70,14 +70,14 @@ Scene::Scene()
 	{
 		Plane *p = new Plane(Ray(Vector3d(0.0, 0.0, -10.0), Vector3d(0.0, 0.0, 1.0)));
 		DefaultShader *ds = new DefaultShader;
-		ds->SetDiffuseColor(colorf(1.0, 0, 0));
+		ds->SetDiffuseColor(colorf(1.0, 0.2, 0.2));
 		p->SetShader(ShaderPtr(ds));
 		m_DrawableList.push_back(p);
 	}
 	{
 		Plane *p = new Plane(Ray(Vector3d(0.0, -10.0, 0.0), Vector3d(0.0, 1.0, 0.0)));
 		DefaultShader *ds = new DefaultShader;
-		ds->SetDiffuseColor(colorf(0, 1.0, 0));
+		ds->SetDiffuseColor(colorf(0.2, 1.0, 0.2));
 		p->SetShader(ShaderPtr(ds));
 		m_DrawableList.push_back(p);
 	}
@@ -85,7 +85,7 @@ Scene::Scene()
 	{
 		Plane *p = new Plane(Ray(Vector3d(-10.0, 0.0, 0.0), Vector3d(1.0, 0.0, 0.0)));
 		DefaultShader *ds = new DefaultShader;
-		ds->SetDiffuseColor(colorf(0, 0, 1.0));
+		ds->SetDiffuseColor(colorf(0.2, 0.2, 1.0));
 		p->SetShader(ShaderPtr(ds));
 		m_DrawableList.push_back(p);
 	}

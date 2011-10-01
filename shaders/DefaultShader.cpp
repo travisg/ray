@@ -61,12 +61,13 @@ colorf DefaultShader::Run(const ShaderArgs &args)
 
 		ray.dir = reflect;
 
+		color *= (1.0f - m_Shinyness);
+
 		// recursively trace to see
 		colorf reflectcolor;
-		args.tracer->Cast(reflectcolor, ray);
-
-		color *= (1.0f - m_Shinyness);
-		color += reflectcolor * m_Shinyness;
+		if (args.tracer->Cast(reflectcolor, ray)) {
+			color += reflectcolor * m_Shinyness;
+		}
 	}
 
 	return color;

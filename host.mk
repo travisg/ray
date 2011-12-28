@@ -12,7 +12,8 @@ ARCH := $(shell uname -m)
 
 # Darwin (Mac OS X)
 ifeq ($(UNAME),Darwin)
-COMPILEFLAGS += -DASM_LEADING_UNDERSCORES=1 -mdynamic-no-pic -fast -I/sw/include -I/opt/local/include
+COMPILEFLAGS += -DASM_LEADING_UNDERSCORES=1 -mdynamic-no-pic -I/opt/local/include
+LDLIBS += -L/opt/local/lib
 endif
 
 # linux

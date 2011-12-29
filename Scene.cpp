@@ -27,6 +27,7 @@
 #include <libvec/Random.h>
 #include <drawables/Sphere.h>
 #include <drawables/Plane.h>
+#include <drawables/Triangle.h>
 #include <shaders/DefaultShader.h>
 #include <lights/SimpleLight.h>
 
@@ -75,8 +76,8 @@ Scene::Scene()
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(100.0, 0.0, 5.0), colorf(0.0, 1.0, 0.0), 100));
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 100.0, 5.0), colorf(0.0, 0.0, 1.0), 100));
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 60.0, 60.0), colorf(1.0, 1.0, 1.0), 100));
-#else
-
+#endif
+#if 0
 	m_AmbientLight = colorf(0.0f, 0.0f, 0.0f);
 	{
 		Sphere *s = new Sphere(Vector3d(10.0, 10.0, 10.0), 8.0);
@@ -118,6 +119,28 @@ Scene::Scene()
 //	m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0, 1.0, 100.0), colorf(1.0, 0.0, 0.0), 100));
 //	m_SimpleLightList.push_back(new SimpleLight(Vector3d(100.0, 1.0, 5.0), colorf(0.0, 1.0, 0.0), 100));
 //	m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0, 100.0, 5.0), colorf(0.0, 0.0, 1.0), 100));
+	m_SimpleLightList.push_back(new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
+#endif
+
+#if 1
+	m_AmbientLight = colorf(0.0f, 0.0f, 0.0f);
+	{
+		Triangle *t = new Triangle(Vector3d(0.0, 0.0, 10.0), Vector3d(20.0, 0.0, 0.0), Vector3d(0.0, 20.0, 0.0));
+		DefaultShader *ds = new DefaultShader;
+		ds->SetDiffuseColor(colorf(0.2, 0.2, 1.0));
+		ds->SetShinyness(0.5f);
+		t->SetShader(ShaderPtr(ds));
+		m_DrawableList.push_back(t);
+	}
+	{
+		Plane *p = new Plane(Ray(Vector3d(0.0, 0.0, -1.0), Vector3d(0.0, 0.0, 1.0)));
+		DefaultShader *ds = new DefaultShader;
+		ds->SetDiffuseColor(colorf(1.0, 0.0, 0.0));
+		ds->SetShinyness(0.0f);
+		p->SetShader(ShaderPtr(ds));
+		m_DrawableList.push_back(p);
+	}
+
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
 #endif
 

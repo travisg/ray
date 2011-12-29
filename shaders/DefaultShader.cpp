@@ -92,6 +92,7 @@ colorf DefaultShader::Run(const ShaderArgs &args)
 		}
 	}
 
+//	std::cout << "color " << color << std::endl;
 	return color;
 }
 

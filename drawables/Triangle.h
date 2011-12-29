@@ -20,50 +20,26 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <iostream>
+#ifndef __TRIANGLE_H
+#define __TRIANGLE_H
 
+#include <libvec/Vector3.h>
 #include <Ray.h>
-#include "Plane.h"
 
-using Libvec::Vector3d;
+#include "Drawable.h"
 
-Plane::Plane(const Ray &normal)
-:	m_Normal(normal)
-{
-	m_Normal.dir.Normalize();
-}
+class Triangle : public Drawable {
+public:
+	Triangle(const Libvec::Vector3d &v0, const Libvec::Vector3d &v1, const Libvec::Vector3d &v2);
+	virtual ~Triangle();
 
+	virtual bool Intersect(const Ray &ray) const;
+	virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const;
 
-Plane::~Plane()
-{
-}
+private:
+	Libvec::Vector3d m_v[3];
+	Libvec::Vector3d m_normal;
+};
 
-bool Plane::Intersect(const Ray &ray) const
-{
-//	std::cout << ray.dir << std::endl;
-	Vector3d dir = ray.dir;
-	dir.Normalize();
-
-	if (Dot(dir, m_Normal.dir) > 0.0)
-		return false;
-
-	return true;
-}
-
-bool Plane::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const
-{
-	if (!Intersect(ray))
-		return false;
-
-	// t = ((P - P0) . N) / (V . N)
-	// P = P0 + tV
-
-	double t = (Dot(m_Normal.origin - ray.origin, m_Normal.dir)) / (Dot(ray.dir, m_Normal.dir));
-//	std::cout << t << std::endl;
-
-	pos = ray.origin + ray.dir * t;
-	normal = m_Normal.dir;
-
-	return true;
-}
+#endif
 

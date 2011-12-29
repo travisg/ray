@@ -2,11 +2,11 @@
 #include <math.h>
 
 #include <drawables/Sphere.h>
-#include <libmath/Math.h>
+#include <libvec/Vec.h>
 
-using Math::Vector3d;
+using Libvec::Vector3d;
 
-Sphere::Sphere(const Math::Vector3d &pos, double radius)
+Sphere::Sphere(const Libvec::Vector3d &pos, double radius)
 :	m_Center(pos),
 	m_Radius(radius)
 {

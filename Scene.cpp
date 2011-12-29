@@ -1,14 +1,14 @@
 #include <iostream>
 #include <vector>	
 #include <Scene.h>
-#include <libmath/Vector3.h>
-#include <libmath/Random.h>
+#include <libvec/Vector3.h>
+#include <libvec/Random.h>
 #include <drawables/Sphere.h>
 #include <drawables/Plane.h>
 #include <shaders/DefaultShader.h>
 #include <lights/SimpleLight.h>
 
-using Math::Vector3d;
+using Libvec::Vector3d;
 
 Scene::Scene()
 :	m_AmbientLight(0)
@@ -17,7 +17,7 @@ Scene::Scene()
 #if 1
 	for (int i=0; i < 100; i++) {
 		DefaultShader *ds = new DefaultShader;
-		Sphere *s = new Sphere(Vector3d(Math::Random(-50, 50), Math::Random(-50, 50), Math::Random(-50, 50)), Math::Random(1, 20));
+		Sphere *s = new Sphere(Vector3d(Libvec::Random(-50, 50), Libvec::Random(-50, 50), Libvec::Random(-50, 50)), Libvec::Random(1, 20));
 		ds->SetDiffuseColor(colorf::RandColor());
 		ds->SetShinyness(0.0f);
 		s->SetShader(ShaderPtr(ds));
@@ -99,10 +99,10 @@ Scene::Scene()
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
 #endif
 
-	m_Camera = Math::Vector3d(30.0f, 30.0f, 10.0f);
-//	m_Camera = Math::Vector3d(80.0f, 80.0f, 10.0f);
+	m_Camera = Libvec::Vector3d(30.0f, 30.0f, 10.0f);
+//	m_Camera = Libvec::Vector3d(80.0f, 80.0f, 10.0f);
 
-	m_Target = Math::Vector3d(0.0f, 0.0f, 0.0f);
+	m_Target = Libvec::Vector3d(0.0f, 0.0f, 0.0f);
 }
 
 Scene::~Scene()

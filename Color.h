@@ -3,7 +3,7 @@
 
 #include <ostream>
 #include <cstdlib>
-#include <libmath/Random.h>
+#include <libvec/Random.h>
 
 struct color32;
 struct colorf;
@@ -88,7 +88,7 @@ inline std::ostream &operator<<(std::ostream &os, const colorf &c)
 
 inline colorf colorf::RandColor()
 {
-	return colorf(Math::Random(), Math::Random(), Math::Random());
+	return colorf(Libvec::Random(), Libvec::Random(), Libvec::Random());
 }
 
 #endif

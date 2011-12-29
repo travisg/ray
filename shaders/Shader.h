@@ -2,7 +2,7 @@
 #define __SHADER_H
 
 #include <Color.h>
-#include <libmath/Vector3.h>
+#include <libvec/Vector3.h>
 #include <boost/shared_ptr.hpp>
 
 class Drawable;
@@ -15,8 +15,8 @@ struct ShaderArgs {
 	Tracer *tracer;
 	const Drawable *d;
 	const Ray *ray;
-	Math::Vector3d pos;
-	Math::Vector3d normal;
+	Libvec::Vector3d pos;
+	Libvec::Vector3d normal;
 };
 
 class Shader {

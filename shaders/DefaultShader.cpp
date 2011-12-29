@@ -6,7 +6,7 @@
 #include <lights/SimpleLight.h>
 #include "DefaultShader.h"
 
-using Math::Vector3d;
+using Libvec::Vector3d;
 
 DefaultShader::DefaultShader()
 	: m_Shinyness(0.0f),

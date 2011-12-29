@@ -3,7 +3,7 @@
 #include <Ray.h>
 #include "Plane.h"
 
-using Math::Vector3d;
+using Libvec::Vector3d;
 
 Plane::Plane(const Ray &normal)
 :	m_Normal(normal)

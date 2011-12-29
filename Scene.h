@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "Color.h"
-#include <libmath/Vector3.h>
+#include <libvec/Vector3.h>
 
 class Drawable;
 struct Ray;
@@ -21,16 +21,16 @@ public:
 	const std::vector<SimpleLight *> GetLightList() const { return m_SimpleLightList; }
 	colorf GetAmbientLight() const { return m_AmbientLight; }
 
-	const Math::Vector3d &GetCamera() const { return m_Camera; }
-	const Math::Vector3d &GetTarget() const { return m_Target; }
+	const Libvec::Vector3d &GetCamera() const { return m_Camera; }
+	const Libvec::Vector3d &GetTarget() const { return m_Target; }
 
 private:
 	std::vector<Drawable *> m_DrawableList;;
 	std::vector<SimpleLight *> m_SimpleLightList;
 	colorf m_AmbientLight;
 
-	Math::Vector3d m_Camera;
-	Math::Vector3d m_Target;
+	Libvec::Vector3d m_Camera;
+	Libvec::Vector3d m_Target;
 };
 
 

@@ -11,7 +11,7 @@
 
 #include <shaders/Shader.h>
 
-using Math::Vector3d;
+using Libvec::Vector3d;
 
 Tracer::Tracer(RenderSurface &surface, Scene &scene, TraceMaster &tracemaster)
 :	m_Surface(surface),
@@ -71,7 +71,7 @@ void Tracer::Trace()
 //	std::cout << "Camera " << m_Camera << std::endl;
 //	std::cout << "Target " << m_Target << std::endl;
 
-	Math::Vector3d target = m_Scene.GetTarget();
+	Libvec::Vector3d target = m_Scene.GetTarget();
 	target -= m_Scene.GetCamera();
 	target.Normalize();
 	target += m_Scene.GetCamera();
@@ -99,7 +99,7 @@ void Tracer::Trace()
 				wing.Normalize((x - width / 2.0) * pixpitch);
 				head.Normalize((y - height / 2.0) * pixpitch);
 
-				Math::Vector3d ray = target + wing + head - m_Scene.GetCamera();
+				Libvec::Vector3d ray = target + wing + head - m_Scene.GetCamera();
 				ray.Normalize();
 
 		//			std::cout << "Ray " << ray << std::endl;

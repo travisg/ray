@@ -14,6 +14,7 @@ ARCH := $(shell uname -m)
 ifeq ($(UNAME),Darwin)
 COMPILEFLAGS += -DASM_LEADING_UNDERSCORES=1 -mdynamic-no-pic -I/opt/local/include
 LDLIBS += -L/opt/local/lib
+CC := clang
 endif
 
 # linux

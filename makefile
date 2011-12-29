@@ -7,11 +7,6 @@ all: $(addsuffix .do,$(TARGETS))
 
 TARGET := ray
 
-# Darwin (Mac OS X)
-ifeq ($(UNAME),Darwin)
-LDLIBS += -framework Cocoa -lSDLmain
-endif
-
 COMPILEFLAGS += -Wall -g -O2 -I. -Wno-multichar
 CFLAGS += $(COMPILEFLAGS)
 CPPFLAGS += $(COMPILEFLAGS)
@@ -37,16 +32,6 @@ include libvec/rules.mk
 
 include compile.mk
 
-# rayview
-TARGET := rayview
-
-LDLIBS += -lSDL
-
-OBJS := \
-	rayview.o
-
-include compile.mk
-
 # ray2tga
 TARGET := ray2tga
 
@@ -62,6 +47,21 @@ TARGET := raysplit
 OBJS := \
 	raysplit.o \
 	RayFile.o
+
+include compile.mk
+
+# rayview
+TARGET := rayview
+
+LDLIBS += -lSDL
+
+# Darwin (Mac OS X)
+ifeq ($(UNAME),Darwin)
+LDLIBS += -framework Cocoa -lSDLmain
+endif
+
+OBJS := \
+	rayview.o
 
 include compile.mk
 

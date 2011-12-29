@@ -11,6 +11,8 @@ $(TARGET).do: TARGET:=$(TARGET)
 $(TARGET).do: $(BUILDDIR-$(TARGET))/$(TARGET) $(BUILDDIR-$(TARGET))/$(TARGET).lst $(BUILDDIR-$(TARGET))/$(TARGET).debug.lst
 	@ln -sf $(BUILDDIR-$(TARGET))/$(TARGET)
 
+$(BUILDDIR-$(TARGET))/$(TARGET): LDFLAGS:=$(LDFLAGS)
+$(BUILDDIR-$(TARGET))/$(TARGET): LDLIBS:=$(LDLIBS)
 $(BUILDDIR-$(TARGET))/$(TARGET): TARGET:=$(TARGET)
 $(BUILDDIR-$(TARGET))/$(TARGET): $(OBJS-$(TARGET))
 	@$(MKDIR)
@@ -34,16 +36,19 @@ endif
 # makes sure the target dir exists
 MKDIR = if [ ! -d $(dir $@) ]; then mkdir -p $(dir $@); fi
 
+$(BUILDDIR-$(TARGET))/%.o: CFLAGS:=$(CFLAGS)
 $(BUILDDIR-$(TARGET))/%.o: %.c
 	@$(MKDIR)
 	@echo compiling $<
 	@$(CC) $(CFLAGS) -c $< -MD -MT $@ -MF $(@:%o=%d) -o $@
 
+$(BUILDDIR-$(TARGET))/%.o: CPPFLAGS:=$(CPPFLAGS)
 $(BUILDDIR-$(TARGET))/%.o: %.cpp
 	@$(MKDIR)
 	@echo compiling $<
 	@$(CC) $(CPPFLAGS) -c $< -MD -MT $@ -MF $(@:%o=%d) -o $@
 
+$(BUILDDIR-$(TARGET))/%.o: ASMFLAGS:=$(ASMFLAGS)
 $(BUILDDIR-$(TARGET))/%.o: %.S
 	@$(MKDIR)
 	@echo compiling $<

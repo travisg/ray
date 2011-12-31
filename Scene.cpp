@@ -77,7 +77,7 @@ Scene::Scene()
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 100.0, 5.0), colorf(0.0, 0.0, 1.0), 100));
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 60.0, 60.0), colorf(1.0, 1.0, 1.0), 100));
 #endif
-#if 0
+#if 1
 	m_AmbientLight = colorf(0.0f, 0.0f, 0.0f);
 	{
 		Sphere *s = new Sphere(Vector3d(10.0, 10.0, 10.0), 8.0);
@@ -122,7 +122,7 @@ Scene::Scene()
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
 #endif
 
-#if 1
+#if 0
 	m_AmbientLight = colorf(0.0f, 0.0f, 0.0f);
 	{
 		Triangle *t = new Triangle(Vector3d(0.0, 0.0, 10.0), Vector3d(20.0, 0.0, 0.0), Vector3d(0.0, 20.0, 0.0));

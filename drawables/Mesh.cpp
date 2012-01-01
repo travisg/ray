@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2011 Travis Geiselbrecht
+ * Copyright (c) 2008-2012 Travis Geiselbrecht
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -87,7 +87,9 @@ bool MeshDrawable::Intersect(const Ray &ray) const
 	return false;
 }
 
-bool TriIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Vector3d &v0, const Vector3d &v1, const Vector3d &v2)
+bool TriIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, 
+	const Vector3d &v0, const Vector3d &v1, const Vector3d &v2,
+	const Vector3d &n0, const Vector3d &n1, const Vector3d &n2)
 {
 //	std::cout << v0 << " " << v1 << " " << v2 << std::endl;
 
@@ -135,6 +137,9 @@ bool TriIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Vector3
 		return false;
 	}
 
+	// lerp the normal from the passed in normal vertexes
+	normal = n0 * (1 - (s + t)) + n1 * s + n2 * t;
+
 	// normalize the normal before sending it back
 	normal.Normalize();
 
@@ -158,13 +163,15 @@ bool TriIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Vector3
 	return true;
 }
 
-bool QuadIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Vector3d &v0, const Vector3d &v1, const Vector3d &v2, const Vector3d &v3)
+bool QuadIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, 
+	const Vector3d &v0, const Vector3d &v1, const Vector3d &v2, const Vector3d &v3,
+	const Vector3d &n0, const Vector3d &n1, const Vector3d &n2, const Vector3d &n3)
 {
 //	std::cout << "quad" << v0 << " " << v1 << " " << v2 << " " << v3 << std::endl;
-	if (TriIntersect(ray, pos, normal, v0, v1, v2)) {
+	if (TriIntersect(ray, pos, normal, v0, v1, v2, n0, n1, n2)) {
 		return true;
 	}
-	return TriIntersect(ray, pos, normal, v2, v3, v0);
+	return TriIntersect(ray, pos, normal, v2, v3, v0, n2, n3, n0);
 }
 
 bool SurfaceIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Mesh &mesh, const Surface &surface)
@@ -187,14 +194,26 @@ bool SurfaceIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Mes
 	Vector3d v1(vp->x, vp->y, vp->z);
 	vp = &verts[surface.m_Indexes[2].posIndex];
 	Vector3d v2(vp->x, vp->y, vp->z);
+
+	// get the normal vertexes
+	const VertexList &nverts = mesh.GetNormalVertexList();
+	vp = &nverts[surface.m_Indexes[0].normIndex];
+	Vector3d n0(vp->x, vp->y, vp->z);
+	vp = &nverts[surface.m_Indexes[1].normIndex];
+	Vector3d n1(vp->x, vp->y, vp->z);
+	vp = &nverts[surface.m_Indexes[2].normIndex];
+	Vector3d n2(vp->x, vp->y, vp->z);
+
 	if (surface.m_Indexes.size() == 3) {
-		if (TriIntersect(ray, pos, normal, v0, v1, v2) == false)
+		if (TriIntersect(ray, pos, normal, v0, v1, v2, n0, n1, n2) == false)
 			return false;
 	} else {
 		vp = &verts[surface.m_Indexes[3].posIndex];
 		Vector3d v3(vp->x, vp->y, vp->z);
+		vp = &nverts[surface.m_Indexes[3].normIndex];
+		Vector3d n3(vp->x, vp->y, vp->z);
 
-		if (QuadIntersect(ray, pos, normal, v0, v1, v2, v3) == false)
+		if (QuadIntersect(ray, pos, normal, v0, v1, v2, v3, n0, n1, n2, n3) == false)
 			return false;
 	}
 

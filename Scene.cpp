@@ -31,6 +31,7 @@
 #include <drawables/Triangle.h>
 #include <drawables/Mesh.h>
 #include <shaders/DefaultShader.h>
+#include <shaders/DebugShader.h>
 #include <lights/SimpleLight.h>
 #include <mesh/OBJLoader.h>
 
@@ -160,7 +161,7 @@ Scene::Scene()
 //	m_SimpleLightList.push_back(new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
 #endif
 
-	if (1) {
+	if (0) {
 		Geometry *g;
 		std::cout << "loading cbox" << std::endl;
 		FILE *fp = fopen("resources/cbox.obj", "r");
@@ -189,8 +190,10 @@ Scene::Scene()
 			g->Dump();
 			MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
 			DefaultShader *ds = new DefaultShader;
-			ds->SetDiffuseColor(colorf(1.0, 0.0, 1.0));
+			ds->SetDiffuseColor(colorf(1.0, 1.0, 0.0));
 			ds->SetShinyness(0.0f);
+//			DebugShader *ds = new DebugShader;
+//			ds->SetMode(DebugShader::MODE_NORMAL);
 			md->SetShader(ShaderPtr(ds));
 			md->Prepare();
 			m_DrawableList.push_back(md);
@@ -225,8 +228,25 @@ Scene::Scene()
 			g->Dump();
 			MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
 			DefaultShader *ds = new DefaultShader;
-			ds->SetDiffuseColor(colorf(1.0, 0.5, 0.0));
+			ds->SetDiffuseColor(colorf(1.0, 0.5, 0.5));
 			ds->SetShinyness(0.0f);
+			md->SetShader(ShaderPtr(ds));
+			md->Prepare();
+			m_DrawableList.push_back(md);
+		}
+		fclose(fp);
+	}
+	if (0) {
+		Geometry *g;
+		std::cout << "loading lerp" << std::endl;
+		FILE *fp = fopen("resources/lerp.obj", "r");
+		if (obj_load(fp, &g) < 0) {
+			std::cerr << "error loading mesh" << std::endl;
+		} else {
+			g->Dump();
+			MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
+			DebugShader *ds = new DebugShader;
+			ds->SetMode(DebugShader::MODE_NORMAL);
 			md->SetShader(ShaderPtr(ds));
 			md->Prepare();
 			m_DrawableList.push_back(md);
@@ -236,7 +256,7 @@ Scene::Scene()
 
 //	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 0.0, 20), colorf(1.0, 1.0, 1.0), 100));
 
-	m_Camera = Libvec::Vector3d(3.0f, 3.0f, 3.0f);
+	m_Camera = Libvec::Vector3d(2.0f, 2.0f, 2.0f);
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0f, 4.0f, 7.0f), colorf(0.5, 1.0, 0.5), 100));
 //	m_Camera = Libvec::Vector3d(80.0f, 80.0f, 10.0f);
 

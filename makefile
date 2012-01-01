@@ -28,6 +28,7 @@ OBJS := \
 include drawables/rules.mk
 include lights/rules.mk
 include shaders/rules.mk
+include mesh/rules.mk
 include libvec/rules.mk
 
 include compile.mk

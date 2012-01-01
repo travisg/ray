@@ -20,6 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+#include <cstdio>
 #include <iostream>
 #include <vector>	
 #include <Scene.h>
@@ -30,6 +31,7 @@
 #include <drawables/Triangle.h>
 #include <shaders/DefaultShader.h>
 #include <lights/SimpleLight.h>
+#include <mesh/OBJLoader.h>
 
 using Libvec::Vector3d;
 
@@ -143,6 +145,41 @@ Scene::Scene()
 
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
 #endif
+
+	{
+		Geometry *g;
+		std::cout << "loading cbox" << std::endl;
+		FILE *fp = fopen("resources/cbox.obj", "r");
+		if (obj_load(fp, &g) < 0) {
+			std::cerr << "error loading mesh" << std::endl;
+		} else {
+			g->Dump();
+		}
+		fclose(fp);
+	}
+	{
+		Geometry *g;
+		std::cout << "loading dude" << std::endl;
+		FILE *fp = fopen("resources/dude.obj", "r");
+		if (obj_load(fp, &g) < 0) {
+			std::cerr << "error loading mesh" << std::endl;
+		} else {
+			g->Dump();
+		}
+		fclose(fp);
+	}
+	{
+		Geometry *g;
+		std::cout << "loading plane" << std::endl;
+		FILE *fp = fopen("resources/plane.obj", "r");
+		if (obj_load(fp, &g) < 0) {
+			std::cerr << "error loading mesh" << std::endl;
+		} else {
+			g->Dump();
+		}
+		fclose(fp);
+	}
+
 
 	m_Camera = Libvec::Vector3d(30.0f, 30.0f, 10.0f);
 //	m_Camera = Libvec::Vector3d(80.0f, 80.0f, 10.0f);

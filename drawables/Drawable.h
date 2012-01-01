@@ -35,6 +35,8 @@ protected:
 public:
 	virtual ~Drawable();
 
+	virtual int Prepare() { return 0; }
+
 	virtual bool Intersect(const Ray &ray) const = 0;
 	virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const = 0;
 

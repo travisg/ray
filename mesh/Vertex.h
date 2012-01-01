@@ -45,5 +45,7 @@ public:
 };
 
 typedef std::vector<Vertex> VertexList;
+typedef std::vector<Vertex>::iterator VertexListIterator;
+typedef std::vector<Vertex>::const_iterator VertexListIteratorConst;
 
 #endif

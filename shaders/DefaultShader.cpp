@@ -52,13 +52,17 @@ colorf DefaultShader::Run(const ShaderArgs &args)
 
 		// cast a ray at each light, see if we're in a shadow
 		Ray ray;
-		ray.origin = args.pos;
+		ray.origin = args.pos + args.normal * 0.001f;
 		ray.dir = l->GetPos() - ray.origin;
 		ray.dir.Normalize();
+		ray.light = true;
 	
+//		std::cout << "casting ray back to light" << std::endl;
 		if (!args.scene->DoesIntersect(ray, (ray.origin - l->GetPos()).Length())) {
 			Vector3d suntosurface = l->GetPos() - args.pos;
 			suntosurface.Normalize();
+
+//			std::cout << "does not intersect" << std::endl;
 		
 			float light = Dot(suntosurface, args.normal);
 
@@ -68,6 +72,7 @@ colorf DefaultShader::Run(const ShaderArgs &args)
 		}
 	}
 
+//	std::cout << "color " << color << std::endl;
 	// see how much of it is a pure reflection
 	if (m_Shinyness > 0.0f) {
 		Ray ray;
@@ -92,7 +97,7 @@ colorf DefaultShader::Run(const ShaderArgs &args)
 		}
 	}
 
-//	std::cout << "color " << color << std::endl;
+//	std::cout << "default shader color " << color << std::endl;
 	return color;
 }
 

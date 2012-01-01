@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2011 Travis Geiselbrecht
+ * Copyright (c) 2008-2012 Travis Geiselbrecht
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files
@@ -20,19 +20,36 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __RAY_H
-#define __RAY_H
+#ifndef __BOUNDING_SPHERE_H
+#define __BOUNDING_SPHERE_H
 
 #include <libvec/Vector3.h>
+#include <Ray.h>
 
-struct Ray {
-	Ray() : light(false) {}
-	Ray(const Libvec::Vector3d &_origin, const Libvec::Vector3d &_dir) : origin(_origin), dir(_dir), light(false) {}
+/* simple bounding sphere implementation */
+struct BoundingSphere {
+	bool DoesIntersect(const Ray &ray) const {
+		double radius2 = radius * radius;
 
-	Libvec::Vector3d origin;
-	Libvec::Vector3d dir;
+		Libvec::Vector3d oc = center - ray.origin;
+		double tca = Dot(oc, ray.dir);
+		if (tca < 0) {
+			// points away from the sphere
+			return false;
+		}
 
-	bool light;
+		double l2oc = oc.LengthSquared();
+		double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
+		if (l2hc > 0) {
+			return true;
+		}
+
+		return false;
+	}
+
+	Libvec::Vector3d center;
+	double radius;
 };
 
 #endif
+

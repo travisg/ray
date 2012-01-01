@@ -23,7 +23,7 @@
 #include <iostream>
 #include "TraceMaster.h"
 
-#define WORKUNITSIZE 256
+#define WORKUNITSIZE 16
 
 TraceMaster::TraceMaster(RenderSurface &surface)
 :	m_Surface(surface),

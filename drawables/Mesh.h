@@ -20,19 +20,32 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __RAY_H
-#define __RAY_H
+#ifndef __DRAWABLE_MESH_H
+#define __DRAWABLE_MESH_H
 
 #include <libvec/Vector3.h>
+#include <Ray.h>
+#include <BoundingSphere.h>
+#include <drawables/Drawable.h>
+#include <boost/shared_ptr.hpp>
 
-struct Ray {
-	Ray() : light(false) {}
-	Ray(const Libvec::Vector3d &_origin, const Libvec::Vector3d &_dir) : origin(_origin), dir(_dir), light(false) {}
+class Geometry;
 
-	Libvec::Vector3d origin;
-	Libvec::Vector3d dir;
+class MeshDrawable : public Drawable {
+public:
+	MeshDrawable(boost::shared_ptr<Geometry>);
+	virtual ~MeshDrawable();
 
-	bool light;
+	virtual int Prepare();
+
+	virtual bool Intersect(const Ray &ray) const;
+	virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const;
+
+private:
+	boost::shared_ptr<Geometry> m_Geom;
+
+	BoundingSphere m_BSphere;
 };
 
 #endif
+

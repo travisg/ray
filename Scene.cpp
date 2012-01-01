@@ -29,6 +29,7 @@
 #include <drawables/Sphere.h>
 #include <drawables/Plane.h>
 #include <drawables/Triangle.h>
+#include <drawables/Mesh.h>
 #include <shaders/DefaultShader.h>
 #include <lights/SimpleLight.h>
 #include <mesh/OBJLoader.h>
@@ -46,6 +47,7 @@ Scene::Scene()
 		ds->SetDiffuseColor(colorf::RandColor());
 		ds->SetShinyness(0.0f);
 		s->SetShader(ShaderPtr(ds));
+		s->Prepare();
 		m_DrawableList.push_back(s);
 	}
 #endif
@@ -55,6 +57,7 @@ Scene::Scene()
 		DefaultShader *ds = new DefaultShader;
 		ds->SetShinyness(0.0f);
 		s->SetShader(ShaderPtr(ds));
+		s->Prepare();
 	}
 	m_DrawableList.push_back(s);
 
@@ -63,6 +66,7 @@ Scene::Scene()
 		DefaultShader *ds = new DefaultShader;
 		ds->SetShinyness(0.2f);
 		p->SetShader(ShaderPtr(ds));
+		p->Prepare();
 	}
 	m_DrawableList.push_back(p);
 
@@ -71,6 +75,7 @@ Scene::Scene()
 		DefaultShader *ds = new DefaultShader;
 		ds->SetShinyness(0.0f);
 		p->SetShader(ShaderPtr(ds));
+		p->Prepare();
 	}
 	m_DrawableList.push_back(p);
 
@@ -79,7 +84,7 @@ Scene::Scene()
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 100.0, 5.0), colorf(0.0, 0.0, 1.0), 100));
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 60.0, 60.0), colorf(1.0, 1.0, 1.0), 100));
 #endif
-#if 1
+#if 0
 	m_AmbientLight = colorf(0.0f, 0.0f, 0.0f);
 	{
 		Sphere *s = new Sphere(Vector3d(10.0, 10.0, 10.0), 8.0);
@@ -87,6 +92,7 @@ Scene::Scene()
 			DefaultShader *ds = new DefaultShader;
 			ds->SetShinyness(0.8f);
 			s->SetShader(ShaderPtr(ds));
+			s->Prepare();
 		}
 		m_DrawableList.push_back(s);
 	}
@@ -98,6 +104,7 @@ Scene::Scene()
 		ds->SetDiffuseColor(colorf(1.0, 0.2, 0.2));
 		ds->SetShinyness(0.5f);
 		p->SetShader(ShaderPtr(ds));
+		p->Prepare();
 		m_DrawableList.push_back(p);
 	}
 	{
@@ -106,6 +113,7 @@ Scene::Scene()
 		ds->SetDiffuseColor(colorf(0.2, 1.0, 0.2));
 		ds->SetShinyness(0.5f);
 		p->SetShader(ShaderPtr(ds));
+		p->Prepare();
 		m_DrawableList.push_back(p);
 	}
 	// back
@@ -115,6 +123,7 @@ Scene::Scene()
 		ds->SetDiffuseColor(colorf(0.2, 0.2, 1.0));
 		ds->SetShinyness(0.5f);
 		p->SetShader(ShaderPtr(ds));
+		p->Prepare();
 		m_DrawableList.push_back(p);
 	}
 
@@ -124,29 +133,34 @@ Scene::Scene()
 	m_SimpleLightList.push_back(new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
 #endif
 
-#if 0
-	m_AmbientLight = colorf(0.0f, 0.0f, 0.0f);
-	{
+#if 1
+	m_AmbientLight = colorf(0.0f, 0.0f, 0.2f);
+	if (0) {
 		Triangle *t = new Triangle(Vector3d(0.0, 0.0, 10.0), Vector3d(20.0, 0.0, 0.0), Vector3d(0.0, 20.0, 0.0));
 		DefaultShader *ds = new DefaultShader;
 		ds->SetDiffuseColor(colorf(0.2, 0.2, 1.0));
 		ds->SetShinyness(0.5f);
 		t->SetShader(ShaderPtr(ds));
+		t->Prepare();
 		m_DrawableList.push_back(t);
 	}
-	{
-		Plane *p = new Plane(Ray(Vector3d(0.0, 0.0, -1.0), Vector3d(0.0, 0.0, 1.0)));
+	if (1) {
+		Plane *p = new Plane(Ray(Vector3d(0.0, 0.0, -3.0), Vector3d(0.0, 0.0, 1.0)));
 		DefaultShader *ds = new DefaultShader;
 		ds->SetDiffuseColor(colorf(1.0, 0.0, 0.0));
-		ds->SetShinyness(0.0f);
+		ds->SetShinyness(0.2f);
 		p->SetShader(ShaderPtr(ds));
+		p->Prepare();
 		m_DrawableList.push_back(p);
 	}
 
-	m_SimpleLightList.push_back(new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
+//	m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0, 1.0, 100.0), colorf(1.0, 0.0, 0.0), 100));
+//	m_SimpleLightList.push_back(new SimpleLight(Vector3d(100.0, 1.0, 5.0), colorf(0.0, 1.0, 0.0), 100));
+	m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0, 100.0, 5.0), colorf(0.0, 0.0, 1.0), 100));
+//	m_SimpleLightList.push_back(new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
 #endif
 
-	{
+	if (1) {
 		Geometry *g;
 		std::cout << "loading cbox" << std::endl;
 		FILE *fp = fopen("resources/cbox.obj", "r");
@@ -154,10 +168,18 @@ Scene::Scene()
 			std::cerr << "error loading mesh" << std::endl;
 		} else {
 			g->Dump();
+
+			MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
+			DefaultShader *ds = new DefaultShader;
+			ds->SetDiffuseColor(colorf(1.0, 1.0, 0.0));
+			ds->SetShinyness(0.0f);
+			md->SetShader(ShaderPtr(ds));
+			md->Prepare();
+			m_DrawableList.push_back(md);
 		}
 		fclose(fp);
 	}
-	{
+	if (1) {
 		Geometry *g;
 		std::cout << "loading dude" << std::endl;
 		FILE *fp = fopen("resources/dude.obj", "r");
@@ -165,10 +187,17 @@ Scene::Scene()
 			std::cerr << "error loading mesh" << std::endl;
 		} else {
 			g->Dump();
+			MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
+			DefaultShader *ds = new DefaultShader;
+			ds->SetDiffuseColor(colorf(1.0, 0.0, 1.0));
+			ds->SetShinyness(0.0f);
+			md->SetShader(ShaderPtr(ds));
+			md->Prepare();
+			m_DrawableList.push_back(md);
 		}
 		fclose(fp);
 	}
-	{
+	if (0) {
 		Geometry *g;
 		std::cout << "loading plane" << std::endl;
 		FILE *fp = fopen("resources/plane.obj", "r");
@@ -176,12 +205,39 @@ Scene::Scene()
 			std::cerr << "error loading mesh" << std::endl;
 		} else {
 			g->Dump();
+			MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
+			DefaultShader *ds = new DefaultShader;
+			ds->SetDiffuseColor(colorf(0.0, 0.0, 1.0));
+			ds->SetShinyness(0.0f);
+			md->SetShader(ShaderPtr(ds));
+			md->Prepare();
+			m_DrawableList.push_back(md);
+		}
+		fclose(fp);
+	}
+	if (1) {
+		Geometry *g;
+		std::cout << "loading blob" << std::endl;
+		FILE *fp = fopen("resources/blob.obj", "r");
+		if (obj_load(fp, &g) < 0) {
+			std::cerr << "error loading mesh" << std::endl;
+		} else {
+			g->Dump();
+			MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
+			DefaultShader *ds = new DefaultShader;
+			ds->SetDiffuseColor(colorf(1.0, 0.5, 0.0));
+			ds->SetShinyness(0.0f);
+			md->SetShader(ShaderPtr(ds));
+			md->Prepare();
+			m_DrawableList.push_back(md);
 		}
 		fclose(fp);
 	}
 
+//	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 0.0, 20), colorf(1.0, 1.0, 1.0), 100));
 
-	m_Camera = Libvec::Vector3d(30.0f, 30.0f, 10.0f);
+	m_Camera = Libvec::Vector3d(3.0f, 3.0f, 3.0f);
+	m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0f, 4.0f, 7.0f), colorf(0.5, 1.0, 0.5), 100));
 //	m_Camera = Libvec::Vector3d(80.0f, 80.0f, 10.0f);
 
 	m_Target = Libvec::Vector3d(0.0f, 0.0f, 0.0f);

@@ -38,8 +38,14 @@ public:
 
 	Mesh *CreateMesh();
 
-	MeshListIteratorConst ListIterator() { return m_Meshes.begin(); }
-	MeshListIteratorConst ListEnd() { return m_Meshes.end(); }
+	MeshListIteratorConst ListIterator() const { return m_Meshes.begin(); }
+	MeshListIteratorConst ListEnd() const { return m_Meshes.end(); }
+
+	VertexListIteratorConst VertexListIterator() const { return m_Verts.begin(); }
+	VertexListIteratorConst VertexListEnd() const { return m_Verts.end(); }
+
+	VertexListIteratorConst NormalVertexListIterator() const { return m_NormalVerts.begin(); }
+	VertexListIteratorConst NormalVertexListEnd() const { return m_NormalVerts.end(); }
 
 	void Dump() const;
 

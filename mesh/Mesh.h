@@ -41,6 +41,13 @@ public:
 
 	void Dump() const;
 
+	const SurfaceList &GetSurfaceList() const { return m_Surfaces; }
+
+	const VertexList &GetVertexList() const { return m_Verts; }
+	const VertexList &GetNormalVertexList() const { return m_NormalVerts; }
+	const VertexList &GetTangentVertexList() const { return m_TangentVerts; }
+	const VertexList &GetUVVertexList() const { return m_UVVerts; }
+
 private:
 	std::string m_Name;
 

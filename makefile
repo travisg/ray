@@ -7,6 +7,9 @@ all: $(addsuffix .do,$(TARGETS))
 
 TARGET := ray
 
+#COMPILEFLAGS += -pg
+#LDFLAGS += -pg
+
 COMPILEFLAGS += -Wall -g -O2 -I. -Wno-multichar
 CFLAGS += $(COMPILEFLAGS)
 CPPFLAGS += $(COMPILEFLAGS)

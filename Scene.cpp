@@ -37,6 +37,32 @@
 
 using Libvec::Vector3d;
 
+static MeshDrawable *LoadMesh(const std::string &filename)
+{
+	Geometry *g;
+	std::cout << "loading " << filename << std::endl;
+	FILE *fp = fopen(filename.c_str(), "r");
+	if (!fp) {
+		std::cerr << "error opening file " << filename << std::endl;
+		return NULL;
+	}
+
+	int err = obj_load(fp, &g);
+	fclose(fp);
+
+	if (err < 0) {
+		std::cerr << "error loading mesh" << std::endl;
+		return NULL;
+	}
+
+	g->Dump();
+
+	MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
+
+	return md;
+}
+
+
 Scene::Scene()
 :	m_AmbientLight(0)
 {
@@ -162,96 +188,61 @@ Scene::Scene()
 #endif
 
 	if (0) {
-		Geometry *g;
-		std::cout << "loading cbox" << std::endl;
-		FILE *fp = fopen("resources/cbox.obj", "r");
-		if (obj_load(fp, &g) < 0) {
-			std::cerr << "error loading mesh" << std::endl;
-		} else {
-			g->Dump();
+		MeshDrawable *md = LoadMesh("resources/cbox.obj");
 
-			MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
-			DefaultShader *ds = new DefaultShader;
-			ds->SetDiffuseColor(colorf(1.0, 1.0, 0.0));
-			ds->SetShinyness(0.0f);
-			md->SetShader(ShaderPtr(ds));
-			md->Prepare();
-			m_DrawableList.push_back(md);
-		}
-		fclose(fp);
+		DefaultShader *ds = new DefaultShader;
+		ds->SetDiffuseColor(colorf(1.0, 1.0, 0.0));
+		ds->SetShinyness(0.0f);
+		md->SetShader(ShaderPtr(ds));
+		md->Prepare();
+		m_DrawableList.push_back(md);
 	}
 	if (1) {
-		Geometry *g;
-		std::cout << "loading dude" << std::endl;
-		FILE *fp = fopen("resources/dude.obj", "r");
-		if (obj_load(fp, &g) < 0) {
-			std::cerr << "error loading mesh" << std::endl;
-		} else {
-			g->Dump();
-			MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
-			DefaultShader *ds = new DefaultShader;
-			ds->SetDiffuseColor(colorf(1.0, 1.0, 0.0));
-			ds->SetShinyness(0.0f);
+		MeshDrawable *md = LoadMesh("resources/dude.obj");
+
+		DefaultShader *ds = new DefaultShader;
+		ds->SetDiffuseColor(colorf(1.0, 1.0, 0.0));
+		ds->SetShinyness(0.0f);
 //			DebugShader *ds = new DebugShader;
 //			ds->SetMode(DebugShader::MODE_NORMAL);
-			md->SetShader(ShaderPtr(ds));
-			md->Prepare();
-			m_DrawableList.push_back(md);
-		}
-		fclose(fp);
+		md->SetShader(ShaderPtr(ds));
+		md->Prepare();
+		m_DrawableList.push_back(md);
 	}
 	if (0) {
-		Geometry *g;
-		std::cout << "loading plane" << std::endl;
-		FILE *fp = fopen("resources/plane.obj", "r");
-		if (obj_load(fp, &g) < 0) {
-			std::cerr << "error loading mesh" << std::endl;
-		} else {
-			g->Dump();
-			MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
-			DefaultShader *ds = new DefaultShader;
-			ds->SetDiffuseColor(colorf(0.0, 0.0, 1.0));
-			ds->SetShinyness(0.0f);
-			md->SetShader(ShaderPtr(ds));
-			md->Prepare();
-			m_DrawableList.push_back(md);
-		}
-		fclose(fp);
-	}
-	if (1) {
-		Geometry *g;
-		std::cout << "loading blob" << std::endl;
-		FILE *fp = fopen("resources/blob.obj", "r");
-		if (obj_load(fp, &g) < 0) {
-			std::cerr << "error loading mesh" << std::endl;
-		} else {
-			g->Dump();
-			MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
-			DefaultShader *ds = new DefaultShader;
-			ds->SetDiffuseColor(colorf(1.0, 0.5, 0.5));
-			ds->SetShinyness(0.0f);
-			md->SetShader(ShaderPtr(ds));
-			md->Prepare();
-			m_DrawableList.push_back(md);
-		}
-		fclose(fp);
+		MeshDrawable *md = LoadMesh("resources/plane.obj");
+		DefaultShader *ds = new DefaultShader;
+		ds->SetDiffuseColor(colorf(0.0, 0.0, 1.0));
+		ds->SetShinyness(0.0f);
+		md->SetShader(ShaderPtr(ds));
+		md->Prepare();
+		m_DrawableList.push_back(md);
 	}
 	if (0) {
-		Geometry *g;
-		std::cout << "loading lerp" << std::endl;
-		FILE *fp = fopen("resources/lerp.obj", "r");
-		if (obj_load(fp, &g) < 0) {
-			std::cerr << "error loading mesh" << std::endl;
-		} else {
-			g->Dump();
-			MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
-			DebugShader *ds = new DebugShader;
-			ds->SetMode(DebugShader::MODE_NORMAL);
-			md->SetShader(ShaderPtr(ds));
-			md->Prepare();
-			m_DrawableList.push_back(md);
-		}
-		fclose(fp);
+		MeshDrawable *md = LoadMesh("resources/csphere.obj");
+		DefaultShader *ds = new DefaultShader;
+		ds->SetDiffuseColor(colorf(0.0, 0.0, 1.0));
+		ds->SetShinyness(0.0f);
+		md->SetShader(ShaderPtr(ds));
+		md->Prepare();
+		m_DrawableList.push_back(md);
+	}
+	if (0) {
+		MeshDrawable *md = LoadMesh("resources/blob.obj");
+		DefaultShader *ds = new DefaultShader;
+		ds->SetDiffuseColor(colorf(1.0, 0.5, 0.5));
+		ds->SetShinyness(0.0f);
+		md->SetShader(ShaderPtr(ds));
+		md->Prepare();
+		m_DrawableList.push_back(md);
+	}
+	if (0) {
+		MeshDrawable *md = LoadMesh("resources/lerp.obj");
+		DebugShader *ds = new DebugShader;
+		ds->SetMode(DebugShader::MODE_NORMAL);
+		md->SetShader(ShaderPtr(ds));
+		md->Prepare();
+		m_DrawableList.push_back(md);
 	}
 
 //	m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 0.0, 20), colorf(1.0, 1.0, 1.0), 100));

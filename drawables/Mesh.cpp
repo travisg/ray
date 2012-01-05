@@ -22,6 +22,7 @@
  */
 #include <cstdlib>
 #include <vector>
+#include <iostream>
 #include <boost/shared_ptr.hpp>
 
 #include <drawables/Mesh.h>

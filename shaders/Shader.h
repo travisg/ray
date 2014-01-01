@@ -33,20 +33,20 @@ class Tracer;
 struct Ray;
 
 struct ShaderArgs {
-	Scene *scene;
-	Tracer *tracer;
-	const Drawable *d;
-	const Ray *ray;
-	Libvec::Vector3d pos;
-	Libvec::Vector3d normal;
+    Scene *scene;
+    Tracer *tracer;
+    const Drawable *d;
+    const Ray *ray;
+    Libvec::Vector3d pos;
+    Libvec::Vector3d normal;
 };
 
 class Shader {
 public:
-	Shader() {}
-	virtual ~Shader() {}
+    Shader() {}
+    virtual ~Shader() {}
 
-	virtual colorf Run(const ShaderArgs &args) = 0;
+    virtual colorf Run(const ShaderArgs &args) = 0;
 };
 
 typedef boost::shared_ptr<Shader> ShaderPtr;

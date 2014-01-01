@@ -25,8 +25,8 @@
 
 class Light {
 public:
-	Light() {}
-	virtual ~Light() {}
+    Light() {}
+    virtual ~Light() {}
 
 };
 

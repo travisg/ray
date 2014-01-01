@@ -27,36 +27,36 @@
 
 class Geometry {
 public:
-	Geometry();
-	~Geometry();
+    Geometry();
+    ~Geometry();
 
-	void AddVert(const Vertex &v);
-	void AddNormalVert(const Vertex &v);
-	void AddTangentVert(const Vertex &v);
-	void AddUVVert(const Vertex &v);
-	void AddMesh(Mesh *m);
+    void AddVert(const Vertex &v);
+    void AddNormalVert(const Vertex &v);
+    void AddTangentVert(const Vertex &v);
+    void AddUVVert(const Vertex &v);
+    void AddMesh(Mesh *m);
 
-	Mesh *CreateMesh();
+    Mesh *CreateMesh();
 
-	MeshListIteratorConst ListIterator() const { return m_Meshes.begin(); }
-	MeshListIteratorConst ListEnd() const { return m_Meshes.end(); }
+    MeshListIteratorConst ListIterator() const { return m_Meshes.begin(); }
+    MeshListIteratorConst ListEnd() const { return m_Meshes.end(); }
 
-	VertexListIteratorConst VertexListIterator() const { return m_Verts.begin(); }
-	VertexListIteratorConst VertexListEnd() const { return m_Verts.end(); }
+    VertexListIteratorConst VertexListIterator() const { return m_Verts.begin(); }
+    VertexListIteratorConst VertexListEnd() const { return m_Verts.end(); }
 
-	VertexListIteratorConst NormalVertexListIterator() const { return m_NormalVerts.begin(); }
-	VertexListIteratorConst NormalVertexListEnd() const { return m_NormalVerts.end(); }
+    VertexListIteratorConst NormalVertexListIterator() const { return m_NormalVerts.begin(); }
+    VertexListIteratorConst NormalVertexListEnd() const { return m_NormalVerts.end(); }
 
-	void Dump() const;
+    void Dump() const;
 
 private:
-	MeshList m_Meshes;
+    MeshList m_Meshes;
 
-	// shared verts
-	VertexList m_Verts;
-	VertexList m_NormalVerts;
-	VertexList m_TangentVerts;
-	VertexList m_UVVerts;
+    // shared verts
+    VertexList m_Verts;
+    VertexList m_NormalVerts;
+    VertexList m_TangentVerts;
+    VertexList m_UVVerts;
 };
 
 #endif

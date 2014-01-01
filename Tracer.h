@@ -32,21 +32,21 @@ class Scene;
 
 class Tracer {
 public:
-	Tracer(RenderSurface &surface, Scene &scene, TraceMaster &master);
-	virtual ~Tracer();
+    Tracer(RenderSurface &surface, Scene &scene, TraceMaster &master);
+    virtual ~Tracer();
 
-	void Trace();
-	bool Cast(colorf &color, const Ray &ray);
+    void Trace();
+    bool Cast(colorf &color, const Ray &ray);
 
 private:
-	RenderSurface &m_Surface;
+    RenderSurface &m_Surface;
 
-	Scene &m_Scene;
-	TraceMaster &m_Master;
+    Scene &m_Scene;
+    TraceMaster &m_Master;
 
-	int m_Depth;
+    int m_Depth;
 
-	static const int kMaxTraceDepth = 16;
+    static const int kMaxTraceDepth = 16;
 };
 
 #endif

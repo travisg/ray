@@ -32,85 +32,85 @@ struct colorf;
 
 struct color32 {
 public:
-	unsigned char r;
-	unsigned char g;
-	unsigned char b;
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
 
-	color32() {}
-	color32(int c) : r(c), g(c), b(c) {}
-	color32(const colorf &c);
+    color32() {}
+    color32(int c) : r(c), g(c), b(c) {}
+    color32(const colorf &c);
 
-	operator unsigned int() { return xrgb(); }
+    operator unsigned int() { return xrgb(); }
 
-	unsigned int xrgb() { return ((r << 16) | (g << 8) | (b)); }
-	unsigned int xbgr() { return ((b << 16) | (g << 8) | (r)); }
-	unsigned int rgbx() { return ((r << 24) | (g << 16) | (b << 8)); }
-	unsigned int bgrx() { return ((b << 24) | (g << 16) | (r << 8)); }
+    unsigned int xrgb() { return ((r << 16) | (g << 8) | (b)); }
+    unsigned int xbgr() { return ((b << 16) | (g << 8) | (r)); }
+    unsigned int rgbx() { return ((r << 24) | (g << 16) | (b << 8)); }
+    unsigned int bgrx() { return ((b << 24) | (g << 16) | (r << 8)); }
 };
 
 struct colorf {
 public:
-	double r;
-	double g;
-	double b;
+    double r;
+    double g;
+    double b;
 
-	colorf() {}
-	colorf(double _r, double _g, double _b) : r(_r), g(_g), b(_b) {}
-	colorf(double c) : r(c), g(c), b(c) {}
+    colorf() {}
+    colorf(double _r, double _g, double _b) : r(_r), g(_g), b(_b) {}
+    colorf(double c) : r(c), g(c), b(c) {}
 
-	colorf operator*(double f);
-	colorf operator*(const colorf &c);
+    colorf operator*(double f);
+    colorf operator*(const colorf &c);
 
-	colorf & operator+=(const colorf &c);
-	colorf & operator*=(double f);
-	
-	static colorf RandColor();
+    colorf & operator+=(const colorf &c);
+    colorf & operator*=(double f);
+
+    static colorf RandColor();
 };
 
-inline color32::color32(const colorf &c) 
+inline color32::color32(const colorf &c)
 {
-	r = (c.r < 0.0f) ? 0 : ((c.r > 1.0f) ? 255 : ((unsigned char)(255.0 * c.r)));
-	g = (c.g < 0.0f) ? 0 : ((c.g > 1.0f) ? 255 : ((unsigned char)(255.0 * c.g)));
-	b = (c.b < 0.0f) ? 0 : ((c.b > 1.0f) ? 255 : ((unsigned char)(255.0 * c.b)));
+    r = (c.r < 0.0f) ? 0 : ((c.r > 1.0f) ? 255 : ((unsigned char)(255.0 * c.r)));
+    g = (c.g < 0.0f) ? 0 : ((c.g > 1.0f) ? 255 : ((unsigned char)(255.0 * c.g)));
+    b = (c.b < 0.0f) ? 0 : ((c.b > 1.0f) ? 255 : ((unsigned char)(255.0 * c.b)));
 }
 
 inline colorf & colorf::operator+=(const colorf &c)
 {
-	r += c.r;
-	g += c.g;
-	b += c.b;
+    r += c.r;
+    g += c.g;
+    b += c.b;
 
-	return *this;
+    return *this;
 }
 
 inline colorf & colorf::operator*=(double f)
 {
-	r *= f;
-	g *= f;
-	b *= f;
+    r *= f;
+    g *= f;
+    b *= f;
 
-	return *this;
+    return *this;
 }
 
 inline colorf colorf::operator*(double f)
 {
-	return colorf(r * f, g * f, b * f);
+    return colorf(r * f, g * f, b * f);
 }
 
 inline colorf colorf::operator*(const colorf &c)
 {
-	return colorf(r * c.r, g * c.g, b * c.b);
+    return colorf(r * c.r, g * c.g, b * c.b);
 }
 
 inline std::ostream &operator<<(std::ostream &os, const colorf &c)
 {
-	os << "< " << c.r << " " << c.g << " " << c.b << " >";
-	return os;
+    os << "< " << c.r << " " << c.g << " " << c.b << " >";
+    return os;
 }
 
 inline colorf colorf::RandColor()
 {
-	return colorf(Libvec::Random(), Libvec::Random(), Libvec::Random());
+    return colorf(Libvec::Random(), Libvec::Random(), Libvec::Random());
 }
 
 #endif

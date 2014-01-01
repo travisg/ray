@@ -33,45 +33,45 @@ Geometry::~Geometry()
 
 void Geometry::AddMesh(Mesh *m)
 {
-	m_Meshes.push_back(m);
+    m_Meshes.push_back(m);
 }
 
 void Geometry::AddVert(const Vertex &v)
 {
-	m_Verts.push_back(v);
+    m_Verts.push_back(v);
 }
 
 void Geometry::AddNormalVert(const Vertex &v)
 {
-	m_NormalVerts.push_back(v);
+    m_NormalVerts.push_back(v);
 }
 
 void Geometry::AddTangentVert(const Vertex &v)
 {
-	m_TangentVerts.push_back(v);
+    m_TangentVerts.push_back(v);
 }
 
 void Geometry::AddUVVert(const Vertex &v)
 {
-	m_UVVerts.push_back(v);
+    m_UVVerts.push_back(v);
 }
 
 Mesh *Geometry::CreateMesh()
 {
-	return new Mesh(m_Verts, m_NormalVerts, m_TangentVerts, m_UVVerts);
+    return new Mesh(m_Verts, m_NormalVerts, m_TangentVerts, m_UVVerts);
 }
 
 void Geometry::Dump() const
 {
-	std::cout << "Geometry at " << (void *)this << std::endl;
+    std::cout << "Geometry at " << (void *)this << std::endl;
 
-	std::cout << "\t" << m_Meshes.size() << " meshes" << std::endl;
-	std::cout << "\t" << m_Verts.size() << " vertices" << std::endl;
-	std::cout << "\t" << m_NormalVerts.size() << " normal vertices" << std::endl;
-	std::cout << "\t" << m_TangentVerts.size() << " tangent vertices" << std::endl;
-	std::cout << "\t" << m_UVVerts.size() << " uv vertices" << std::endl;
-	
-	for (MeshListIteratorConst i = m_Meshes.begin(); i != m_Meshes.end(); i++) {
-		(*i)->Dump();
-	}
+    std::cout << "\t" << m_Meshes.size() << " meshes" << std::endl;
+    std::cout << "\t" << m_Verts.size() << " vertices" << std::endl;
+    std::cout << "\t" << m_NormalVerts.size() << " normal vertices" << std::endl;
+    std::cout << "\t" << m_TangentVerts.size() << " tangent vertices" << std::endl;
+    std::cout << "\t" << m_UVVerts.size() << " uv vertices" << std::endl;
+
+    for (MeshListIteratorConst i = m_Meshes.begin(); i != m_Meshes.end(); i++) {
+        (*i)->Dump();
+    }
 }

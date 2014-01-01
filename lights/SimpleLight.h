@@ -29,20 +29,20 @@
 
 class SimpleLight : public Light {
 public:
-	SimpleLight() {}
-	SimpleLight(const Libvec::Vector3d &pos, colorf color, float falloff) :
-		m_Position(pos), m_Color(color), m_Falloff(falloff) {}
+    SimpleLight() {}
+    SimpleLight(const Libvec::Vector3d &pos, colorf color, float falloff) :
+        m_Position(pos), m_Color(color), m_Falloff(falloff) {}
 
-	virtual ~SimpleLight() {}
+    virtual ~SimpleLight() {}
 
-	const Libvec::Vector3d &GetPos() const { return m_Position; }
-	colorf GetColor() const { return m_Color; }
-	float GetFalloff() const { return m_Falloff; }
+    const Libvec::Vector3d &GetPos() const { return m_Position; }
+    colorf GetColor() const { return m_Color; }
+    float GetFalloff() const { return m_Falloff; }
 
 private:
-	Libvec::Vector3d m_Position;
-	colorf m_Color;
-	float m_Falloff;
+    Libvec::Vector3d m_Position;
+    colorf m_Color;
+    float m_Falloff;
 };
 
 #endif

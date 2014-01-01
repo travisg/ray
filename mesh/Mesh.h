@@ -29,37 +29,37 @@
 
 class Mesh {
 public:
-	Mesh(const VertexList &posVerts, const VertexList &normalVerts, const VertexList &tangentVerts, const VertexList &uvVerts);
-	virtual ~Mesh();
+    Mesh(const VertexList &posVerts, const VertexList &normalVerts, const VertexList &tangentVerts, const VertexList &uvVerts);
+    virtual ~Mesh();
 
-	void AddSurface(Surface *s);
+    void AddSurface(Surface *s);
 
-	void SetName(const std::string &name);
-	std::string GetName() { return m_Name; }
+    void SetName(const std::string &name);
+    std::string GetName() { return m_Name; }
 
-	void SetVertexLists();
+    void SetVertexLists();
 
-	void Dump() const;
+    void Dump() const;
 
-	const SurfaceList &GetSurfaceList() const { return m_Surfaces; }
+    const SurfaceList &GetSurfaceList() const { return m_Surfaces; }
 
-	const VertexList &GetVertexList() const { return m_Verts; }
-	const VertexList &GetNormalVertexList() const { return m_NormalVerts; }
-	const VertexList &GetTangentVertexList() const { return m_TangentVerts; }
-	const VertexList &GetUVVertexList() const { return m_UVVerts; }
+    const VertexList &GetVertexList() const { return m_Verts; }
+    const VertexList &GetNormalVertexList() const { return m_NormalVerts; }
+    const VertexList &GetTangentVertexList() const { return m_TangentVerts; }
+    const VertexList &GetUVVertexList() const { return m_UVVerts; }
 
 private:
-	std::string m_Name;
+    std::string m_Name;
 
-	// vertex list, probably shared between multiple meshes
-	const VertexList &m_Verts;
-	const VertexList &m_NormalVerts;
-	const VertexList &m_TangentVerts;
-	const VertexList &m_UVVerts;
+    // vertex list, probably shared between multiple meshes
+    const VertexList &m_Verts;
+    const VertexList &m_NormalVerts;
+    const VertexList &m_TangentVerts;
+    const VertexList &m_UVVerts;
 
-	SurfaceList m_Surfaces;
+    SurfaceList m_Surfaces;
 
-	friend class UnifiedMesh;
+    friend class UnifiedMesh;
 };
 
 typedef std::vector<Mesh*> MeshList;

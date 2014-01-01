@@ -26,13 +26,13 @@
 #include <libvec/Vector3.h>
 
 struct Ray {
-	Ray() : light(false) {}
-	Ray(const Libvec::Vector3d &_origin, const Libvec::Vector3d &_dir) : origin(_origin), dir(_dir), light(false) {}
+    Ray() : light(false) {}
+    Ray(const Libvec::Vector3d &_origin, const Libvec::Vector3d &_dir) : origin(_origin), dir(_dir), light(false) {}
 
-	Libvec::Vector3d origin;
-	Libvec::Vector3d dir;
+    Libvec::Vector3d origin;
+    Libvec::Vector3d dir;
 
-	bool light;
+    bool light;
 };
 
 #endif

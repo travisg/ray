@@ -30,15 +30,15 @@
 
 class Triangle : public Drawable {
 public:
-	Triangle(const Libvec::Vector3d &v0, const Libvec::Vector3d &v1, const Libvec::Vector3d &v2);
-	virtual ~Triangle();
+    Triangle(const Libvec::Vector3d &v0, const Libvec::Vector3d &v1, const Libvec::Vector3d &v2);
+    virtual ~Triangle();
 
-	virtual bool Intersect(const Ray &ray) const;
-	virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const;
+    virtual bool Intersect(const Ray &ray) const;
+    virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const;
 
 private:
-	Libvec::Vector3d m_v[3];
-	Libvec::Vector3d m_normal;
+    Libvec::Vector3d m_v[3];
+    Libvec::Vector3d m_normal;
 };
 
 #endif

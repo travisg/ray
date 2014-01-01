@@ -24,11 +24,11 @@
 
 void Surface::AddIndex(int posIndex, int normIndex, int uvIndex)
 {
-	SurfaceIndex i;
+    SurfaceIndex i;
 
-	i.posIndex = posIndex;
-	i.normIndex = normIndex;
-	i.uvIndex = uvIndex;
+    i.posIndex = posIndex;
+    i.normIndex = normIndex;
+    i.uvIndex = uvIndex;
 
-	m_Indexes.push_back(i);
+    m_Indexes.push_back(i);
 }

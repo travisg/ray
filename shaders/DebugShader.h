@@ -28,19 +28,19 @@
 
 class DebugShader : public Shader {
 public:
-	DebugShader();
-	virtual ~DebugShader();
+    DebugShader();
+    virtual ~DebugShader();
 
-	virtual colorf Run(const ShaderArgs &args);
+    virtual colorf Run(const ShaderArgs &args);
 
-	enum DebugMode {
-		MODE_NORMAL = 0,
-		MODE_DEPTH,
-	};
-	void SetMode(DebugMode _mode) { mode = _mode; }
+    enum DebugMode {
+        MODE_NORMAL = 0,
+        MODE_DEPTH,
+    };
+    void SetMode(DebugMode _mode) { mode = _mode; }
 
 private:
-	DebugMode mode;
+    DebugMode mode;
 };
 
 #endif

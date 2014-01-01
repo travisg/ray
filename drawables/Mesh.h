@@ -33,18 +33,18 @@ class Geometry;
 
 class MeshDrawable : public Drawable {
 public:
-	MeshDrawable(boost::shared_ptr<Geometry>);
-	virtual ~MeshDrawable();
+    MeshDrawable(boost::shared_ptr<Geometry>);
+    virtual ~MeshDrawable();
 
-	virtual int Prepare();
+    virtual int Prepare();
 
-	virtual bool Intersect(const Ray &ray) const;
-	virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const;
+    virtual bool Intersect(const Ray &ray) const;
+    virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const;
 
 private:
-	boost::shared_ptr<Geometry> m_Geom;
+    boost::shared_ptr<Geometry> m_Geom;
 
-	BoundingSphere m_BSphere;
+    BoundingSphere m_BSphere;
 };
 
 #endif

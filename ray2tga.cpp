@@ -34,31 +34,31 @@
 
 static void usage(int argc, char **argv)
 {
-	printf("usage: %s <input file> <output file>\n", argv[0]);
+    printf("usage: %s <input file> <output file>\n", argv[0]);
 }
 
 int main(int argc, char **argv)
 {
-	if (argc < 3) {
-		usage(argc, argv);
-		exit(1);
-	}
+    if (argc < 3) {
+        usage(argc, argv);
+        exit(1);
+    }
 
-	RayFile file;
+    RayFile file;
 
-	int rc = file.Open(argv[1]);
-	if (rc < 0) {
-		std::cerr << "error opening file " << argv[1] << std::endl;
-		return 1;
-	}
+    int rc = file.Open(argv[1]);
+    if (rc < 0) {
+        std::cerr << "error opening file " << argv[1] << std::endl;
+        return 1;
+    }
 
-	rc = ConvertToTGA(file, argv[2]);
-	if (rc < 0) {
-		std::cerr << "error outputting file " << argv[2] << std::endl;
-		return 1;
-	}
+    rc = ConvertToTGA(file, argv[2]);
+    if (rc < 0) {
+        std::cerr << "error outputting file " << argv[2] << std::endl;
+        return 1;
+    }
 
-	file.Close();
+    file.Close();
 
-	return 0;
+    return 0;
 }

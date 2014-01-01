@@ -28,27 +28,27 @@
 
 /* simple bounding sphere implementation */
 struct BoundingSphere {
-	bool DoesIntersect(const Ray &ray) const {
-		double radius2 = radius * radius;
+    bool DoesIntersect(const Ray &ray) const {
+        double radius2 = radius * radius;
 
-		Libvec::Vector3d oc = center - ray.origin;
-		double tca = Dot(oc, ray.dir);
-		if (tca < 0) {
-			// points away from the sphere
-			return false;
-		}
+        Libvec::Vector3d oc = center - ray.origin;
+        double tca = Dot(oc, ray.dir);
+        if (tca < 0) {
+            // points away from the sphere
+            return false;
+        }
 
-		double l2oc = oc.LengthSquared();
-		double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
-		if (l2hc > 0) {
-			return true;
-		}
+        double l2oc = oc.LengthSquared();
+        double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
+        if (l2hc > 0) {
+            return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	Libvec::Vector3d center;
-	double radius;
+    Libvec::Vector3d center;
+    double radius;
 };
 
 #endif

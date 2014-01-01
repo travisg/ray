@@ -31,7 +31,7 @@
 using Libvec::Vector3d;
 
 DebugShader::DebugShader()
-:	mode(MODE_NORMAL)
+    :   mode(MODE_NORMAL)
 {
 }
 
@@ -41,22 +41,22 @@ DebugShader::~DebugShader()
 
 colorf DebugShader::Run(const ShaderArgs &args)
 {
-//	std::cout << "DebugShader Run" << std::endl;
+//  std::cout << "DebugShader Run" << std::endl;
 
-	colorf color;
-	switch (mode) {
-		case MODE_NORMAL:
-			color = colorf(args.normal.getx(), args.normal.gety(), args.normal.getz());
-			break;
-		case MODE_DEPTH:
-			color = (args.ray->origin - args.pos).Length();
-			break;
-		default:
-			color = 0;
-	}
+    colorf color;
+    switch (mode) {
+        case MODE_NORMAL:
+            color = colorf(args.normal.getx(), args.normal.gety(), args.normal.getz());
+            break;
+        case MODE_DEPTH:
+            color = (args.ray->origin - args.pos).Length();
+            break;
+        default:
+            color = 0;
+    }
 
 
-//	std::cout << "debug shader color " << color << std::endl;
-	return color;
+//  std::cout << "debug shader color " << color << std::endl;
+    return color;
 }
 

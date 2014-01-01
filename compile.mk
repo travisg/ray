@@ -27,10 +27,14 @@ $(BUILDDIR-$(TARGET))/$(TARGET).debug.lst: $(BUILDDIR-$(TARGET))/$(TARGET)
 	otool -Vt $< | $(CPPFILT) > $@
 else
 $(BUILDDIR-$(TARGET))/$(TARGET).lst: $(BUILDDIR-$(TARGET))/$(TARGET)
-	$(OBJDUMP) -d $< | $(CPPFILT) > $@
+	@$(MKDIR)
+	@echo generating $@
+	@$(OBJDUMP) -d $< | $(CPPFILT) > $@
 
 $(BUILDDIR-$(TARGET))/$(TARGET).debug.lst: $(BUILDDIR-$(TARGET))/$(TARGET)
-	$(OBJDUMP) -S $< | $(CPPFILT) > $@
+	@$(MKDIR)
+	@echo generating $@
+	@$(OBJDUMP) -S $< | $(CPPFILT) > $@
 endif
 
 # makes sure the target dir exists

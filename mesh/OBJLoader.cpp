@@ -63,6 +63,9 @@ static int tokenize(char *str, const char sep, char **tokens, int num_tokens)
                 str[pos] = 0;
                 pos++;
                 state = IN_SEP;
+                // if there are no more tokens available in the array, end here
+                if (curr_token == num_tokens - 1)
+                    break;
                 break;
             case IN_SEP:
                 if (str[pos] == sep) {

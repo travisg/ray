@@ -7,15 +7,12 @@ all: $(addsuffix .do,$(TARGETS))
 
 TARGET := ray
 
-#COMPILEFLAGS += -pg
-#LDFLAGS += -pg
-
-COMPILEFLAGS += -Wall -g -O2 -I. -Wno-multichar
+COMPILEFLAGS += -Wextra -Wall -g -O2 -I. -Wno-multichar
 CFLAGS += $(COMPILEFLAGS)
 CPPFLAGS += $(COMPILEFLAGS)
 ASMFLAGS += $(COMPILEFLAGS)
 LDFLAGS +=
-LDLIBS += -lstdc++ -lboost_program_options-mt -lboost_thread-mt
+LDLIBS += -lstdc++ -lm -lboost_program_options-mt -lboost_thread-mt
 OBJDUMP := objdump
 CPPFILT := c++filt
 ALLOBJS :=

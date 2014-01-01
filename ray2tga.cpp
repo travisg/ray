@@ -32,15 +32,15 @@
 #include <string.h>
 #include <stdlib.h>
 
-static void usage(int argc, char **argv)
+static void usage(char **argv)
 {
-    printf("usage: %s <input file> <output file>\n", argv[0]);
+    fprintf(stderr, "usage: %s <input file> <output file>\n", argv[0]);
 }
 
 int main(int argc, char **argv)
 {
     if (argc < 3) {
-        usage(argc, argv);
+        usage(argv);
         exit(1);
     }
 

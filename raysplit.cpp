@@ -32,15 +32,15 @@
 #include <string.h>
 #include <stdlib.h>
 
-static void usage(int argc, char **argv)
+static void usage(char **argv)
 {
-    printf("usage: %s <input file> <x> <y>\n", argv[0]);
+    fprintf(stderr, "usage: %s <input file> <x> <y>\n", argv[0]);
 }
 
 int main(int argc, char **argv)
 {
     if (argc < 4) {
-        usage(argc, argv);
+        usage(argv);
         exit(1);
     }
 
@@ -76,16 +76,16 @@ int main(int argc, char **argv)
     }
 
     printf("sizex %d sizey %d\n", sizex, sizey);
-    for (int y = 0; y < file.Height(); y += sizey) {
+    for (uint32_t y = 0; y < file.Height(); y += sizey) {
         // see how much we can actually do in this chunk
-        int runy = sizey;
+        uint32_t runy = sizey;
         if (y + runy > file.Height())
             runy = file.Height() - y;
-        for (int x = 0; x < file.Width(); x += sizex) {
+        for (uint32_t x = 0; x < file.Width(); x += sizex) {
             RayFile outfile;
 
             // how much X can we actually do?
-            int runx = sizex;
+            uint32_t runx = sizex;
             if (x + runx > file.Width())
                 runx = file.Width() - x;
 
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 
             outfile.OpenWrite(name, runx, runy);
 
-            for (int y1 = y; y1 < y + runy; y1++) {
+            for (uint32_t y1 = y; y1 < y + runy; y1++) {
 //              printf("setxyrun %d %d %d\n", x, y1, runx);
                 outfile.SetXYRun(0, y1 - y, runx, &buf[(y1 * file.Width() + x) * 3]);
             }

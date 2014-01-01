@@ -48,7 +48,6 @@ static int fd;
 static int inwidth, inheight;
 
 static SDL_Surface *surface;
-static bool dirty = false;
 
 static void WindowUpdate()
 {
@@ -68,14 +67,14 @@ static void WindowUpdate()
     SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-static Uint32 TimerTick(Uint32 interval, void *param)
+static Uint32 TimerTick(Uint32 interval, void *)
 {
     WindowUpdate();
 
     return interval;
 }
 
-int SetupSDL()
+static int SetupSDL()
 {
     atexit(SDL_Quit);
 
@@ -85,7 +84,7 @@ int SetupSDL()
     return 0;
 }
 
-int OpenWindow()
+static int OpenWindow()
 {
     screen = SDL_SetVideoMode(width, height, 32, SDL_SWSURFACE | SDL_RESIZABLE);
     SDL_UpdateRect(screen, 0,0,0,0); // Update entire surface
@@ -93,20 +92,22 @@ int OpenWindow()
     SDL_WM_SetCaption("Ray","ray");
 
     timer = SDL_AddTimer(1000, &TimerTick, NULL);
+
+    return 0;
 }
 
-int ReadData(void *_buf, size_t len)
+static ssize_t ReadData(void *_buf, size_t len)
 {
     uint8_t *buf = (uint8_t *)_buf;
     size_t pos;
 
     for (pos = 0; pos < len; ) {
         size_t toread = len - pos;
-        int r = read(fd, &buf[pos], toread);
+        ssize_t r = read(fd, &buf[pos], toread);
         if (r < 0)
             return r;
 
-        if (r != toread) {
+        if ((size_t)r != toread) {
 //          printf("read %d, toread %d\n", read, toread);
             usleep(100000);
         }
@@ -117,7 +118,7 @@ int ReadData(void *_buf, size_t len)
     return pos;
 }
 
-int ReaderThread()
+static int ReaderThread()
 {
     for (;;) {
         uint32_t type;
@@ -151,7 +152,7 @@ int ReaderThread()
 
 //              printf("pixel run data: x %d y %d, len %d\n", run.x, run.y, run.length);
 
-                for (int i = 0; i < run.length; i++) {
+                for (size_t i = 0; i < run.length; i++) {
                     float c[3];
                     if (ReadData(&c, sizeof(c)) < 0)
                         goto done;
@@ -185,7 +186,7 @@ done:
     return 0;
 }
 
-int main(int argc, char* argv[])
+int main(int /* argc */, char ** /* argv */)
 {
     printf("hello\n");
 
@@ -200,7 +201,10 @@ int main(int argc, char* argv[])
 
     // parse the header of the file
     RayHeader header;
-    read(fd, &header, sizeof(RayHeader));
+    if (read(fd, &header, sizeof(RayHeader)) < (ssize_t)sizeof(RayHeader)) {
+        fprintf(stderr, "ray file corrupt\n");
+        return 1;
+    }
     if (header.magic != RAY_HEADER_MAGIC) {
         fprintf(stderr, "ray file corrupt\n");
         return 1;

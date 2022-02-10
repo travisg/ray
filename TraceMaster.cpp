@@ -21,6 +21,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <iostream>
+#include <mutex>
 #include "TraceMaster.h"
 
 #define WORKUNITSIZE 16
@@ -43,7 +44,7 @@ void TraceMaster::SetDone()
 
 void TraceMaster::WaitForDone()
 {
-    boost::unique_lock<boost::mutex> lock(m_Lock);
+    std::unique_lock<std::mutex> lock(m_Lock);
     while (!m_Done) {
         m_DoneCond.wait(lock);
     }
@@ -73,27 +74,27 @@ int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit)
     int oldwidth = unit.Width();
     int oldheight = unit.Height();
 
-    Lock();
+    {
+        std::lock_guard<std::mutex> guard(m_Lock);
 
-    /* dish out another unit, row first */
-    unit.startx = m_Nextx;
-    unit.starty = m_Nexty;
-    unit.endx = unit.startx + WORKUNITSIZE - 1;
-    unit.endy = unit.starty + WORKUNITSIZE - 1;
+        /* dish out another unit, row first */
+        unit.startx = m_Nextx;
+        unit.starty = m_Nexty;
+        unit.endx = unit.startx + WORKUNITSIZE - 1;
+        unit.endy = unit.starty + WORKUNITSIZE - 1;
 
-    m_PendingCount++;
+        m_PendingCount++;
 
-    /* move to the next block */
-    m_Nextx += WORKUNITSIZE;
-    if (m_Nextx >= surface.Width()) {
-        m_Nextx = 0;
-        m_Nexty += WORKUNITSIZE;
+        /* move to the next block */
+        m_Nextx += WORKUNITSIZE;
+        if (m_Nextx >= surface.Width()) {
+            m_Nextx = 0;
+            m_Nexty += WORKUNITSIZE;
+        }
+
+        if (m_Nexty >= surface.Height())
+            m_IssuedLast = true;
     }
-
-    if (m_Nexty >= surface.Height())
-        m_IssuedLast = true;
-
-    Unlock();
 
     /* trim the result */
     if (unit.endx >= surface.Width()) {
@@ -119,20 +120,20 @@ int TraceMasterSimple::ReturnWorkUnit(TraceWorkUnit &unit)
 {
     colorf *c = unit.result;
 
-    Lock();
+    {
+        std::lock_guard<std::mutex> guard(m_Lock);
 
-//  std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << " " << unit.endy << std::endl;
-    for (int y = unit.starty; y <= unit.endy; y++) {
-        int runlen = unit.endx + 1 - unit.startx;
-        GetSurface().SetXYRun(unit.startx, y, runlen, c);
-        c += runlen;
+//      std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << " " << unit.endy << std::endl;
+        for (int y = unit.starty; y <= unit.endy; y++) {
+            int runlen = unit.endx + 1 - unit.startx;
+            GetSurface().SetXYRun(unit.startx, y, runlen, c);
+            c += runlen;
+        }
+
+        m_PendingCount--;
+        if (m_IssuedLast && m_PendingCount == 0)
+            SetDone();
     }
-
-    m_PendingCount--;
-    if (m_IssuedLast && m_PendingCount == 0)
-        SetDone();
-
-    Unlock();
 
     return 0;
 }
@@ -161,28 +162,28 @@ int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit)
     if (m_Count == 0)
         return -1;
 
-    Lock();
+    {
+        std::lock_guard<std::mutex> guard(m_Lock);
 
-    for (;;) {
-        unsigned int x = rand() % (surface.Width() / WORKUNITSIZE);
-        unsigned int y = rand() % (surface.Height() / WORKUNITSIZE);
+        for (;;) {
+            unsigned int x = rand() % (surface.Width() / WORKUNITSIZE);
+            unsigned int y = rand() % (surface.Height() / WORKUNITSIZE);
 
-        if (m_Bitmap[y * (surface.Width() / WORKUNITSIZE) + x] == false) {
-            m_Bitmap[y * (surface.Width() / WORKUNITSIZE) + x] = true;
-            m_Count--;
+            if (m_Bitmap[y * (surface.Width() / WORKUNITSIZE) + x] == false) {
+                m_Bitmap[y * (surface.Width() / WORKUNITSIZE) + x] = true;
+                m_Count--;
 
-            unit.startx = x * WORKUNITSIZE;
-            unit.starty = y * WORKUNITSIZE;
-            unit.endx = unit.startx + WORKUNITSIZE - 1;
-            unit.endy = unit.starty + WORKUNITSIZE - 1;
+                unit.startx = x * WORKUNITSIZE;
+                unit.starty = y * WORKUNITSIZE;
+                unit.endx = unit.startx + WORKUNITSIZE - 1;
+                unit.endy = unit.starty + WORKUNITSIZE - 1;
 
-            break;
+                break;
+            }
         }
+
+        m_PendingCount++;
     }
-
-    m_PendingCount++;
-
-    Unlock();
 
     /* trim the result */
     if (unit.endx >= surface.Width()) {
@@ -205,21 +206,21 @@ int TraceMasterRandom::ReturnWorkUnit(TraceWorkUnit &unit)
 {
     colorf *c = unit.result;
 
-    Lock();
+    {
+        std::lock_guard<std::mutex> guard(m_Lock);
 
-//  std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << " " << unit.endy << std::endl;
-    for (int x = unit.startx; x <= unit.endx; x++) {
-        for (int y = unit.starty; y <= unit.endy; y++) {
-            GetSurface().SetXY(x, y, *c);
-            c++;
+    //  std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << " " << unit.endy << std::endl;
+        for (int x = unit.startx; x <= unit.endx; x++) {
+            for (int y = unit.starty; y <= unit.endy; y++) {
+                GetSurface().SetXY(x, y, *c);
+                c++;
+            }
         }
+
+        m_PendingCount--;
+        if (m_Count == 0 && m_PendingCount == 0)
+            SetDone();
     }
-
-    m_PendingCount--;
-    if (m_Count == 0 && m_PendingCount == 0)
-        SetDone();
-
-    Unlock();
 
     return 0;
 }

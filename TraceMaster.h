@@ -24,8 +24,8 @@
 #define __TRACEMASTER_H
 
 #include <RenderSurface.h>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
+#include <mutex>
+#include <condition_variable>
 
 struct TraceWorkUnit {
     TraceWorkUnit() : startx(0), starty(0), endx(0), endy(0), result(0) {}
@@ -60,15 +60,14 @@ public:
     void WaitForDone();
 
 protected:
-    void Lock() { m_Lock.lock(); }
-    void Unlock() { m_Lock.unlock(); }
     bool Isdone() const { return m_Done; }
     void SetDone();
     RenderSurface &GetSurface() { return m_Surface; }
 
+    std::mutex m_Lock;
+
 private:
-    boost::mutex m_Lock;
-    boost::condition_variable m_DoneCond;
+    std::condition_variable m_DoneCond;
 
     RenderSurface &m_Surface;
     bool m_Done;

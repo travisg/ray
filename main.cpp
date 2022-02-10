@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <iostream>
 #include <time.h>
+#include <thread>
 
 #include <Ray.h>
 #include <RenderSurface.h>
@@ -37,7 +38,6 @@ TraceMaster *gTraceMaster;
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
 #include <boost/program_options/parsers.hpp>
-#include <boost/thread.hpp>
 
 namespace po = boost::program_options;
 
@@ -99,9 +99,10 @@ int main(int argc, char* argv[])
     gTraceMaster = new TraceMasterSimple(*gRenderSurface);
 //  gTraceMaster = new TraceMasterRandom(*gRenderSurface);
 
-    boost::thread **threads = new boost::thread *[cpus];
+    std::vector<std::thread *> threads;
     for (int i = 0; i < cpus; i++) {
-        threads[i] = new boost::thread(&TracerThread);
+        auto *t = new std::thread(TracerThread);
+        threads.push_back(t);
     }
 
     // wait for the trace master to quit handing out work units
@@ -109,11 +110,12 @@ int main(int argc, char* argv[])
 
     // wait for the worker threads to complete
     std::cout << "waiting for worker threads to shut down" << std::endl;
-    for (int i = 0; i < cpus; i++) {
-        threads[i]->join();
-        delete threads[i];
+    while (!threads.empty()) {
+        auto *t = threads.back();
+        threads.pop_back();
+        t->join();
+        delete t;
     }
-    delete[] threads;
 
 //  std::cout << "writing output file..." << std::flush;
 //  gRenderSurface->WriteTGAFile("foo.tga");

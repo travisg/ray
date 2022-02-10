@@ -1,3 +1,5 @@
+NOECHO ?= @
+
 TARGET := $(TARGET)
 BUILDDIR-$(TARGET) := build-$(TARGET)
 #$(warning BUILDDIR = $(BUILDDIR-$(TARGET)))
@@ -17,7 +19,7 @@ $(BUILDDIR-$(TARGET))/$(TARGET): TARGET:=$(TARGET)
 $(BUILDDIR-$(TARGET))/$(TARGET): $(OBJS-$(TARGET))
 	@$(MKDIR)
 	@echo linking $<
-	@$(CC) $(LDFLAGS) $(OBJS-$(TARGET)) -o $@ $(LDLIBS)
+	$(NOECHO)$(CC) $(LDFLAGS) $(OBJS-$(TARGET)) -o $@ $(LDLIBS)
 
 ifeq ($(UNAME),Darwin)
 $(BUILDDIR-$(TARGET))/$(TARGET).lst: $(BUILDDIR-$(TARGET))/$(TARGET)
@@ -29,12 +31,12 @@ else
 $(BUILDDIR-$(TARGET))/$(TARGET).lst: $(BUILDDIR-$(TARGET))/$(TARGET)
 	@$(MKDIR)
 	@echo generating $@
-	@$(OBJDUMP) -d $< | $(CPPFILT) > $@
+	$(NOECHO)$(OBJDUMP) -d $< | $(CPPFILT) > $@
 
 $(BUILDDIR-$(TARGET))/$(TARGET).debug.lst: $(BUILDDIR-$(TARGET))/$(TARGET)
 	@$(MKDIR)
 	@echo generating $@
-	@$(OBJDUMP) -S $< | $(CPPFILT) > $@
+	$(NOECHO)$(OBJDUMP) -S $< | $(CPPFILT) > $@
 endif
 
 # makes sure the target dir exists
@@ -44,19 +46,19 @@ $(BUILDDIR-$(TARGET))/%.o: CFLAGS:=$(CFLAGS)
 $(BUILDDIR-$(TARGET))/%.o: %.c
 	@$(MKDIR)
 	@echo compiling $<
-	@$(CC) $(CFLAGS) -c $< -MD -MT $@ -MF $(@:%o=%d) -o $@
+	$(NOECHO)$(CC) $(CFLAGS) -c $< -MD -MT $@ -MF $(@:%o=%d) -o $@
 
-$(BUILDDIR-$(TARGET))/%.o: CPPFLAGS:=$(CPPFLAGS)
+$(BUILDDIR-$(TARGET))/%.o: CXXFLAGS:=$(CXXFLAGS)
 $(BUILDDIR-$(TARGET))/%.o: %.cpp
 	@$(MKDIR)
 	@echo compiling $<
-	@$(CC) $(CPPFLAGS) -c $< -MD -MT $@ -MF $(@:%o=%d) -o $@
+	$(NOECHO)$(CC) $(CXXFLAGS) -c $< -MD -MT $@ -MF $(@:%o=%d) -o $@
 
 $(BUILDDIR-$(TARGET))/%.o: ASMFLAGS:=$(ASMFLAGS)
 $(BUILDDIR-$(TARGET))/%.o: %.S
 	@$(MKDIR)
 	@echo compiling $<
-	@$(CC) $(ASMFLAGS) -c $< -MD -MT $@ -MF $(@:%o=%d) -o $@
+	$(NOECHO)$(CC) $(ASMFLAGS) -c $< -MD -MT $@ -MF $(@:%o=%d) -o $@
 
 clean-$(TARGET): TARGET:=$(TARGET)
 clean-$(TARGET):

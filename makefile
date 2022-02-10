@@ -9,13 +9,19 @@ TARGET := ray
 
 COMPILEFLAGS += -Wextra -Wall -g -O2 -I. -Wno-multichar
 CFLAGS += $(COMPILEFLAGS)
-CPPFLAGS += $(COMPILEFLAGS)
+CXXFLAGS += $(COMPILEFLAGS)
 ASMFLAGS += $(COMPILEFLAGS)
 LDFLAGS +=
 LDLIBS += -lstdc++ -lm -lboost_program_options-mt -lboost_thread-mt -lboost_system-mt
 OBJDUMP := objdump
 CPPFILT := c++filt
 ALLOBJS :=
+
+# if using lto, set the appropriate flags
+ifeq ($(WITH_LTO),true)
+COMPILEFLAGS += -flto
+LDFLAGS += $(COMPILEFLAGS)
+endif
 
 OBJS := \
 	main.o \

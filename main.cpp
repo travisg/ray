@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
 
     int xres, yres, cpus;
     std::string outfile;
+    bool random;
 
     // deal with options
     po::options_description desc("Allowed options");
@@ -74,6 +75,7 @@ int main(int argc, char* argv[])
     ("yres", po::value<int>(&yres)->default_value(600), "y resolution")
     ("cpus,c", po::value<int>(&cpus)->default_value(8), "number cpus")
     ("out,o", po::value<std::string>(&outfile)->default_value(std::string("out.ray")), "output file")
+    ("random,r", po::value<bool>(&random)->implicit_value(false), "random trace order")
     ;
 
     po::variables_map vm;
@@ -96,8 +98,11 @@ int main(int argc, char* argv[])
     gScene = new Scene();
 
     /* create a tracemaster */
-    gTraceMaster = new TraceMasterSimple(*gRenderSurface);
-//  gTraceMaster = new TraceMasterRandom(*gRenderSurface);
+    if (random) {
+        gTraceMaster = new TraceMasterRandom(*gRenderSurface);
+    } else {
+        gTraceMaster = new TraceMasterSimple(*gRenderSurface);
+    }
 
     std::vector<std::thread *> threads;
     for (int i = 0; i < cpus; i++) {

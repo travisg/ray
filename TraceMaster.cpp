@@ -138,12 +138,16 @@ int TraceMasterSimple::ReturnWorkUnit(TraceWorkUnit &unit)
     return 0;
 }
 
+inline int roundup(int x, int roundto) {
+    return ((x + roundto - 1) / roundto) * roundto;
+}
+
 // random Tracer
 TraceMasterRandom::TraceMasterRandom(RenderSurface &surface)
     :   TraceMaster(surface),
         m_PendingCount(0)
 {
-    m_Count = surface.Width() * surface.Height() / (WORKUNITSIZE * WORKUNITSIZE);
+    m_Count = (roundup(surface.Width(), WORKUNITSIZE) * roundup(surface.Height(), WORKUNITSIZE)) / (WORKUNITSIZE * WORKUNITSIZE);
     m_Bitmap = new bool[m_Count];
 
     for (int i = 0; i < m_Count; i++)
@@ -159,18 +163,20 @@ int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit)
 {
     RenderSurface &surface = GetSurface();
 
-    if (m_Count == 0)
-        return -1;
-
     {
         std::lock_guard<std::mutex> guard(m_Lock);
 
-        for (;;) {
-            unsigned int x = rand() % (surface.Width() / WORKUNITSIZE);
-            unsigned int y = rand() % (surface.Height() / WORKUNITSIZE);
+        if (m_Count == 0)
+            return -1;
 
-            if (m_Bitmap[y * (surface.Width() / WORKUNITSIZE) + x] == false) {
-                m_Bitmap[y * (surface.Width() / WORKUNITSIZE) + x] = true;
+        for (;;) {
+            unsigned int x = (lrand48() % surface.Width()) / WORKUNITSIZE;
+            unsigned int y = (lrand48() % surface.Height()) / WORKUNITSIZE;
+
+            //printf("trying with x %u y %u\n", x, y);
+
+            if (m_Bitmap[y * (roundup(surface.Width(), WORKUNITSIZE) / WORKUNITSIZE) + x] == false) {
+                m_Bitmap[y * (roundup(surface.Width(), WORKUNITSIZE) / WORKUNITSIZE) + x] = true;
                 m_Count--;
 
                 unit.startx = x * WORKUNITSIZE;
@@ -209,15 +215,15 @@ int TraceMasterRandom::ReturnWorkUnit(TraceWorkUnit &unit)
     {
         std::lock_guard<std::mutex> guard(m_Lock);
 
-    //  std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << " " << unit.endy << std::endl;
-        for (int x = unit.startx; x <= unit.endx; x++) {
-            for (int y = unit.starty; y <= unit.endy; y++) {
-                GetSurface().SetXY(x, y, *c);
-                c++;
-            }
+        //std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << " " << unit.endy << std::endl;
+        for (int y = unit.starty; y <= unit.endy; y++) {
+            int runlen = unit.endx + 1 - unit.startx;
+            GetSurface().SetXYRun(unit.startx, y, runlen, c);
+            c += runlen;
         }
 
         m_PendingCount--;
+        //printf("count %d pendingcount %d\n", m_Count, m_PendingCount);
         if (m_Count == 0 && m_PendingCount == 0)
             SetDone();
     }

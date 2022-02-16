@@ -61,7 +61,7 @@ include compile.mk
 # rayview
 TARGET := rayview
 
-LDLIBS += -lSDL
+LDLIBS += -lSDL2
 
 # Darwin (Mac OS X)
 ifeq ($(UNAME),Darwin)

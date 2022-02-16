@@ -57,7 +57,7 @@ static MeshDrawable *LoadMesh(const std::string &filename)
 
     g->Dump();
 
-    MeshDrawable *md = new MeshDrawable(boost::shared_ptr<Geometry>(g));
+    MeshDrawable *md = new MeshDrawable(std::shared_ptr<Geometry>(g));
 
     return md;
 }

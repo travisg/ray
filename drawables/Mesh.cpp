@@ -23,7 +23,7 @@
 #include <cstdlib>
 #include <vector>
 #include <iostream>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 #include <drawables/Mesh.h>
 #include <libvec/Vec.h>
@@ -32,7 +32,7 @@
 
 using Libvec::Vector3d;
 
-MeshDrawable::MeshDrawable(boost::shared_ptr<Geometry> g)
+MeshDrawable::MeshDrawable(std::shared_ptr<Geometry> g)
     :   m_Geom(g)
 {
 }

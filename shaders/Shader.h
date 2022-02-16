@@ -25,7 +25,7 @@
 
 #include <Color.h>
 #include <libvec/Vector3.h>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 class Drawable;
 class Scene;
@@ -49,7 +49,7 @@ public:
     virtual colorf Run(const ShaderArgs &args) = 0;
 };
 
-typedef boost::shared_ptr<Shader> ShaderPtr;
+typedef std::shared_ptr<Shader> ShaderPtr;
 
 #endif
 

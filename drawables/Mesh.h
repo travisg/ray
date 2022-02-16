@@ -27,13 +27,13 @@
 #include <Ray.h>
 #include <BoundingSphere.h>
 #include <drawables/Drawable.h>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 class Geometry;
 
 class MeshDrawable : public Drawable {
 public:
-    MeshDrawable(boost::shared_ptr<Geometry>);
+    MeshDrawable(std::shared_ptr<Geometry>);
     virtual ~MeshDrawable();
 
     virtual int Prepare();
@@ -42,7 +42,7 @@ public:
     virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const;
 
 private:
-    boost::shared_ptr<Geometry> m_Geom;
+    std::shared_ptr<Geometry> m_Geom;
 
     BoundingSphere m_BSphere;
 };

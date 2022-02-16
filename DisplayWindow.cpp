@@ -23,7 +23,6 @@
 #include "DisplayWindow.h"
 #include "RenderSurface.h"
 #include <iostream>
-#include <boost/bind.hpp>
 #include <sys/time.h>
 #include <time.h>
 #include <sdl.h>

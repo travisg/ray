@@ -7,7 +7,8 @@ scenes.
 
 The renderer streams finished tiles into an append-only `.ray` file as they
 complete, and `rayview` follows that file while it grows, so you watch the
-picture fill in tile by tile.
+picture fill in tile by tile. It can also write a plain float image (`.pfm`)
+when the render ends.
 
 ## Build
 
@@ -24,6 +25,7 @@ ctest --test-dir build
 ```sh
 build/ray --list-scenes
 build/ray --scene spheres -x 1280 -y 960 -o out.ray   # render
+build/ray --scene spheres -o out.pfm                  # or a float image at the end
 build/rayview out.ray                                 # watch it arrive
 build/ray2tga out.ray out.tga                         # convert when done
 ./doit                                                # both, at 3200x2400

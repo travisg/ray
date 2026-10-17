@@ -2,8 +2,8 @@
 
 Small multithreaded CPU ray tracer (C++20, CMake) plus three helper tools that
 consume its streaming `.ray` output. `ctest` covers the vector math,
-intersections, the tracer, the `.ray` reader/writer, the OBJ loader and a
-golden render of every scene; `./doit` is the eyeball check.
+intersections, the tracer, the `.ray` reader/writer, the PFM writer, the OBJ
+loader and a golden render of every scene; `./doit` is the eyeball check.
 
 ## Build
 
@@ -59,7 +59,7 @@ cp build/tests/golden-<scene>.ray tests/golden/<scene>.ray
 ## Run
 
 ```sh
-build/ray [-x 800] [-y 600] [-c N] [-o out.ray] [-s SCENE] [-r] [--seed N]
+build/ray [-x 800] [-y 600] [-c N] [-o out.ray|out.pfm] [-s SCENE] [-r] [--seed N]
 build/ray --list-scenes
 build/rayview [file.ray]     # default out.ray; follows the file while ray writes it
 ./doit               # ray at 3200x2400 in the background, then rayview
@@ -67,6 +67,9 @@ build/ray2tga out.ray out.tga
 build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in the cwd
 ```
 
+- `-o` picks the output by its extension: `.ray` streams tiles into the file as
+  they finish (what `rayview` follows), `.pfm` keeps the image in a
+  `framebuffer` and writes a portable float map when the render ends.
 - `rayview` polls the file every 100 ms until it sees `ray_data_type::eof`, waiting up
   to 10 s for the header, so it can start before or after `ray`. Esc or closing
   the window exits immediately. Renders up to 2048x1600 open a 1:1 window;
@@ -76,7 +79,8 @@ build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in 
 
 - The root holds only the build files, scripts and docs.
 - `ray/`: the renderer library: `scene*`, `scene_library*`, `tracer*`,
-  `trace_master*`, `render_surface*`, `ray_file*` (the `.ray` format), `hit.h`,
+  `trace_master*`, `render_surface*`, `framebuffer*`, `pfm*`, `ray_file*` (the
+  `.ray` format), `hit.h`,
   `ray.h`, `color.h`, `bounding_sphere.h`, `cpp.h` (the `DISALLOW_*` class
   macros), and `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry
   containers and the OBJ loader).
@@ -92,7 +96,9 @@ Everything includes from the repo root (`-I.`), so headers are written as
 
 **Render pipeline (`tools/ray.cpp`)**
 
-1. `render_surface_file` opens the output via `ray_file::open_write`.
+1. The output is a `render_surface`: `render_surface_file` streams into a
+   `.ray` file via `ray_file::open_write`, or a `framebuffer` holds float RGB
+   in memory and `write_pfm` saves it once the threads are joined.
 2. A `trace_master` owns the tile list (`kWorkUnitSize` = 16 pixel squares,
    row-major, or shuffled with `--seed` when `--random`). `get_work_unit` fills a
    `trace_work_unit` rectangle; `return_work_unit` writes its `colorf` rows to the

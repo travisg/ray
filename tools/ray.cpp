@@ -34,6 +34,8 @@
 #include <thread>
 #include <vector>
 
+#include <ray/framebuffer.h>
+#include <ray/pfm.h>
 #include <ray/ray.h>
 #include <ray/render_surface.h>
 #include <ray/scene.h>
@@ -67,7 +69,8 @@ void usage(FILE *fp, const char *argv0) {
             "  -x, --xres N      image width (default 800)\n"
             "  -y, --yres N      image height (default 600)\n"
             "  -c, --cpus N      worker threads (default: hardware threads)\n"
-            "  -o, --out FILE    output .ray file (default out.ray)\n"
+            "  -o, --out FILE    output: .ray streams tiles as they finish, .pfm is written\n"
+            "                    when the render ends (default out.ray)\n"
             "  -s, --scene NAME  scene to render (default: default)\n"
             "      --list-scenes\n"
             "  -r, --random      trace tiles in random order\n"
@@ -185,23 +188,37 @@ int main(int argc, char *argv[]) {
     std::cout << "outfile " << opts.outfile << std::endl;
 
     std::mt19937 rng(opts.seed);
-    std::unique_ptr<scene> scene = build_scene(opts.scene, rng);
-    if (!scene) {
+    std::unique_ptr<scene> s = build_scene(opts.scene, rng);
+    if (!s) {
         return 1;
     }
 
-    render_surface_file rs(opts.xres, opts.yres);
-    if (rs.open_out_file(opts.outfile) < 0) {
-        std::cerr << "error opening output file " << opts.outfile << std::endl;
+    // the extension picks the output: a .ray file receives tiles as they finish, a .pfm
+    // image is written from the framebuffer once the render ends
+    std::unique_ptr<framebuffer> fb;
+    std::unique_ptr<render_surface_file> file;
+    render_surface *rs = nullptr;
+    if (opts.outfile.ends_with(".pfm")) {
+        fb = std::make_unique<framebuffer>(opts.xres, opts.yres);
+        rs = fb.get();
+    } else if (opts.outfile.ends_with(".ray")) {
+        file = std::make_unique<render_surface_file>(opts.xres, opts.yres);
+        if (file->open_out_file(opts.outfile) < 0) {
+            std::cerr << "error opening output file " << opts.outfile << std::endl;
+            return 1;
+        }
+        rs = file.get();
+    } else {
+        std::cerr << "output file " << opts.outfile << " must end in .ray or .pfm" << std::endl;
         return 1;
     }
 
-    trace_master master(rs, opts.random ? tile_order::random : tile_order::sequential, opts.seed);
+    trace_master master(*rs, opts.random ? tile_order::random : tile_order::sequential, opts.seed);
 
     std::vector<std::thread> threads;
     threads.reserve(opts.cpus);
     for (int i = 0; i < opts.cpus; i++) {
-        threads.emplace_back(tracer_thread, std::cref(rs), std::cref(*scene), std::ref(master));
+        threads.emplace_back(tracer_thread, std::cref(*rs), std::cref(*s), std::ref(master));
     }
 
     // wait for the trace master to hand out and collect every tile
@@ -212,8 +229,13 @@ int main(int argc, char *argv[]) {
         t.join();
     }
 
+    if (fb && !write_pfm(opts.outfile, fb->width(), fb->height(), fb->data())) {
+        std::cerr << "error writing " << opts.outfile << std::endl;
+        return 1;
+    }
+
     std::cout << "shutting down" << std::endl;
 
-    // rs closes the output file, which writes the EOF packet
+    // a .ray file gets its EOF packet when `file` closes it
     return 0;
 }

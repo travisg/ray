@@ -1,6 +1,6 @@
 #include <memory>
 #include <ray/drawables/plane.h>
-#include <ray/render_surface.h>
+#include <ray/framebuffer.h>
 #include <ray/scene.h>
 #include <ray/shaders/default_shader.h>
 #include <ray/trace_master.h>
@@ -12,25 +12,7 @@ using libvec::vector3d;
 
 namespace {
 
-// Keeps the rendered pixels in memory.
-class memory_surface : public render_surface {
-  public:
-    memory_surface(int width, int height)
-        : render_surface(width, height), pixels_(size_t(width) * height) {}
-
-    void set_xy(int x, int y, colorf color) override { pixels_[y * width() + x] = color; }
-    void set_xy_run(int x, int y, int count, const colorf *color) override {
-        for (int i = 0; i < count; i++) {
-            set_xy(x + i, y, color[i]);
-        }
-    }
-    const colorf &at(int x, int y) const { return pixels_[y * width() + x]; }
-
-  private:
-    std::vector<colorf> pixels_;
-};
-
-void render(const scene &s, memory_surface &surface) {
+void render(const scene &s, framebuffer &surface) {
     trace_master master(surface, tile_order::sequential, 1);
     tracer t(surface, s, master);
     t.trace();
@@ -53,7 +35,7 @@ int main() {
     s.set_camera(vector3d(0, 0, 10), vector3d(0, 0, 0));
     s.prepare();
     {
-        memory_surface surface(20, 20);
+        framebuffer surface(20, 20);
         render(s, surface);
         for (int y = 0; y < 20; y++) {
             for (int x = 0; x < 20; x++) {
@@ -68,7 +50,7 @@ int main() {
     // seen from the side at floor level the floor fills the lower half only
     s.set_camera(vector3d(10, 0, 0.5), vector3d(0, 0, 0.5));
     {
-        memory_surface surface(20, 20);
+        framebuffer surface(20, 20);
         render(s, surface);
         CHECK(surface.at(10, 2).r == 0);
         CHECK(surface.at(10, 18).r > 0);

@@ -62,6 +62,8 @@ add_library(raycore STATIC
     ray/tracer.cpp
     ray/trace_master.cpp
     ray/render_surface.cpp
+    ray/framebuffer.cpp
+    ray/pfm.cpp
     ray/drawables/mesh_drawable.cpp
     ray/drawables/plane.cpp
     ray/drawables/sphere.cpp

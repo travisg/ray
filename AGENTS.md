@@ -4,7 +4,8 @@ Small multithreaded CPU ray tracer (C++20, CMake). It renders into an
 in-memory framebuffer, writes a PNG or PFM at the end, and can push tiles to
 a tev viewer as they finish. `ctest` covers the vector math, intersections,
 the tracer, the bvh, the PNG and PFM writers, the tev client, the OBJ loader
-and a golden render of every scene; `./doit` is the eyeball check.
+and a golden render of every scene; `./doit` is the eyeball check. `TODO.md` lists the
+planned work.
 
 ## Build
 

@@ -183,8 +183,9 @@ bool build_sky(scene &s, std::mt19937 &) {
 }
 
 // A Cornell-style room, all diffuse: red wall on the left, green on the right, white
-// elsewhere, two white spheres, one light just under the ceiling and no ambient, so with
-// --gi every soft shadow and every bit of colour on the spheres is bounced light.
+// elsewhere, a white sphere and a blue one, one light just under the ceiling and no
+// ambient, so with --gi every soft shadow and every bit of colour on the white sphere is
+// bounced light.
 bool build_cornell(scene &s, std::mt19937 &) {
     const shader_ptr white = make_shader(colorf(0.75, 0.75, 0.75), 0.0);
     add<plane>(s, white, ray(vector3d(0.0, 0.0, 0.0), vector3d(0.0, 0.0, 1.0)));  // floor
@@ -195,7 +196,7 @@ bool build_cornell(scene &s, std::mt19937 &) {
     add<plane>(s, make_shader(colorf(0.12, 0.45, 0.15), 0.0),
                ray(vector3d(2.75, 0.0, 0.0), vector3d(-1.0, 0.0, 0.0))); // right
     add<sphere>(s, white, vector3d(-1.0, 2.0, 1.0), 1.0);
-    add<sphere>(s, white, vector3d(1.2, 3.6, 0.7), 0.7);
+    add<sphere>(s, make_shader(colorf(0.25, 0.35, 0.85), 0.0), vector3d(1.2, 3.6, 0.7), 0.7);
     s.add_light(simple_light(vector3d(0.0, 2.75, 5.2), colorf(1.0, 1.0, 1.0), 100));
     s.set_camera(vector3d(0.0, -8.0, 2.75), vector3d(0.0, 0.0, 2.75));
     return true;

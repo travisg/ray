@@ -20,6 +20,18 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
 (-march=native), `RAY_LTO`, `RAY_PROFILE` (-pg), `RAY_WERROR`, `RAY_BUILD_TESTS`
 (default ON). `-DCMAKE_BUILD_TYPE=Debug` for -O0 -g.
 
+`CMakePresets.json` names the common combinations; each configures into its
+own `build-<preset>/` (`default` is `build/`). `native` and `clang-native`
+are the fast ones: -O3, LTO and -march=native, so their binaries only run on
+this machine's CPU class.
+
+```sh
+cmake --list-presets                   # default, clang, lto, clang-lto, native, clang-native, debug
+cmake --preset clang-lto               # configure build-clang-lto/
+cmake --build --preset clang-lto
+ctest --preset clang-lto
+```
+
 - Binaries land in `build/`; nothing is written to the source tree.
   `build/compile_commands.json` is generated and `.clangd` points clangd at it.
 - Sources are listed explicitly in `CMakeLists.txt`: `raycore` is the renderer

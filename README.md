@@ -18,6 +18,9 @@ cmake --build build
 ctest --test-dir build
 ```
 
+`cmake --list-presets` shows the clang, LTO and `-march=native` variants;
+`cmake --preset clang-lto && cmake --build --preset clang-lto` is one of them.
+
 ## Use
 
 ```sh

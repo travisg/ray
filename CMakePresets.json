@@ -1,0 +1,72 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": { "major": 3, "minor": 20, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "system compiler, RelWithDebInfo",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build"
+    },
+    {
+      "name": "clang",
+      "displayName": "clang++",
+      "inherits": "default",
+      "binaryDir": "${sourceDir}/build-clang",
+      "cacheVariables": { "CMAKE_CXX_COMPILER": "clang++" }
+    },
+    {
+      "name": "lto",
+      "displayName": "system compiler with link-time optimization",
+      "inherits": "default",
+      "binaryDir": "${sourceDir}/build-lto",
+      "cacheVariables": { "RAY_LTO": "ON" }
+    },
+    {
+      "name": "clang-lto",
+      "displayName": "clang++ with link-time optimization",
+      "inherits": "clang",
+      "binaryDir": "${sourceDir}/build-clang-lto",
+      "cacheVariables": { "RAY_LTO": "ON" }
+    },
+    {
+      "name": "native",
+      "displayName": "system compiler, -O3, LTO and -march=native",
+      "inherits": "lto",
+      "binaryDir": "${sourceDir}/build-native",
+      "cacheVariables": { "RAY_NATIVE_ARCH": "ON", "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "-O3 -g" }
+    },
+    {
+      "name": "clang-native",
+      "displayName": "clang++, -O3, LTO and -march=native",
+      "inherits": "native",
+      "binaryDir": "${sourceDir}/build-clang-native",
+      "cacheVariables": { "CMAKE_CXX_COMPILER": "clang++" }
+    },
+    {
+      "name": "debug",
+      "displayName": "system compiler, -O0 -g",
+      "inherits": "default",
+      "binaryDir": "${sourceDir}/build-debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "default", "configurePreset": "default" },
+    { "name": "clang", "configurePreset": "clang" },
+    { "name": "lto", "configurePreset": "lto" },
+    { "name": "clang-lto", "configurePreset": "clang-lto" },
+    { "name": "native", "configurePreset": "native" },
+    { "name": "clang-native", "configurePreset": "clang-native" },
+    { "name": "debug", "configurePreset": "debug" }
+  ],
+  "testPresets": [
+    { "name": "default", "configurePreset": "default", "output": { "outputOnFailure": true } },
+    { "name": "clang", "configurePreset": "clang", "output": { "outputOnFailure": true } },
+    { "name": "lto", "configurePreset": "lto", "output": { "outputOnFailure": true } },
+    { "name": "clang-lto", "configurePreset": "clang-lto", "output": { "outputOnFailure": true } },
+    { "name": "native", "configurePreset": "native", "output": { "outputOnFailure": true } },
+    { "name": "clang-native", "configurePreset": "clang-native", "output": { "outputOnFailure": true } },
+    { "name": "debug", "configurePreset": "debug", "output": { "outputOnFailure": true } }
+  ]
+}

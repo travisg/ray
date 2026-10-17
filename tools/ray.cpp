@@ -64,9 +64,11 @@ struct options {
     std::string scene = std::string(kDefaultSceneName);
     bool list_scenes = false;
     std::string display; // HOST[:PORT] of a tev viewer, empty for none
+    int gi_samples = 0;
+    int bounces = 1;
 };
 
-enum { opt_seed = 256, opt_list_scenes, opt_display };
+enum { opt_seed = 256, opt_list_scenes, opt_display, opt_gi, opt_bounces };
 
 void usage(FILE *fp, const char *argv0) {
     fprintf(fp,
@@ -80,6 +82,8 @@ void usage(FILE *fp, const char *argv0) {
             "      --list-scenes\n"
             "  -r, --random      trace tiles in random order\n"
             "      --seed N      seed for --random and the random scenes (default 1)\n"
+            "      --gi N        indirect light: N hemisphere rays per hit (default 0, off)\n"
+            "      --bounces N   bounces of indirect light (default 1)\n"
             "      --display HOST[:PORT]\n"
             "                    push tiles to a tev viewer as they finish (port 14158)\n"
             "  -h, --help        this message\n",
@@ -110,6 +114,8 @@ bool parse_options(int argc, char **argv, options &opts, int &exit_code) {
         { "random", no_argument, nullptr, 'r' },
         { "seed", required_argument, nullptr, opt_seed },
         { "display", required_argument, nullptr, opt_display },
+        { "gi", required_argument, nullptr, opt_gi },
+        { "bounces", required_argument, nullptr, opt_bounces },
         { "help", no_argument, nullptr, 'h' },
         { nullptr, 0, nullptr, 0 },
     };
@@ -150,6 +156,20 @@ bool parse_options(int argc, char **argv, options &opts, int &exit_code) {
                 break;
             case opt_display:
                 opts.display = optarg;
+                break;
+            case opt_gi:
+                if (!parse_int(optarg, 0, 1 << 20, opts.gi_samples)) {
+                    fprintf(stderr, "%s: --gi needs a non-negative integer, got '%s'\n", argv[0],
+                            optarg);
+                    return false;
+                }
+                break;
+            case opt_bounces:
+                if (!parse_int(optarg, 1, 15, opts.bounces)) {
+                    fprintf(stderr, "%s: --bounces needs an integer from 1 to 15, got '%s'\n",
+                            argv[0], optarg);
+                    return false;
+                }
                 break;
             case 'h':
                 usage(stdout, argv[0]);
@@ -210,9 +230,9 @@ void display_thread(std::atomic<bool> &stop, framebuffer &fb, tev_display &displ
 
 // Runs one tracer until the tiles run out and adds its busy time to total_us.
 void tracer_thread(const framebuffer &fb, const scene &s, trace_master &master,
-                   std::atomic<int64_t> &total_us) {
+                   const render_settings &settings, std::atomic<int64_t> &total_us) {
     const auto start = std::chrono::steady_clock::now();
-    tracer t(fb, s, master);
+    tracer t(fb, s, master, settings);
     t.trace();
     total_us += std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::steady_clock::now() - start)
@@ -243,8 +263,13 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    printf("rendering %s at %dx%d on %d threads to %s\n", opts.scene.c_str(), opts.xres, opts.yres,
+    printf("rendering %s at %dx%d on %d threads to %s", opts.scene.c_str(), opts.xres, opts.yres,
            opts.cpus, opts.outfile.c_str());
+    if (opts.gi_samples > 0) {
+        printf(", %d indirect rays per hit, %d bounce%s", opts.gi_samples, opts.bounces,
+               opts.bounces == 1 ? "" : "s");
+    }
+    printf("\n");
 
     std::mt19937 rng(opts.seed);
     std::unique_ptr<scene> s = build_scene(opts.scene, rng);
@@ -276,13 +301,18 @@ int main(int argc, char *argv[]) {
             std::thread(display_thread, std::ref(stop_display), std::ref(fb), std::ref(*display));
     }
 
+    render_settings settings;
+    settings.gi_samples = opts.gi_samples;
+    settings.bounces = opts.bounces;
+    settings.seed = opts.seed;
+
     const auto start = std::chrono::steady_clock::now();
     std::atomic<int64_t> thread_us{ 0 };
     std::vector<std::thread> threads;
     threads.reserve(opts.cpus);
     for (int i = 0; i < opts.cpus; i++) {
         threads.emplace_back(tracer_thread, std::cref(fb), std::cref(*s), std::ref(master),
-                             std::ref(thread_us));
+                             std::cref(settings), std::ref(thread_us));
     }
 
     // wait for the trace master to hand out and collect every tile

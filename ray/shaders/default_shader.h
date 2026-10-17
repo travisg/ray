@@ -23,6 +23,7 @@
 #pragma once
 
 #include <algorithm>
+#include <libvec/vector3.h>
 #include <ray/color.h>
 #include <ray/shaders/shader.h>
 
@@ -37,6 +38,8 @@ class default_shader : public shader {
     void set_diffuse_color(colorf diffuse) { diffuse_color_ = diffuse; }
 
   private:
+    colorf indirect_light(const shader_args &args, const libvec::vector3d &origin) const;
+
     double shinyness_ = 0.0;
     colorf diffuse_color_ = colorf(1.0, 1.0, 1.0);
 };

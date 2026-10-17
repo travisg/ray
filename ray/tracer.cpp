@@ -29,8 +29,9 @@
 
 using libvec::vector3d;
 
-tracer::tracer(const framebuffer &surface, const scene &s, trace_master &master)
-    : surface_(surface), scene_(s), master_(master) {}
+tracer::tracer(const framebuffer &surface, const scene &s, trace_master &master,
+               render_settings settings)
+    : surface_(surface), scene_(s), master_(master), settings_(settings) {}
 
 std::optional<colorf> tracer::cast(const ray &r) {
     if (depth_ == kMaxTraceDepth) {
@@ -85,8 +86,16 @@ void tracer::trace() {
                                down * ((y - height / 2.0) * pixpitch);
                 dir.normalize();
 
-                // black where the ray exits the world
-                unit.set_result(x, y, cast(ray(camera, dir)).value_or(colorf(0)));
+                // the pixel's own random sequence, so the image does not depend on which
+                // thread drew it
+                rng_ = rng((static_cast<uint64_t>(settings_.seed) << 40) ^
+                           (static_cast<uint64_t>(y) << 20) ^ static_cast<uint64_t>(x));
+
+                // where the ray exits the world: the sky the indirect light comes from, or black
+                // when there is no indirect light
+                const colorf background =
+                    settings_.gi_samples > 0 ? scene_.ambient_light() : colorf(0);
+                unit.set_result(x, y, cast(ray(camera, dir)).value_or(background));
             }
         }
 

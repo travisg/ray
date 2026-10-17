@@ -24,6 +24,7 @@
 #include <optional>
 #include <ray/lights/simple_light.h>
 #include <ray/ray.h>
+#include <ray/sampling.h>
 #include <ray/scene.h>
 #include <ray/shaders/default_shader.h>
 #include <ray/tracer.h>
@@ -37,10 +38,34 @@ constexpr double kBias = 0.001;
 
 } // namespace
 
+// Light reaching the point from other surfaces and the sky: the average over cosine-weighted
+// hemisphere rays of what each one sees, times the albedo. A ray that escapes sees the
+// scene's ambient colour as a uniform sky; one that lands gets that surface's direct light
+// and, while bounces remain, its own single continuation ray, so a path never branches
+// again after the primary hit.
+colorf default_shader::indirect_light(const shader_args &args, const vector3d &origin) const {
+    const render_settings &settings = args.tracer.settings();
+    const int samples = args.tracer.depth() == 1 ? settings.gi_samples : 1;
+    colorf sum;
+    for (int i = 0; i < samples; i++) {
+        const vector3d dir =
+            cosine_hemisphere(args.hit.normal, args.tracer.random(), args.tracer.random());
+        sum += args.tracer.cast(ray(origin, dir)).value_or(args.scene.ambient_light());
+    }
+    return (sum * (1.0 / samples)) * diffuse_color_;
+}
+
 colorf default_shader::run(const shader_args &args) const {
     const hit &h = args.hit;
     const vector3d origin = h.pos + h.normal * kBias;
-    colorf color = args.scene.ambient_light();
+    const render_settings &settings = args.tracer.settings();
+
+    colorf color;
+    if (settings.gi_samples == 0) {
+        color = args.scene.ambient_light();
+    } else if (args.tracer.depth() <= settings.bounces) {
+        color = indirect_light(args, origin);
+    }
 
     for (const simple_light &l : args.scene.lights()) {
         // shadow ray toward the light

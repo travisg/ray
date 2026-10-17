@@ -2,7 +2,7 @@
 
 A small multithreaded CPU ray tracer, written for fun. Spheres, planes,
 triangles and Wavefront `.obj` meshes, point lights with shadows, mirror
-reflections, and a handful of built-in scenes.
+reflections, optional bounced light, and a handful of built-in scenes.
 
 It writes a PNG, or a float image (`.pfm`), when the render ends, and can
 push finished tiles to a running [tev](https://github.com/Tom94/tev) viewer
@@ -28,6 +28,7 @@ build/ray --list-scenes
 build/ray --scene spheres -x 1280 -y 960              # render to out.png
 build/ray --scene spheres -o out.pfm                  # or keep the floats
 build/ray --scene spheres --display localhost         # watch in tev while it renders
+build/ray --scene cornell --gi 64 --bounces 3         # bounced light, Monte Carlo style
 ./doit                                                # the same at 3200x2400
 ```
 

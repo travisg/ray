@@ -170,6 +170,37 @@ bool build_blob(scene &s, std::mt19937 &) {
     return build_mesh_scene(s, "blob.obj", colorf(1.0, 0.5, 0.5));
 }
 
+// Two spheres on a grey floor under a uniform white sky and no lights at all: everything
+// here is indirect, so without --gi it is a flat white picture.
+bool build_sky(scene &s, std::mt19937 &) {
+    add<plane>(s, make_shader(colorf(0.7, 0.7, 0.7), 0.0),
+               ray(vector3d(0.0, 0.0, 0.0), vector3d(0.0, 0.0, 1.0)));
+    add<sphere>(s, make_shader(colorf(0.8, 0.8, 0.8), 0.0), vector3d(0.0, 0.0, 1.0), 1.0);
+    add<sphere>(s, make_shader(colorf(0.8, 0.3, 0.2), 0.0), vector3d(2.2, -0.8, 0.5), 0.5);
+    s.set_ambient_light(colorf(1.0, 1.0, 1.0));
+    s.set_camera(vector3d(5.0, -5.0, 3.0), vector3d(0.0, 0.0, 0.7));
+    return true;
+}
+
+// A Cornell-style room, all diffuse: red wall on the left, green on the right, white
+// elsewhere, two white spheres, one light just under the ceiling and no ambient, so with
+// --gi every soft shadow and every bit of colour on the spheres is bounced light.
+bool build_cornell(scene &s, std::mt19937 &) {
+    const shader_ptr white = make_shader(colorf(0.75, 0.75, 0.75), 0.0);
+    add<plane>(s, white, ray(vector3d(0.0, 0.0, 0.0), vector3d(0.0, 0.0, 1.0)));  // floor
+    add<plane>(s, white, ray(vector3d(0.0, 0.0, 5.5), vector3d(0.0, 0.0, -1.0))); // ceiling
+    add<plane>(s, white, ray(vector3d(0.0, 5.5, 0.0), vector3d(0.0, -1.0, 0.0))); // back
+    add<plane>(s, make_shader(colorf(0.65, 0.05, 0.05), 0.0),
+               ray(vector3d(-2.75, 0.0, 0.0), vector3d(1.0, 0.0, 0.0))); // left
+    add<plane>(s, make_shader(colorf(0.12, 0.45, 0.15), 0.0),
+               ray(vector3d(2.75, 0.0, 0.0), vector3d(-1.0, 0.0, 0.0))); // right
+    add<sphere>(s, white, vector3d(-1.0, 2.0, 1.0), 1.0);
+    add<sphere>(s, white, vector3d(1.2, 3.6, 0.7), 0.7);
+    s.add_light(simple_light(vector3d(0.0, 2.75, 5.2), colorf(1.0, 1.0, 1.0), 100));
+    s.set_camera(vector3d(0.0, -8.0, 2.75), vector3d(0.0, 0.0, 2.75));
+    return true;
+}
+
 // The 256x256 heightfield of map.obj spans 65536 units; scaled to 16 across, with its
 // relief about 1.6 tall, under one low sun and a touch of ambient so the shadows stay dark.
 constexpr double kMapScale = 1.0 / 4096.0;
@@ -222,11 +253,14 @@ constexpr scene_entry kScenes[] = {
     { { "blob", "resources/blob.obj, 13824 quads" }, build_blob },
     { { "map", "resources/map.obj, a 256x256 heightfield of 131072 triangles" }, build_map },
     { { "map-blob", "the blob floating above the map" }, build_map_blob },
+    { { "sky", "two spheres on a floor under a white sky, lit only by --gi" }, build_sky },
+    { { "cornell", "a diffuse room with a red and a green wall; try --gi" }, build_cornell },
 };
 
 constexpr scene_info kSceneInfos[] = {
-    kScenes[0].info, kScenes[1].info, kScenes[2].info, kScenes[3].info, kScenes[4].info,
-    kScenes[5].info, kScenes[6].info, kScenes[7].info, kScenes[8].info, kScenes[9].info,
+    kScenes[0].info, kScenes[1].info, kScenes[2].info,  kScenes[3].info,
+    kScenes[4].info, kScenes[5].info, kScenes[6].info,  kScenes[7].info,
+    kScenes[8].info, kScenes[9].info, kScenes[10].info, kScenes[11].info,
 };
 static_assert(std::size(kSceneInfos) == std::size(kScenes));
 

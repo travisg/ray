@@ -61,8 +61,9 @@ ctest --test-dir build -R test_pfm            # one (or run build/tests/test_pfm
 Tests are plain executables in `tests/` built on `tests/check.h`; CTest runs
 them. `golden_render_<scene>` renders a scene at 64x48 single-threaded and
 `golden_compare_<scene>` checks every channel against `tests/golden/<scene>.pfm`
-within 1e-3. When a change intentionally alters output, re-baseline in the same
-commit:
+within 1e-3; the `-gi` variants render with `--gi 16`, so they also pin the
+random sequence. When a change intentionally alters output, re-baseline in the
+same commit:
 
 ```sh
 ctest --test-dir build -R golden_render
@@ -73,7 +74,7 @@ cp build/tests/golden-<scene>.pfm tests/golden/<scene>.pfm
 
 ```sh
 build/ray [-x 800] [-y 600] [-c N] [-o out.png|out.pfm] [-s SCENE] [-r] [--seed N]
-          [--display HOST[:PORT]]
+          [--gi N] [--bounces N] [--display HOST[:PORT]]
 build/ray --list-scenes
 ./doit [more ray options]    # 3200x2400, pushing tiles to a tev on localhost
 ```
@@ -81,6 +82,11 @@ build/ray --list-scenes
 - `-o` picks the output by its extension: `.png` (the default, 8-bit sRGB) or
   `.pfm` (the linear floats), written from the `framebuffer` when the render
   ends.
+- `--gi N` turns on indirect light: N cosine-weighted hemisphere rays from every
+  primary hit, each continued for `--bounces` bounces (default 1) with one ray
+  per bounce. Rays that escape see the scene's ambient colour as a uniform sky,
+  which is also what the background shows. Cost grows with N; 64 is a usable
+  preview, 256 is smooth. Off (the default) keeps the constant ambient term.
 - `--display HOST[:PORT]` pushes tiles to a running tev viewer
   (https://github.com/Tom94/tev, port 14158 by default) as they finish. tev is
   the server: if nothing is listening the render goes on without it, retries
@@ -92,8 +98,8 @@ build/ray --list-scenes
 - The root holds only the build files, scripts and docs.
 - `ray/`: the renderer library: `scene*`, `scene_library*`, `tracer*`,
   `trace_master*`, `framebuffer*`, `png*`, `pfm*`, `tev_display*`, `hit.h`,
-  `ray.h`, `color.h`, `aabb.h`, `bvh*`, `triangle_hit.h`, `cpp.h` (the
-  `DISALLOW_*` class macros), and `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry
+  `ray.h`, `color.h`, `aabb.h`, `bvh*`, `triangle_hit.h`, `rng.h`,
+  `sampling.h`, `cpp.h` (the `DISALLOW_*` class macros), and `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry
   containers and the OBJ loader).
 - `tools/`: `ray.cpp`, the renderer's CLI.
 - `libvec/` (vector math), `external/` (vendored third-party code), `tests/`
@@ -124,7 +130,11 @@ Everything includes from the repo root (`-I.`), so headers are written as
 - `tracer::trace` builds the camera basis from `scene::camera/target`
   with +z up (+y when looking along z) and casts one primary ray per pixel
   through an image plane one unit ahead spanning [-1, 1] across its width
-  (about a 90° horizontal field of view; no multisampling).
+  (about a 90° horizontal field of view; no multisampling). Each pixel reseeds
+  the tracer's PCG32 `rng` from `--seed` and its coordinates, so a render is
+  the same whichever thread drew which tile. `render_settings` carries the
+  `--gi`, `--bounces` and `--seed` values to the shaders through
+  `tracer::settings()`.
 - `tracer::cast` asks `scene::intersect` for the nearest `hit` (a linear scan
   over the drawables, nearest by `t`; a `mesh_drawable` walks a `bvh` over its
   faces, see below), then calls
@@ -172,8 +182,12 @@ by shaders).
   number so the result matches a plain scan.
 - `shaders/`: `shader::run(const shader_args&) -> colorf`. `default_shader`
   does ambient + clamped diffuse + shadows + mirror reflection, starting its
-  secondary rays `kBias` (0.001) above the surface; `debug_shader` supports
-  `mode::normal` and `mode::depth`.
+  secondary rays `kBias` (0.001) above the surface. With `gi_samples` set,
+  `indirect_light` replaces the ambient term: `cosine_hemisphere`
+  (`ray/sampling.h`) directions, `tracer::cast` for what each sees, the sky
+  for escapes, averaged and scaled by the albedo; the primary hit (depth 1)
+  spends `gi_samples` rays and deeper hits one, up to `bounces`.
+  `debug_shader` supports `mode::normal` and `mode::depth`.
 - `mesh/`: `geometry` (shared vertex/normal/tangent/uv pools) owning `mesh` →
   `surface` index lists; `obj_loader` is the only importer.
 - `ray/color.h`: `colorf` is double RGB, unclamped and additive; the

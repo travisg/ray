@@ -24,7 +24,6 @@
 
 #include <Ray.h>
 #include <Scene.h>
-#include <cstdio>
 #include <drawables/Mesh.h>
 #include <drawables/Plane.h>
 #include <drawables/Sphere.h>
@@ -63,24 +62,11 @@ template <typename T, typename... Args> void Add(Scene &scene, ShaderPtr shader,
 
 std::unique_ptr<MeshDrawable> LoadMesh(const std::string &filename) {
     std::cout << "loading " << filename << std::endl;
-    FILE *fp = fopen(filename.c_str(), "r");
-    if (!fp) {
-        std::cerr << "error opening file " << filename << std::endl;
+    std::unique_ptr<Geometry> geom = LoadObjFile(filename);
+    if (!geom) {
         return nullptr;
     }
-
-    Geometry *g = nullptr;
-    int err = obj_load(fp, &g);
-    fclose(fp);
-
-    if (err < 0) {
-        std::cerr << "error loading mesh " << filename << std::endl;
-        return nullptr;
-    }
-
-    std::unique_ptr<Geometry> geom(g);
     geom->Dump();
-
     return std::make_unique<MeshDrawable>(std::move(geom));
 }
 

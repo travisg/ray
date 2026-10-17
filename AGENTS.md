@@ -107,7 +107,7 @@ them and `--scene NAME` picks one (default `default`). `BuildScene` runs
 `Scene::Prepare()` once at the end, which calls `Drawable::Prepare()` on every
 drawable (a `MeshDrawable` computes its bounding sphere there). Mesh scenes
 load `resources/*.obj` relative to the working directory via `LoadMesh` →
-`obj_load` → `Geometry`. The `spheres` scene draws from the `--seed` RNG.
+`LoadObj` → `Geometry`. The `spheres` scene draws from the `--seed` RNG.
 Lights are `SimpleLight` point lights only (`m_Falloff` is stored but unused
 by shaders).
 

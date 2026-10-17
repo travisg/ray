@@ -62,7 +62,7 @@ add_library(raycore STATIC
     Tracer.cpp
     TraceMaster.cpp
     RenderSurface.cpp
-    drawables/Mesh.cpp
+    drawables/MeshDrawable.cpp
     drawables/Plane.cpp
     drawables/Sphere.cpp
     drawables/Triangle.cpp

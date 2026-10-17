@@ -25,7 +25,7 @@
 #include <vector>
 
 #include <BoundingSphere.h>
-#include <drawables/Mesh.h>
+#include <drawables/MeshDrawable.h>
 #include <mesh/Geometry.h>
 
 using Libvec::Vector3d;

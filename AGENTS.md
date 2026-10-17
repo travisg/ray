@@ -1,8 +1,9 @@
 # ray
 
 Small multithreaded CPU ray tracer (C++20, CMake) plus three helper tools that
-consume its streaming `.ray` output. `ctest` covers the vector math, the `.ray`
-reader/writer, the OBJ loader and a golden render; `./doit` is the eyeball check.
+consume its streaming `.ray` output. `ctest` covers the vector math,
+intersections, the tracer, the `.ray` reader/writer, the OBJ loader and a
+golden render of every scene; `./doit` is the eyeball check.
 
 ## Build
 
@@ -25,7 +26,10 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
 - Dependencies: a C++20 compiler, CMake >= 3.20, pthreads, SDL2 (`rayview` only;
   missing SDL2 skips that target).
   macOS: `-DCMAKE_PREFIX_PATH=/opt/local` or `/opt/homebrew` if SDL2 isn't found.
-- `libvec/` is the vendored, header-only vector math (`Vector3.h`, `Random.h`).
+- Portability: the tree must build with Apple's libc++, which lags on
+  `std::jthread`, `std::format` and floating-point `std::from_chars`; use
+  `std::thread` with explicit joins, `snprintf`/`std::to_string` and `strtof`.
+- `libvec/` is the vendored, header-only vector math (`Vector3.h`).
 - Formatting: `./codestyle <files>` runs `clang-format -i` with the repo's
   `.clang-format` (LLVM base, 4-space indent, attached braces, braces on every
   `if`/`for` body, 100 columns, sorted includes).
@@ -35,6 +39,7 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
 ```sh
 ctest --test-dir build --output-on-failure    # all
 ctest --test-dir build -R test_rayfile        # one (or run build/tests/test_rayfile)
+ctest --test-dir build -LE slow               # skip the blob golden render
 ```
 
 Tests are plain executables in `tests/` built on `tests/check.h`; CTest runs
@@ -63,6 +68,16 @@ build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in 
   to 10 s for the header, so it can start before or after `ray`. Esc or closing
   the window exits immediately. Renders up to 2048x1600 open a 1:1 window;
   larger ones open 800x600 and scale the full-resolution texture to fit.
+
+## Layout
+
+- Top level: `main.cpp` (CLI), `Scene*`, `SceneLibrary*`, `Tracer*`,
+  `TraceMaster*`, `RenderSurface*`, `RayFile*` (the `.ray` format), `Hit.h`,
+  `Ray.h`, `Color.h`, `BoundingSphere.h`, and the tools `rayview.cpp`,
+  `ray2tga.cpp`, `raysplit.cpp`.
+- `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry containers and the
+  OBJ loader), `libvec/` (vector math), `tests/` (with `golden/` references),
+  `resources/` (`.obj` assets).
 
 ## Architecture
 
@@ -93,7 +108,8 @@ Everything includes from the repo root (`-I.`), so headers are written as
   `args.tracer.Cast` (reflection in `DefaultShader`); `m_Depth` caps recursion
   at `kMaxTraceDepth` (16).
 - Shadow rays use `Scene::DoesIntersect(ray, maxDistance)`, true for any hit
-  with `t < maxDistance`.
+  with `kMinT < t < maxDistance - kMinT`, so a light sitting exactly on a
+  surface does not shadow it.
 - `Drawable::Intersect(ray)` returns `std::optional<Hit>` (`t`, `pos`,
   `normal`); `ray.dir` must be unit length for `t` to be a distance. Planes
   and triangles cull back faces; spheres hit from inside return the far side
@@ -117,9 +133,9 @@ by shaders).
 
 - `drawables/`: `Drawable` interface = `Prepare()`, `Intersect()` and a
   `ShaderPtr`. Implementations: `Sphere`, `Plane`, `Triangle`,
-  `MeshDrawable` (in `drawables/Mesh.h`, distinct from `mesh/Mesh.h`).
-  `MeshDrawable` supports triangle (3-index) and quad (4-index) faces and
-  requires vertex normals (`vn`) in the `.obj`.
+  `MeshDrawable` (in `drawables/MeshDrawable.h`, distinct from `mesh/Mesh.h`).
+  `MeshDrawable` supports triangle and quad faces, interpolating the vertex
+  normals the loader requires.
 - `shaders/`: `Shader::Run(const ShaderArgs&) -> colorf`. `DefaultShader`
   does ambient + clamped diffuse + shadows + mirror reflection, starting its
   secondary rays `kBias` (0.001) above the surface; `DebugShader` supports

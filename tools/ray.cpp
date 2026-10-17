@@ -41,6 +41,7 @@
 #include <ray/pfm.h>
 #include <ray/png.h>
 #include <ray/ray.h>
+#include <ray/sampling.h>
 #include <ray/scene.h>
 #include <ray/scene_library.h>
 #include <ray/tev_display.h>
@@ -82,7 +83,8 @@ void usage(FILE *fp, const char *argv0) {
             "      --list-scenes\n"
             "  -r, --random      trace tiles in random order\n"
             "      --seed N      seed for --random and the random scenes (default 1)\n"
-            "      --gi N        indirect light: N hemisphere rays per hit (default 0, off)\n"
+            "      --gi N        indirect light: N hemisphere rays per hit, rounded up to a\n"
+            "                    grid of strata (default 0, off)\n"
             "      --bounces N   bounces of indirect light (default 1)\n"
             "      --display HOST[:PORT]\n"
             "                    push tiles to a tev viewer as they finish (port 14158)\n"
@@ -266,8 +268,9 @@ int main(int argc, char *argv[]) {
     printf("rendering %s at %dx%d on %d threads to %s", opts.scene.c_str(), opts.xres, opts.yres,
            opts.cpus, opts.outfile.c_str());
     if (opts.gi_samples > 0) {
-        printf(", %d indirect rays per hit, %d bounce%s", opts.gi_samples, opts.bounces,
-               opts.bounces == 1 ? "" : "s");
+        const strata grid = stratify(opts.gi_samples);
+        printf(", %d indirect rays per hit (%dx%d strata), %d bounce%s", grid.count(), grid.x,
+               grid.y, opts.bounces, opts.bounces == 1 ? "" : "s");
     }
     printf("\n");
 

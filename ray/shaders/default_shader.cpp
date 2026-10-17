@@ -42,19 +42,22 @@ constexpr double kBias = 0.001;
 // hemisphere rays of what each one sees, times the albedo. A ray that escapes sees the
 // scene's ambient colour as a uniform sky; one that lands gets that surface's direct light
 // and, while bounces remain, its own single continuation ray, so a path never branches
-// again after the primary hit.
+// again after the primary hit. The primary hit's rays take one random point per cell of a
+// grid over the unit square, so no part of the hemisphere is skipped or sampled twice.
 colorf default_shader::indirect_light(const shader_args &args, const vector3d &origin) const {
     const render_settings &settings = args.tracer.settings();
-    const int samples = args.tracer.depth() == 1 ? settings.gi_samples : 1;
+    const strata grid = stratify(args.tracer.depth() == 1 ? settings.gi_samples : 1);
     colorf sum;
-    for (int i = 0; i < samples; i++) {
-        // two draws in a fixed order: as arguments their order would be the compiler's choice
-        const double u1 = args.tracer.random();
-        const double u2 = args.tracer.random();
-        const vector3d dir = cosine_hemisphere(args.hit.normal, u1, u2);
-        sum += args.tracer.cast(ray(origin, dir)).value_or(args.scene.ambient_light());
+    for (int i = 0; i < grid.x; i++) {
+        for (int j = 0; j < grid.y; j++) {
+            // two draws in a fixed order: as arguments their order would be the compiler's
+            const double u1 = (i + args.tracer.random()) / grid.x;
+            const double u2 = (j + args.tracer.random()) / grid.y;
+            const vector3d dir = cosine_hemisphere(args.hit.normal, u1, u2);
+            sum += args.tracer.cast(ray(origin, dir)).value_or(args.scene.ambient_light());
+        }
     }
-    return (sum * (1.0 / samples)) * diffuse_color_;
+    return (sum * (1.0 / grid.count())) * diffuse_color_;
 }
 
 colorf default_shader::run(const shader_args &args) const {

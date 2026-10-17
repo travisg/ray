@@ -83,10 +83,12 @@ build/ray --list-scenes
   `.pfm` (the linear floats), written from the `framebuffer` when the render
   ends.
 - `--gi N` turns on indirect light: N cosine-weighted hemisphere rays from every
-  primary hit, each continued for `--bounces` bounces (default 1) with one ray
-  per bounce. Rays that escape see the scene's ambient colour as a uniform sky,
-  which is also what the background shows. Cost grows with N; 64 is a usable
-  preview, 256 is smooth. Off (the default) keeps the constant ambient term.
+  primary hit, one per cell of a grid of strata over the hemisphere (N rounds
+  up to the grid, 64 is 8x8), each continued for `--bounces` bounces (default
+  1) with one ray per bounce. Rays that escape see the scene's ambient colour
+  as a uniform sky, which is also what the background shows. Cost grows with
+  N; 64 is a usable preview, 256 is smooth. Off (the default) keeps the
+  constant ambient term.
 - `--display HOST[:PORT]` pushes tiles to a running tev viewer
   (https://github.com/Tom94/tev, port 14158 by default) as they finish. tev is
   the server: if nothing is listening the render goes on without it, retries
@@ -184,9 +186,10 @@ by shaders).
   does ambient + clamped diffuse + shadows + mirror reflection, starting its
   secondary rays `kBias` (0.001) above the surface. With `gi_samples` set,
   `indirect_light` replaces the ambient term: `cosine_hemisphere`
-  (`ray/sampling.h`) directions, `tracer::cast` for what each sees, the sky
+  (`ray/sampling.h`) directions from one random point per cell of a
+  `stratify(gi_samples)` grid, `tracer::cast` for what each sees, the sky
   for escapes, averaged and scaled by the albedo; the primary hit (depth 1)
-  spends `gi_samples` rays and deeper hits one, up to `bounces`.
+  spends the grid and deeper hits one ray, up to `bounces`.
   `debug_shader` supports `mode::normal` and `mode::depth`.
 - `mesh/`: `geometry` (shared vertex/normal/tangent/uv pools) owning `mesh` →
   `surface` index lists; `obj_loader` is the only importer.

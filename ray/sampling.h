@@ -26,6 +26,20 @@
 #include <libvec/vector3.h>
 #include <numbers>
 
+// A grid over the unit square with at least n cells, as square as n allows: 64 is 8x8, 50 is
+// 8x7. One random point per cell (stratified sampling) spreads n samples evenly, where n
+// independent points would clump and leave gaps.
+struct strata {
+    int x;
+    int y;
+    int count() const { return x * y; }
+};
+
+inline strata stratify(int n) {
+    const int x = static_cast<int>(std::ceil(std::sqrt(static_cast<double>(n))));
+    return { x, (n + x - 1) / x };
+}
+
 // A direction on the hemisphere around the unit normal n, with probability proportional to
 // the cosine of its angle to n (Malley's method: a uniform disc point lifted to the sphere).
 // u1 and u2 are uniform in [0, 1). Under this density the diffuse estimator is just the

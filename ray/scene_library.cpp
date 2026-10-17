@@ -171,7 +171,7 @@ bool build_blob(scene &s, std::mt19937 &) {
 }
 
 // The 256x256 heightfield of map.obj spans 65536 units; scaled to 16 across, with its
-// relief about 1.6 tall, under one high sun and a little ambient fill.
+// relief about 1.6 tall, under one low sun and a touch of ambient so the shadows stay dark.
 constexpr double kMapScale = 1.0 / 4096.0;
 
 bool add_map(scene &s) {
@@ -179,10 +179,10 @@ bool add_map(scene &s) {
     if (!md) {
         return false;
     }
-    md->set_shader(make_shader(colorf(0.35, 0.5, 0.25), 0.0));
+    md->set_shader(make_shader(colorf(0.35, 0.35, 0.25), 0.0));
     s.add_drawable(std::move(md));
-    s.add_light(simple_light(vector3d(40.0, -30.0, 50.0), colorf(1.0, 1.0, 1.0), 100));
-    s.set_ambient_light(colorf(0.15, 0.15, 0.15));
+    s.add_light(simple_light(vector3d(-40.0, -30.0, 20.0), colorf(1.0, 1.0, 1.0), 100));
+    s.set_ambient_light(colorf(0.05, 0.05, 0.05));
     return true;
 }
 
@@ -204,7 +204,7 @@ bool build_map_blob(scene &s, std::mt19937 &) {
     if (!blob) {
         return false;
     }
-    blob->set_shader(make_shader(colorf(0.9, 0.3, 0.3), 0.3));
+    blob->set_shader(make_shader(colorf(0.9, 0.0, 0.0), 0.3));
     s.add_drawable(std::move(blob));
     s.set_camera(vector3d(8.0, -8.0, 4.5), vector3d(0.0, 0.0, 1.5));
     return true;

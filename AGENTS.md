@@ -51,7 +51,8 @@ cp build/tests/golden-<scene>.ray tests/golden/<scene>.ray
 ## Run
 
 ```sh
-build/ray [-x 800] [-y 600] [-c N] [-o out.ray] [-r] [--seed N]   # -r = random tile order
+build/ray [-x 800] [-y 600] [-c N] [-o out.ray] [-s SCENE] [-r] [--seed N]
+build/ray --list-scenes
 build/rayview        # opens ./out.ray (hard-coded) and follows it while ray writes
 ./doit               # ray at 3200x2400 in the background, then rayview
 build/ray2tga out.ray out.tga
@@ -97,16 +98,18 @@ Everything includes from the repo root (`-I.`), so headers are written as
   `normal`); `ray.dir` must be unit length for `t` to be a distance.
   `Plane`/`Triangle` cull back faces and do not reject `t < 0`.
 
-**Scene (`Scene.cpp`)**
+**Scene (`Scene.cpp`, `SceneLibrary.cpp`)**
 
-The scene is hard-coded in the `Scene` constructor behind `#if 0` / `#if 1` and
-`if (0)` / `if (1)` blocks; flip those to switch scenes (note: `resources/lerp.obj`
-referenced in the last `if (0)` block does not exist). There is no scene-file
-loader. Every drawable must have `Prepare()` called before rendering; for
-`MeshDrawable`, `Prepare()` computes `m_BSphere` (omitting it leaves radius 0).
-Meshes are loaded with `LoadMesh("resources/*.obj")` → `obj_load` → `Geometry`,
-wrapped in a `MeshDrawable` with a bounding-sphere pre-test. Lights are
-`SimpleLight` point lights only (`m_Falloff` is stored but unused by shaders).
+`Scene` is a container: owned drawables, point lights, ambient colour and a
+camera position/target. Scenes are built by name in `SceneLibrary.cpp`, one
+`Build*` function per entry in the `kScenes` table; `--list-scenes` prints
+them and `--scene NAME` picks one (default `default`). `BuildScene` runs
+`Scene::Prepare()` once at the end, which calls `Drawable::Prepare()` on every
+drawable (a `MeshDrawable` computes its bounding sphere there). Mesh scenes
+load `resources/*.obj` relative to the working directory via `LoadMesh` →
+`obj_load` → `Geometry`. The `spheres` scene draws from the `--seed` RNG.
+Lights are `SimpleLight` point lights only (`m_Falloff` is stored but unused
+by shaders).
 
 **Pluggable pieces**
 

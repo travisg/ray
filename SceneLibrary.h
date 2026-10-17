@@ -20,20 +20,24 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __LIBVEC_RANDOM_H
-#define __LIBVEC_RANDOM_H
+#pragma once
 
-#include <cstdlib>
+#include <memory>
+#include <random>
+#include <span>
+#include <string_view>
 
-namespace Libvec {
+class Scene;
 
-inline double Random() {
-    return drand48();
-}
-inline double Random(double low, double high) {
-    return (drand48() * (high - low)) + low;
-}
+struct SceneInfo {
+    std::string_view name;
+    std::string_view description;
+};
 
-} // namespace Libvec
+inline constexpr std::string_view kDefaultSceneName = "default";
 
-#endif
+std::span<const SceneInfo> ListScenes();
+
+// Builds the named scene with Prepare() already run. Returns nullptr, after
+// reporting on stderr, when the name is unknown or an asset fails to load.
+std::unique_ptr<Scene> BuildScene(std::string_view name, std::mt19937 &rng);

@@ -27,6 +27,8 @@
 #include <functional>
 #include <getopt.h>
 #include <iostream>
+#include <memory>
+#include <random>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -35,6 +37,7 @@
 #include <Ray.h>
 #include <RenderSurface.h>
 #include <Scene.h>
+#include <SceneLibrary.h>
 #include <TraceMaster.h>
 #include <Tracer.h>
 
@@ -52,20 +55,24 @@ struct Options {
     std::string outfile = "out.ray";
     bool random = false;
     uint32_t seed = 1;
+    std::string scene = std::string(kDefaultSceneName);
+    bool listScenes = false;
 };
 
-enum { kOptSeed = 256 };
+enum { kOptSeed = 256, kOptListScenes };
 
 void Usage(FILE *fp, const char *argv0) {
     fprintf(fp,
             "usage: %s [options]\n"
-            "  -x, --xres N    image width (default 800)\n"
-            "  -y, --yres N    image height (default 600)\n"
-            "  -c, --cpus N    worker threads (default: hardware threads)\n"
-            "  -o, --out FILE  output .ray file (default out.ray)\n"
-            "  -r, --random    trace tiles in random order\n"
-            "      --seed N    shuffle seed for --random (default 1)\n"
-            "  -h, --help      this message\n",
+            "  -x, --xres N      image width (default 800)\n"
+            "  -y, --yres N      image height (default 600)\n"
+            "  -c, --cpus N      worker threads (default: hardware threads)\n"
+            "  -o, --out FILE    output .ray file (default out.ray)\n"
+            "  -s, --scene NAME  scene to render (default: default)\n"
+            "      --list-scenes\n"
+            "  -r, --random      trace tiles in random order\n"
+            "      --seed N      seed for --random and the random scenes (default 1)\n"
+            "  -h, --help        this message\n",
             argv0);
 }
 
@@ -88,6 +95,8 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
         { "yres", required_argument, nullptr, 'y' },
         { "cpus", required_argument, nullptr, 'c' },
         { "out", required_argument, nullptr, 'o' },
+        { "scene", required_argument, nullptr, 's' },
+        { "list-scenes", no_argument, nullptr, kOptListScenes },
         { "random", no_argument, nullptr, 'r' },
         { "seed", required_argument, nullptr, kOptSeed },
         { "help", no_argument, nullptr, 'h' },
@@ -96,7 +105,7 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
 
     exitCode = 1;
     int c;
-    while ((c = getopt_long(argc, argv, "x:y:c:o:rh", kLongOptions, nullptr)) != -1) {
+    while ((c = getopt_long(argc, argv, "x:y:c:o:s:rh", kLongOptions, nullptr)) != -1) {
         switch (c) {
             case 'x':
             case 'y':
@@ -111,6 +120,12 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
             }
             case 'o':
                 opts.outfile = optarg;
+                break;
+            case 's':
+                opts.scene = optarg;
+                break;
+            case kOptListScenes:
+                opts.listScenes = true;
                 break;
             case 'r':
                 opts.random = true;
@@ -157,8 +172,23 @@ int main(int argc, char *argv[]) {
         return exitCode;
     }
 
-    printf("xres %d yres %d cpus %d\n", opts.xres, opts.yres, opts.cpus);
+    if (opts.listScenes) {
+        for (const SceneInfo &info : ListScenes()) {
+            printf("%-12.*s %.*s\n", (int)info.name.size(), info.name.data(),
+                   (int)info.description.size(), info.description.data());
+        }
+        return 0;
+    }
+
+    printf("xres %d yres %d cpus %d scene %s\n", opts.xres, opts.yres, opts.cpus,
+           opts.scene.c_str());
     std::cout << "outfile " << opts.outfile << std::endl;
+
+    std::mt19937 rng(opts.seed);
+    std::unique_ptr<Scene> scene = BuildScene(opts.scene, rng);
+    if (!scene) {
+        return 1;
+    }
 
     RenderSurfaceFile rs(opts.xres, opts.yres);
     if (rs.OpenOutFile(opts.outfile) < 0) {
@@ -166,14 +196,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    Scene scene;
-
     TraceMaster master(rs, opts.random ? TileOrder::Random : TileOrder::Sequential, opts.seed);
 
     std::vector<std::thread> threads;
     threads.reserve(opts.cpus);
     for (int i = 0; i < opts.cpus; i++) {
-        threads.emplace_back(TracerThread, std::cref(rs), std::cref(scene), std::ref(master));
+        threads.emplace_back(TracerThread, std::cref(rs), std::cref(*scene), std::ref(master));
     }
 
     // wait for the trace master to hand out and collect every tile

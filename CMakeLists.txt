@@ -58,6 +58,7 @@ target_link_libraries(rayfile PUBLIC ray_flags)
 # Renderer core: scene, tracing, work distribution, drawables, shaders, meshes.
 add_library(raycore STATIC
     Scene.cpp
+    SceneLibrary.cpp
     Tracer.cpp
     TraceMaster.cpp
     RenderSurface.cpp

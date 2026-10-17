@@ -33,9 +33,19 @@
 
 struct Ray;
 
+// Drawables, point lights, ambient light and a camera. Built by SceneLibrary.
 class Scene {
   public:
-    Scene();
+    Scene() = default;
+    Scene(const Scene &) = delete;
+    Scene &operator=(const Scene &) = delete;
+
+    void AddDrawable(std::unique_ptr<Drawable> d);
+    void AddLight(const SimpleLight &l);
+    void SetAmbientLight(const colorf &c) { m_AmbientLight = c; }
+    void SetCamera(const Libvec::Vector3d &pos, const Libvec::Vector3d &target);
+    // Drawable::Prepare on every drawable; run once after the last AddDrawable
+    void Prepare();
 
     // nearest hit by t, with Hit::drawable set
     std::optional<Hit> Intersect(const Ray &ray) const;

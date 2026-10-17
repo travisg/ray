@@ -1,8 +1,10 @@
 #include "check.h"
 #include <Ray.h>
+#include <Scene.h>
 #include <drawables/Plane.h>
 #include <drawables/Sphere.h>
 #include <drawables/Triangle.h>
+#include <memory>
 
 using Libvec::Vector3d;
 
@@ -51,6 +53,31 @@ int main() {
         CHECK(!t.Intersect(Ray(Vector3d(8, 8, 5), Vector3d(0, 0, -1))));
         // back face
         CHECK(!t.Intersect(Ray(Vector3d(1, 1, -5), Vector3d(0, 0, 1))));
+    }
+
+    // a scene reports the nearest hit and which drawable it came from
+    {
+        Scene scene;
+        auto sphere = std::make_unique<Sphere>(Vector3d(0, 0, 10), 1);
+        const Drawable *sp = sphere.get();
+        scene.AddDrawable(std::move(sphere));
+        scene.AddDrawable(std::make_unique<Plane>(Ray(Vector3d(0, 0, 20), Vector3d(0, 0, -1))));
+        scene.Prepare();
+
+        auto hit = scene.Intersect(Ray(Vector3d(0, 0, 0), Vector3d(0, 0, 1)));
+        CHECK(hit.has_value());
+        if (hit) {
+            CHECK(hit->drawable == sp);
+            CHECK_NEAR(hit->t, 9.0, 1e-9);
+        }
+        auto behind = scene.Intersect(Ray(Vector3d(5, 0, 0), Vector3d(0, 0, 1)));
+        CHECK(behind.has_value());
+        if (behind) {
+            CHECK(behind->drawable != sp);
+            CHECK_NEAR(behind->t, 20.0, 1e-9);
+        }
+        CHECK(scene.DoesIntersect(Ray(Vector3d(0, 0, 0), Vector3d(0, 0, 1)), 15));
+        CHECK(!scene.DoesIntersect(Ray(Vector3d(0, 0, 0), Vector3d(0, 0, 1)), 5));
     }
 
     return TEST_RESULT();

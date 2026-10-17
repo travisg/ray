@@ -18,7 +18,8 @@ target_link_libraries(test_golden PRIVATE rayfile)
 
 function(ray_add_golden scene)
     add_test(NAME golden_render_${scene}
-        COMMAND ray -x 64 -y 48 -c 1 -o ${CMAKE_CURRENT_BINARY_DIR}/golden-${scene}.ray
+        COMMAND ray --scene ${scene} -x 64 -y 48 -c 1
+                -o ${CMAKE_CURRENT_BINARY_DIR}/golden-${scene}.ray
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
     set_tests_properties(golden_render_${scene} PROPERTIES FIXTURES_SETUP golden_${scene})
     add_test(NAME golden_compare_${scene}
@@ -28,3 +29,11 @@ function(ray_add_golden scene)
 endfunction()
 
 ray_add_golden(default)
+ray_add_golden(spheres)
+ray_add_golden(triangle)
+ray_add_golden(cbox)
+ray_add_golden(dude)
+ray_add_golden(plane-mesh)
+ray_add_golden(csphere)
+ray_add_golden(blob)
+set_tests_properties(golden_render_blob golden_compare_blob PROPERTIES LABELS slow)

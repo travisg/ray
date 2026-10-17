@@ -67,13 +67,13 @@ std::optional<hit> triangle::intersect(const ray &r) const {
     double vv = dot(v, v);
     double wu = dot(w, u);
     double wv = dot(w, v);
-    double D = 1.0 / (uv * uv - uu * vv);
+    double d = 1.0 / (uv * uv - uu * vv);
 
-    double b1 = (uv * wv - vv * wu) * D;
+    double b1 = (uv * wv - vv * wu) * d;
     if (b1 < 0.0 || b1 > 1.0) {
         return std::nullopt;
     }
-    double b2 = (uv * wu - uu * wv) * D;
+    double b2 = (uv * wu - uu * wv) * d;
     if (b2 < 0.0 || (b1 + b2) > 1.0) {
         return std::nullopt;
     }

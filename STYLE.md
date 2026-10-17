@@ -60,8 +60,10 @@ struct shader_args {
 };
 ```
 
-No `readability-identifier-naming` options are configured, so naming is
-convention, not lint.
+`.clang-tidy` carries these as `readability-identifier-naming` options, so
+the lint reports a name that breaks them. Local constants stay snake_case
+(the `k` prefix is for constants with static storage), and a public field
+has no suffix.
 
 ## Class layout
 
@@ -148,7 +150,7 @@ class tile_queue final {
 
 ## Lint
 
-`.clang-tidy` is lk's file, verbatim. It enables `bugprone-*`,
+`.clang-tidy` is lk's file plus the naming options above. It enables `bugprone-*`,
 `clang-diagnostic-*`, `google-*`, `misc-*`, `modernize-*`, `performance-*` and
 `readability-*`, then switches off:
 

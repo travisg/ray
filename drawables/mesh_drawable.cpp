@@ -92,7 +92,7 @@ std::optional<hit> tri_intersect(const ray &r, const vector3d &v0, const vector3
 
     // it intersects the plane the triangle is in, now calc the u/v coordinates and see if it's in
     // the triangle
-    double uu, uv, vv, wu, wv, D;
+    double uu, uv, vv, wu, wv, d;
 
     vector3d u = v1 - v0;
     vector3d v = v2 - v0;
@@ -103,14 +103,14 @@ std::optional<hit> tri_intersect(const ray &r, const vector3d &v0, const vector3
     vector3d w = pos - v0;
     wu = dot(w, u);
     wv = dot(w, v);
-    D = 1.0 / (uv * uv - uu * vv);
+    d = 1.0 / (uv * uv - uu * vv);
 
     // get and test parametric coords
-    double b1 = (uv * wv - vv * wu) * D;
+    double b1 = (uv * wv - vv * wu) * d;
     if (b1 < 0.0 || b1 > 1.0) {
         return std::nullopt;
     }
-    double b2 = (uv * wu - uu * wv) * D;
+    double b2 = (uv * wu - uu * wv) * d;
     if (b2 < 0.0 || (b1 + b2) > 1.0) {
         return std::nullopt;
     }

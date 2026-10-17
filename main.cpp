@@ -59,7 +59,7 @@ struct options {
     bool list_scenes = false;
 };
 
-enum { kOptSeed = 256, kOptListScenes };
+enum { opt_seed = 256, opt_list_scenes };
 
 void usage(FILE *fp, const char *argv0) {
     fprintf(fp,
@@ -96,9 +96,9 @@ bool parse_options(int argc, char **argv, options &opts, int &exit_code) {
         { "cpus", required_argument, nullptr, 'c' },
         { "out", required_argument, nullptr, 'o' },
         { "scene", required_argument, nullptr, 's' },
-        { "list-scenes", no_argument, nullptr, kOptListScenes },
+        { "list-scenes", no_argument, nullptr, opt_list_scenes },
         { "random", no_argument, nullptr, 'r' },
-        { "seed", required_argument, nullptr, kOptSeed },
+        { "seed", required_argument, nullptr, opt_seed },
         { "help", no_argument, nullptr, 'h' },
         { nullptr, 0, nullptr, 0 },
     };
@@ -124,13 +124,13 @@ bool parse_options(int argc, char **argv, options &opts, int &exit_code) {
             case 's':
                 opts.scene = optarg;
                 break;
-            case kOptListScenes:
+            case opt_list_scenes:
                 opts.list_scenes = true;
                 break;
             case 'r':
                 opts.random = true;
                 break;
-            case kOptSeed:
+            case opt_seed:
                 if (!parse_int(optarg, uint32_t{ 0 }, UINT32_MAX, opts.seed)) {
                     fprintf(stderr, "%s: --seed needs an unsigned integer, got '%s'\n", argv[0],
                             optarg);

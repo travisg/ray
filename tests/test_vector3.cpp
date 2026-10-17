@@ -1,6 +1,6 @@
-#include "check.h"
 #include <libvec/vector3.h>
 #include <sstream>
+#include <tests/check.h>
 
 using libvec::vector3d;
 

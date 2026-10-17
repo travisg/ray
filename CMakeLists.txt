@@ -51,37 +51,37 @@ if(RAY_LTO)
 endif()
 
 # .ray stream reader/writer, shared by the renderer and the tools.
-add_library(rayfile STATIC ray_file.cpp)
+add_library(rayfile STATIC ray/ray_file.cpp)
 target_include_directories(rayfile PUBLIC ${PROJECT_SOURCE_DIR})
 target_link_libraries(rayfile PUBLIC ray_flags)
 
 # Renderer core: scene, tracing, work distribution, drawables, shaders, meshes.
 add_library(raycore STATIC
-    scene.cpp
-    scene_library.cpp
-    tracer.cpp
-    trace_master.cpp
-    render_surface.cpp
-    drawables/mesh_drawable.cpp
-    drawables/plane.cpp
-    drawables/sphere.cpp
-    drawables/triangle.cpp
-    shaders/debug_shader.cpp
-    shaders/default_shader.cpp
-    mesh/geometry.cpp
-    mesh/mesh.cpp
-    mesh/obj_loader.cpp
-    mesh/surface.cpp
+    ray/scene.cpp
+    ray/scene_library.cpp
+    ray/tracer.cpp
+    ray/trace_master.cpp
+    ray/render_surface.cpp
+    ray/drawables/mesh_drawable.cpp
+    ray/drawables/plane.cpp
+    ray/drawables/sphere.cpp
+    ray/drawables/triangle.cpp
+    ray/shaders/debug_shader.cpp
+    ray/shaders/default_shader.cpp
+    ray/mesh/geometry.cpp
+    ray/mesh/mesh.cpp
+    ray/mesh/obj_loader.cpp
+    ray/mesh/surface.cpp
 )
 target_link_libraries(raycore PUBLIC rayfile Threads::Threads)
 
-add_executable(ray main.cpp)
+add_executable(ray tools/ray.cpp)
 target_link_libraries(ray PRIVATE raycore)
 
-add_executable(ray2tga ray2tga.cpp)
+add_executable(ray2tga tools/ray2tga.cpp)
 target_link_libraries(ray2tga PRIVATE rayfile)
 
-add_executable(raysplit raysplit.cpp)
+add_executable(raysplit tools/raysplit.cpp)
 target_link_libraries(raysplit PRIVATE rayfile)
 
 # rayview needs SDL2: prefer SDL2's CMake config, fall back to pkg-config, and
@@ -99,7 +99,7 @@ else()
     endif()
 endif()
 if(RAY_SDL2)
-    add_executable(rayview rayview.cpp)
+    add_executable(rayview tools/rayview.cpp)
     target_link_libraries(rayview PRIVATE rayfile ${RAY_SDL2} Threads::Threads)
 else()
     message(STATUS "SDL2 not found; rayview will not be built")

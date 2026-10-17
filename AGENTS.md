@@ -74,20 +74,23 @@ build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in 
 
 ## Layout
 
-- Top level: `main.cpp` (CLI), `scene*`, `scene_library*`, `tracer*`,
+- The root holds only the build files, scripts and docs.
+- `ray/`: the renderer library: `scene*`, `scene_library*`, `tracer*`,
   `trace_master*`, `render_surface*`, `ray_file*` (the `.ray` format), `hit.h`,
   `ray.h`, `color.h`, `bounding_sphere.h`, `cpp.h` (the `DISALLOW_*` class
-  macros), and the tools `rayview.cpp`, `ray2tga.cpp`, `raysplit.cpp`.
-- `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry containers and the
-  OBJ loader), `libvec/` (vector math), `tests/` (with `golden/` references),
-  `resources/` (`.obj` assets).
+  macros), and `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry
+  containers and the OBJ loader).
+- `tools/`: the programs: `ray.cpp` (the renderer's CLI), `rayview.cpp`,
+  `ray2tga.cpp`, `raysplit.cpp`.
+- `libvec/` (vector math), `tests/` (with `golden/` references), `resources/`
+  (`.obj` assets).
 
 ## Architecture
 
 Everything includes from the repo root (`-I.`), so headers are written as
-`<drawables/sphere.h>`, `<libvec/vector3.h>`, `<ray.h>`.
+`<ray/drawables/sphere.h>`, `<libvec/vector3.h>`, `<ray/ray.h>`.
 
-**Render pipeline (`main.cpp`)**
+**Render pipeline (`tools/ray.cpp`)**
 
 1. `render_surface_file` opens the output via `ray_file::open_write`.
 2. A `trace_master` owns the tile list (`kWorkUnitSize` = 16 pixel squares,
@@ -99,7 +102,7 @@ Everything includes from the repo root (`-I.`), so headers are written as
    `get_work_unit` → trace every pixel → `return_work_unit` until it returns false.
 4. `main` blocks in `trace_master::wait_for_done`, then joins the threads.
 
-**Ray casting (`tracer.cpp`)**
+**Ray casting (`ray/tracer.cpp`)**
 
 - `tracer::trace` builds the camera basis from `scene::camera/target`
   with +z up (+y when looking along z) and casts one primary ray per pixel
@@ -119,10 +122,10 @@ Everything includes from the repo root (`-I.`), so headers are written as
   with the normal flipped to face the ray. `scene` ignores hits with
   `t <= kMinT` (1e-6) so a ray leaving a surface never re-hits it.
 
-**Scene (`scene.cpp`, `scene_library.cpp`)**
+**Scene (`ray/scene.cpp`, `ray/scene_library.cpp`)**
 
 `scene` is a container: owned drawables, point lights, ambient colour and a
-camera position/target. Scenes are built by name in `scene_library.cpp`, one
+camera position/target. Scenes are built by name in `ray/scene_library.cpp`, one
 `Build*` function per entry in the `kScenes` table; `--list-scenes` prints
 them and `--scene NAME` picks one (default `default`). `build_scene` runs
 `scene::prepare()` once at the end, which calls `drawable::prepare()` on every
@@ -136,7 +139,7 @@ by shaders).
 
 - `drawables/`: `drawable` interface = `prepare()`, `intersect()` and a
   `shader_ptr`. Implementations: `sphere`, `plane`, `triangle`,
-  `mesh_drawable` (in `drawables/mesh_drawable.h`, distinct from `mesh/mesh.h`).
+  `mesh_drawable` (in `ray/drawables/mesh_drawable.h`, distinct from `ray/mesh/mesh.h`).
   `mesh_drawable` supports triangle and quad faces, interpolating the vertex
   normals the loader requires.
 - `shaders/`: `shader::run(const shader_args&) -> colorf`. `default_shader`
@@ -145,11 +148,11 @@ by shaders).
   `mode::normal` and `mode::depth`.
 - `mesh/`: `geometry` (shared vertex/normal/tangent/uv pools) owning `mesh` →
   `surface` index lists; `obj_loader` is the only importer.
-- `color.h`: `colorf` is double RGB (unclamped, additive); `color32` clamps to
+- `ray/color.h`: `colorf` is double RGB (unclamped, additive); `color32` clamps to
   bytes (used directly as `b, g, r` by `convert_to_tga` and via packed `rgbx()`
   by `rayview`).
 
-**`.ray` file format (`ray_file.h`)**
+**`.ray` file format (`ray/ray_file.h`)**
 
 Append-only stream: `ray_header {magic kRayHeaderMagic ('RAY1'), width, height}`
 then packets of `uint32 type` followed by `ray_data_pixel`, `ray_data_pixel_run`

@@ -1,8 +1,8 @@
-#include "check.h"
 #include <memory>
-#include <mesh/geometry.h>
-#include <mesh/obj_loader.h>
+#include <ray/mesh/geometry.h>
+#include <ray/mesh/obj_loader.h>
 #include <sstream>
+#include <tests/check.h>
 
 int main() {
     // cbox.obj: a cube of 8 vertices, 24 normals and 6 quad faces in one mesh

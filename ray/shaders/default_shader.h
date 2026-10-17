@@ -1,0 +1,42 @@
+/*
+ * Copyright (c) 2008-2011 Travis Geiselbrecht
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files
+ * (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+#pragma once
+
+#include <algorithm>
+#include <ray/color.h>
+#include <ray/shaders/shader.h>
+
+// Ambient + diffuse point lights with shadow rays, plus a mirror reflection
+// weighted by shininess.
+class default_shader : public shader {
+  public:
+    colorf run(const shader_args &args) const override;
+
+    // 0 = matte, 1 = perfect mirror
+    void set_shinyness(double shiny) { shinyness_ = std::clamp(shiny, 0.0, 1.0); }
+    void set_diffuse_color(colorf diffuse) { diffuse_color_ = diffuse; }
+
+  private:
+    double shinyness_ = 0.0;
+    colorf diffuse_color_ = colorf(1.0, 1.0, 1.0);
+};

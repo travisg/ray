@@ -1,9 +1,9 @@
-#include "check.h"
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
-#include <ray_file.h>
+#include <ray/ray_file.h>
+#include <tests/check.h>
 #include <vector>
 
 namespace fs = std::filesystem;

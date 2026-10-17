@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
-#include <ray_file.h>
+#include <ray/ray_file.h>
 #include <vector>
 
 namespace {

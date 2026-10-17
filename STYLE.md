@@ -27,7 +27,7 @@ Fixed by `.clang-format` (LLVM base); `./codestyle <files>` applies it.
 | One-line functions | only inside a class body | anywhere |
 | Header guard | `#pragma once` | `#ifndef PROJECT_PATH_FILE_H_` |
 | File extension | `.cpp`, `.h` | `.cc`, `.h` |
-| Includes | one sorted `<...>` block (system and project headers interleaved), blank line, sorted `"..."` block; the file's own header may come first, alone | four groups: related header, C system, C++ standard, other libraries, this project |
+| Includes | every include is the path from the repo root in angle brackets (`<ray/scene.h>`, `<libvec/vector3.h>`), a file's own header too; one sorted block with system and project headers interleaved, or the own header alone in a first block (clang-format pins only a quoted main header, so a blank line does it) | four groups: related header, C system, C++ standard, other libraries, this project |
 | Namespace close | `} // namespace x` | `}  // namespace x` |
 
 ## Naming

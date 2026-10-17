@@ -1,10 +1,10 @@
-#include "check.h"
-#include <drawables/plane.h>
-#include <drawables/sphere.h>
-#include <drawables/triangle.h>
 #include <memory>
-#include <ray.h>
-#include <scene.h>
+#include <ray/drawables/plane.h>
+#include <ray/drawables/sphere.h>
+#include <ray/drawables/triangle.h>
+#include <ray/ray.h>
+#include <ray/scene.h>
+#include <tests/check.h>
 
 using libvec::vector3d;
 

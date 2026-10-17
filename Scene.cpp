@@ -111,7 +111,7 @@ Scene::Scene()
     m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 100.0, 5.0), colorf(0.0, 0.0, 1.0), 100));
     m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 60.0, 60.0), colorf(1.0, 1.0, 1.0), 100));
 #endif
-#if 0
+#if 1
     m_AmbientLight = colorf(0.0f, 0.0f, 0.0f);
     {
         Sphere *s = new Sphere(Vector3d(10.0, 10.0, 10.0), 8.0);
@@ -160,7 +160,7 @@ Scene::Scene()
     m_SimpleLightList.push_back(new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
 #endif
 
-#if 1
+#if 0
     m_AmbientLight = colorf(0.0f, 0.0f, 0.2f);
     if (0) {
         Triangle *t = new Triangle(Vector3d(0.0, 0.0, 10.0), Vector3d(20.0, 0.0, 0.0), Vector3d(0.0, 20.0, 0.0));
@@ -197,7 +197,7 @@ Scene::Scene()
         md->Prepare();
         m_DrawableList.push_back(md);
     }
-    if (1) {
+    if (0) {
         MeshDrawable *md = LoadMesh("resources/dude.obj");
 
         DefaultShader *ds = new DefaultShader;
@@ -245,11 +245,11 @@ Scene::Scene()
         m_DrawableList.push_back(md);
     }
 
-//  m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 0.0, 20), colorf(1.0, 1.0, 1.0), 100));
+  m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 0.0, 20), colorf(1.0, 1.0, 1.0), 100));
 
-    m_Camera = Libvec::Vector3d(2.0f, 2.0f, 2.0f);
-    m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0f, 4.0f, 7.0f), colorf(0.5, 1.0, 0.5), 100));
-//  m_Camera = Libvec::Vector3d(80.0f, 80.0f, 10.0f);
+//    m_Camera = Libvec::Vector3d(2.0f, 2.0f, 2.0f);
+//  m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0f, 4.0f, 7.0f), colorf(0.5, 1.0, 0.5), 100));
+  m_Camera = Libvec::Vector3d(20.0f, 20.0f, 20.0f);
 
     m_Target = Libvec::Vector3d(0.0f, 0.0f, 0.0f);
 }

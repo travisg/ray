@@ -30,10 +30,6 @@
 #include <Tracer.h>
 #include <Scene.h>
 
-RenderSurface *gRenderSurface;
-Scene *gScene;
-TraceMaster *gTraceMaster;
-
 #include <boost/program_options/option.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/variables_map.hpp>
@@ -41,12 +37,11 @@ TraceMaster *gTraceMaster;
 
 namespace po = boost::program_options;
 
-int TracerThread()
-{
+int TracerThread(RenderSurface *rs, Scene *scene, TraceMaster *trace_master) {
 //  std::cout << "TracerThread start" << std::endl;
     time_t start = time(NULL);
 
-    Tracer *tracer = new Tracer(*gRenderSurface, *gScene, *gTraceMaster);
+    Tracer *tracer = new Tracer(*rs, *scene, *trace_master);
     tracer->Trace();
 
     start = time(NULL) - start;
@@ -59,8 +54,7 @@ int TracerThread()
     return 0;
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     srand(time(NULL));
 
     int xres, yres, cpus;
@@ -90,28 +84,29 @@ int main(int argc, char* argv[])
     printf("xres %d yres %d cpus %d\n", xres, yres, cpus);
     std::cout << "outfile " << outfile << std::endl;
 
-    gRenderSurface = new RenderSurfaceFile(xres, yres);
+    auto *rs= new RenderSurfaceFile(xres, yres);
 
-    (dynamic_cast<RenderSurfaceFile *>(gRenderSurface))->OpenOutFile(outfile);
+    rs->OpenOutFile(outfile);
 
     /* create the scene */
-    gScene = new Scene();
+    auto *scene = new Scene();
 
     /* create a tracemaster */
+    TraceMaster *trace_master;
     if (random) {
-        gTraceMaster = new TraceMasterRandom(*gRenderSurface);
+        trace_master = new TraceMasterRandom(*rs);
     } else {
-        gTraceMaster = new TraceMasterSimple(*gRenderSurface);
+        trace_master = new TraceMasterSimple(*rs);
     }
 
     std::vector<std::thread *> threads;
     for (int i = 0; i < cpus; i++) {
-        auto *t = new std::thread(TracerThread);
+        auto *t = new std::thread(TracerThread, rs, scene, trace_master);
         threads.push_back(t);
     }
 
     // wait for the trace master to quit handing out work units
-    gTraceMaster->WaitForDone();
+    trace_master->WaitForDone();
 
     // wait for the worker threads to complete
     std::cout << "waiting for worker threads to shut down" << std::endl;
@@ -128,9 +123,9 @@ int main(int argc, char* argv[])
 
     std::cout << "shutting down" << std::endl;
 
-    delete gTraceMaster;
-    delete gScene;
-    delete gRenderSurface;
+    delete trace_master;
+    delete scene;
+    delete rs;
 
     return 0;
 }

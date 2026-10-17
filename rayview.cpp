@@ -53,8 +53,7 @@ static uint32_t *pixels;
 
 static SDL_Texture *tex;
 
-static void WindowUpdate()
-{
+static void WindowUpdate() {
     int err;
     lock.lock();
     if (!window || !renderer) {
@@ -81,8 +80,7 @@ static void WindowUpdate()
     //SDL_FreeSurface(destsurface);
 }
 
-static Uint32 TimerTick(Uint32 interval, void *)
-{
+static Uint32 TimerTick(Uint32 interval, void *) {
     //printf("tick\n");
     SDL_Event event {};
     SDL_UserEvent userevent {};
@@ -100,8 +98,7 @@ static Uint32 TimerTick(Uint32 interval, void *)
     return interval;
 }
 
-static int SetupSDL()
-{
+static int SetupSDL() {
     atexit(SDL_Quit);
 
     SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
@@ -110,8 +107,7 @@ static int SetupSDL()
     return 0;
 }
 
-static int OpenWindow()
-{
+static int OpenWindow() {
     lock.lock();
     window = SDL_CreateWindow("rayview", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, -1, 0);
@@ -127,8 +123,7 @@ static int OpenWindow()
     return 0;
 }
 
-static ssize_t ReadData(void *_buf, size_t len)
-{
+static ssize_t ReadData(void *_buf, size_t len) {
     uint8_t *buf = (uint8_t *)_buf;
     size_t pos;
 
@@ -138,6 +133,7 @@ static ssize_t ReadData(void *_buf, size_t len)
         if (r < 0)
             return r;
 
+        // TODO: poll instead of sleeping
         if ((size_t)r != toread) {
 //          printf("read %d, toread %d\n", read, toread);
             usleep(100000);
@@ -149,8 +145,7 @@ static ssize_t ReadData(void *_buf, size_t len)
     return pos;
 }
 
-static int ReaderThread()
-{
+static int ReaderThread() {
     size_t count = 0;
     for (;;) {
         uint32_t type;
@@ -177,7 +172,7 @@ static int ReaderThread()
 
                 //printf("pixels %p pixel val %#x\n", pixels, c32.rgbx());
                 pixels[pixel.y * inwidth + pixel.x] = c32.rgbx();
-                SDL_UnlockTexture(tex);
+                // SDL_UnlockTexture(tex);
                 break;
             }
             case TYPE_PIXEL_RUN: {
@@ -208,6 +203,17 @@ static int ReaderThread()
                 ;
         }
 
+        // send a SDL_USEREVENT to update the window
+        SDL_Event event {};
+        SDL_UserEvent userevent {};
+        userevent.type = SDL_USEREVENT;
+        userevent.code = 0;
+        userevent.data1 = NULL;
+        userevent.data2 = NULL;
+        event.type = SDL_USEREVENT;
+        event.user = userevent;
+        SDL_PushEvent(&event);
+
         // XXX remove
         //SDL_Delay(50);
     }
@@ -223,8 +229,7 @@ done:
     return 0;
 }
 
-int main(int /* argc */, char ** /* argv */)
-{
+int main(int /* argc */, char ** /* argv */) {
     printf("hello\n");
 
     srand(time(NULL));
@@ -299,6 +304,7 @@ int main(int /* argc */, char ** /* argv */)
                 break;
             }
             case SDL_USEREVENT:
+                std::cout << "SDL_USEREVENT" << std::endl;
                 WindowUpdate();
                 break;
             case SDL_QUIT:
@@ -311,11 +317,20 @@ int main(int /* argc */, char ** /* argv */)
             case SDL_MOUSEWHEEL:
                 // eat these
                 break;
+            case SDL_KEYDOWN:
+            case SDL_KEYUP:
+                if (event.key.keysym.sym == SDLK_ESCAPE) {
+                    std::cout << "SDL_KEYDOWN: escape" << std::endl;
+                    quit = true;
+                }
+                break;
             default:
                 std::cout << "unhandled event 0x" << std::hex << event.type << std::endl;
                 ;
         }
     }
+
+    reader.join();
 
     close(fd);
 

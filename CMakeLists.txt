@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(ray LANGUAGES CXX)
 
-# C++17: libvec/Vec.h declares its constructor as Math<T>(), which C++20 rejects.
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -75,7 +74,6 @@ add_library(raycore STATIC
     mesh/OBJLoader.cpp
     mesh/Surface.cpp
     mesh/Vertex.cpp
-    libvec/Vector3.cpp
 )
 target_link_libraries(raycore PUBLIC rayfile Threads::Threads)
 

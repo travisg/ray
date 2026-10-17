@@ -25,8 +25,7 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
 - Dependencies: a C++20 compiler, CMake >= 3.20, pthreads, `boost_program_options`
   (`main.cpp` only), SDL2 (`rayview` only; missing SDL2 skips that target).
   macOS: `-DCMAKE_PREFIX_PATH=/opt/local` or `/opt/homebrew` if SDL2 isn't found.
-- `libvec` is a symlink to `../libvec`, a sibling checkout with its own git repo.
-  The build fails without it. Don't edit it from here unless the task is about it.
+- `libvec/` is the vendored, header-only vector math (`Vector3.h`, `Random.h`).
 - Formatting: `./codestyle <files>` runs `clang-format -i` with the repo's
   `.clang-format` (LLVM base, 4-space indent, attached braces, braces on every
   `if`/`for` body, 100 columns, sorted includes).

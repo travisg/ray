@@ -24,7 +24,6 @@
 #include <math.h>
 
 #include <drawables/Sphere.h>
-#include <libvec/Vec.h>
 
 using Libvec::Vector3d;
 

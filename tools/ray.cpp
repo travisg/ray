@@ -41,7 +41,6 @@
 #include <ray/pfm.h>
 #include <ray/png.h>
 #include <ray/ray.h>
-#include <ray/render_surface.h>
 #include <ray/scene.h>
 #include <ray/scene_library.h>
 #include <ray/tev_display.h>
@@ -75,9 +74,8 @@ void usage(FILE *fp, const char *argv0) {
             "  -x, --xres N      image width (default 800)\n"
             "  -y, --yres N      image height (default 600)\n"
             "  -c, --cpus N      worker threads (default: hardware threads)\n"
-            "  -o, --out FILE    output, by extension: .png (8-bit sRGB) or .pfm (float) written\n"
-            "                    when the render ends, .ray streamed as tiles finish\n"
-            "                    (default out.png)\n"
+            "  -o, --out FILE    output, by extension: .png (8-bit sRGB) or .pfm (linear float),\n"
+            "                    written when the render ends (default out.png)\n"
             "  -s, --scene NAME  scene to render (default: default)\n"
             "      --list-scenes\n"
             "  -r, --random      trace tiles in random order\n"
@@ -178,26 +176,6 @@ std::pair<std::string, std::string> split_host_port(const std::string &spec) {
     return { spec.substr(0, colon), spec.substr(colon + 1) };
 }
 
-// Forwards every write to two surfaces: the output file and the framebuffer the display reads.
-class tee_surface : public render_surface {
-  public:
-    tee_surface(render_surface &a, render_surface &b)
-        : render_surface(a.width(), a.height()), a_(a), b_(b) {}
-
-    void set_xy(int x, int y, colorf color) override {
-        a_.set_xy(x, y, color);
-        b_.set_xy(x, y, color);
-    }
-    void set_xy_run(int x, int y, int count, const colorf *color) override {
-        a_.set_xy_run(x, y, count, color);
-        b_.set_xy_run(x, y, count, color);
-    }
-
-  private:
-    render_surface &a_;
-    render_surface &b_;
-};
-
 constexpr auto kDisplayRefresh = std::chrono::milliseconds(100);
 constexpr auto kDisplayRetry = std::chrono::seconds(1);
 
@@ -231,10 +209,10 @@ void display_thread(std::atomic<bool> &stop, framebuffer &fb, tev_display &displ
 }
 
 // Runs one tracer until the tiles run out and adds its busy time to total_us.
-void tracer_thread(const render_surface &rs, const scene &s, trace_master &master,
+void tracer_thread(const framebuffer &fb, const scene &s, trace_master &master,
                    std::atomic<int64_t> &total_us) {
     const auto start = std::chrono::steady_clock::now();
-    tracer t(rs, s, master);
+    tracer t(fb, s, master);
     t.trace();
     total_us += std::chrono::duration_cast<std::chrono::microseconds>(
                     std::chrono::steady_clock::now() - start)
@@ -258,6 +236,13 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    // the extension picks the output, written from the framebuffer once the render ends
+    const bool to_png = opts.outfile.ends_with(".png");
+    if (!to_png && !opts.outfile.ends_with(".pfm")) {
+        std::cerr << "output file " << opts.outfile << " must end in .png or .pfm\n";
+        return 1;
+    }
+
     printf("rendering %s at %dx%d on %d threads to %s\n", opts.scene.c_str(), opts.xres, opts.yres,
            opts.cpus, opts.outfile.c_str());
 
@@ -267,39 +252,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // the extension picks the output: a .ray file receives tiles as they finish, a .png or
-    // .pfm image is written from the framebuffer once the render ends
-    const bool to_png = opts.outfile.ends_with(".png");
-    const bool to_pfm = opts.outfile.ends_with(".pfm");
-    std::unique_ptr<framebuffer> fb;
-    std::unique_ptr<render_surface_file> file;
-    render_surface *rs = nullptr;
-    if (to_png || to_pfm) {
-        fb = std::make_unique<framebuffer>(opts.xres, opts.yres);
-        rs = fb.get();
-    } else if (opts.outfile.ends_with(".ray")) {
-        file = std::make_unique<render_surface_file>(opts.xres, opts.yres);
-        if (file->open_out_file(opts.outfile) < 0) {
-            std::cerr << "error opening output file " << opts.outfile << std::endl;
-            return 1;
-        }
-        rs = file.get();
-    } else {
-        std::cerr << "output file " << opts.outfile << " must end in .png, .pfm or .ray"
-                  << std::endl;
-        return 1;
-    }
+    framebuffer fb(opts.xres, opts.yres);
 
-    // the live view reads from a framebuffer; a .ray output gets one alongside
     std::unique_ptr<tev_display> display;
-    std::unique_ptr<tee_surface> tee;
     if (!opts.display.empty()) {
         const auto [host, port] = split_host_port(opts.display);
-        if (!fb) {
-            fb = std::make_unique<framebuffer>(opts.xres, opts.yres);
-            tee = std::make_unique<tee_surface>(*rs, *fb);
-            rs = tee.get();
-        }
         // the image is named after the output file, so re-rendering replaces it in the viewer
         display = std::make_unique<tev_display>(
             host, port, std::filesystem::path(opts.outfile).filename().string(), opts.xres,
@@ -310,13 +267,13 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    trace_master master(*rs, opts.random ? tile_order::random : tile_order::sequential, opts.seed);
+    trace_master master(fb, opts.random ? tile_order::random : tile_order::sequential, opts.seed);
 
     std::atomic<bool> stop_display{ false };
     std::thread display_worker;
     if (display) {
         display_worker =
-            std::thread(display_thread, std::ref(stop_display), std::ref(*fb), std::ref(*display));
+            std::thread(display_thread, std::ref(stop_display), std::ref(fb), std::ref(*display));
     }
 
     const auto start = std::chrono::steady_clock::now();
@@ -324,7 +281,7 @@ int main(int argc, char *argv[]) {
     std::vector<std::thread> threads;
     threads.reserve(opts.cpus);
     for (int i = 0; i < opts.cpus; i++) {
-        threads.emplace_back(tracer_thread, std::cref(*rs), std::cref(*s), std::ref(master),
+        threads.emplace_back(tracer_thread, std::cref(fb), std::cref(*s), std::ref(master),
                              std::ref(thread_us));
     }
 
@@ -335,21 +292,18 @@ int main(int argc, char *argv[]) {
     }
     const double wall =
         std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-    printf("rendered in %.2f s wall, %.1f s across %d threads\n", wall, thread_us / 1e6, opts.cpus);
+    printf("rendered in %.3f s wall, %.1f s across %d threads\n", wall, thread_us / 1e6, opts.cpus);
+
     if (display_worker.joinable()) {
         stop_display = true;
         display_worker.join();
     }
 
-    if (to_png || to_pfm) {
-        const bool ok = to_png ? write_png(opts.outfile, fb->width(), fb->height(), fb->data())
-                               : write_pfm(opts.outfile, fb->width(), fb->height(), fb->data());
-        if (!ok) {
-            std::cerr << "error writing " << opts.outfile << std::endl;
-            return 1;
-        }
+    const bool ok = to_png ? write_png(opts.outfile, fb.width(), fb.height(), fb.data())
+                           : write_pfm(opts.outfile, fb.width(), fb.height(), fb.data());
+    if (!ok) {
+        std::cerr << "error writing " << opts.outfile << "\n";
+        return 1;
     }
-
-    // a .ray file gets its EOF packet when `file` closes it
     return 0;
 }

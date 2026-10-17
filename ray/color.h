@@ -26,23 +26,7 @@
 
 struct colorf;
 
-// 8-bit RGB, with packed accessors for display and file output.
-struct color32 {
-    unsigned char r = 0;
-    unsigned char g = 0;
-    unsigned char b = 0;
-
-    color32() = default;
-    color32(int c) : r(c), g(c), b(c) {}
-    color32(const colorf &c);
-
-    unsigned int xrgb() const { return (r << 16) | (g << 8) | b; }
-    unsigned int xbgr() const { return (b << 16) | (g << 8) | r; }
-    unsigned int rgbx() const { return (r << 24) | (g << 16) | (b << 8); }
-    unsigned int bgrx() const { return (b << 24) | (g << 16) | (r << 8); }
-};
-
-// Unclamped linear RGB; converting to color32 clamps to [0, 1].
+// Unclamped linear RGB.
 struct colorf {
     double r = 0;
     double g = 0;
@@ -68,12 +52,6 @@ struct colorf {
         return *this;
     }
 };
-
-inline color32::color32(const colorf &c) {
-    r = (c.r < 0.0f) ? 0 : ((c.r > 1.0f) ? 255 : ((unsigned char)(255.0 * c.r)));
-    g = (c.g < 0.0f) ? 0 : ((c.g > 1.0f) ? 255 : ((unsigned char)(255.0 * c.g)));
-    b = (c.b < 0.0f) ? 0 : ((c.b > 1.0f) ? 255 : ((unsigned char)(255.0 * c.b)));
-}
 
 inline std::ostream &operator<<(std::ostream &os, const colorf &c) {
     os << "< " << c.r << " " << c.g << " " << c.b << " >";

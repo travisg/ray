@@ -1,17 +1,17 @@
 # ray
 
-Small multithreaded CPU ray tracer (C++20, CMake) plus two helper tools that
-consume its streaming `.ray` output. `ctest` covers the vector math,
-intersections, the tracer, the `.ray` reader/writer, the PNG and PFM writers, the tev
-client, the OBJ loader and a golden render of every scene; `./doit` is the
-eyeball check.
+Small multithreaded CPU ray tracer (C++20, CMake). It renders into an
+in-memory framebuffer, writes a PNG or PFM at the end, and can push tiles to
+a tev viewer as they finish. `ctest` covers the vector math, intersections,
+the tracer, the PNG and PFM writers, the tev client, the OBJ loader and a
+golden render of every scene; `./doit` is the eyeball check.
 
 ## Build
 
 ```sh
 cmake -S . -B build -G Ninja           # configure; RelWithDebInfo (-O2 -g, asserts on)
-cmake --build build                    # ray, raysplit, rayview (if SDL2 is found)
-cmake --build build --target rayview   # one target
+cmake --build build                    # ray and the tests
+cmake --build build --target ray       # one target
 cmake --build build -v                 # echo the compiler command lines
 cmake --build build --target clean     # objects only; rm -rf build for a full reset
 ```
@@ -22,11 +22,10 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
 
 - Binaries land in `build/`; nothing is written to the source tree.
   `build/compile_commands.json` is generated and `.clangd` points clangd at it.
-- Sources are listed explicitly in `CMakeLists.txt`: `raycore` is the renderer,
-  `rayfile` the `.ray` reader/writer the tools share. A new source file goes there.
-- Dependencies: a C++20 compiler, CMake >= 3.20, pthreads, SDL2 (`rayview` only;
-  missing SDL2 skips that target).
-  macOS: `-DCMAKE_PREFIX_PATH=/opt/local` or `/opt/homebrew` if SDL2 isn't found.
+- Sources are listed explicitly in `CMakeLists.txt`: `raycore` is the renderer
+  library, `ray` the program. A new source file goes there.
+- Dependencies: a C++20 compiler, CMake >= 3.20, pthreads. The live view needs
+  a tev viewer (https://github.com/Tom94/tev) running, not a library.
 - Portability: the tree must build with Apple's libc++, which lags on
   `std::jthread`, `std::format` and floating-point `std::from_chars`; use
   `std::thread` with explicit joins, `snprintf`/`std::to_string` and `strtof`.
@@ -44,57 +43,48 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
 
 ```sh
 ctest --test-dir build --output-on-failure    # all
-ctest --test-dir build -R test_rayfile        # one (or run build/tests/test_rayfile)
+ctest --test-dir build -R test_pfm            # one (or run build/tests/test_pfm)
 ctest --test-dir build -LE slow               # skip the blob golden render
 ```
 
 Tests are plain executables in `tests/` built on `tests/check.h`; CTest runs
 them. `golden_render_<scene>` renders a scene at 64x48 single-threaded and
-`golden_compare_<scene>` checks every channel against `tests/golden/<scene>.ray`
+`golden_compare_<scene>` checks every channel against `tests/golden/<scene>.pfm`
 within 1e-3. When a change intentionally alters output, re-baseline in the same
 commit:
 
 ```sh
 ctest --test-dir build -R golden_render
-cp build/tests/golden-<scene>.ray tests/golden/<scene>.ray
+cp build/tests/golden-<scene>.pfm tests/golden/<scene>.pfm
 ```
 
 ## Run
 
 ```sh
-build/ray [-x 800] [-y 600] [-c N] [-o out.png|out.pfm|out.ray] [-s SCENE] [-r] [--seed N]
+build/ray [-x 800] [-y 600] [-c N] [-o out.png|out.pfm] [-s SCENE] [-r] [--seed N]
           [--display HOST[:PORT]]
 build/ray --list-scenes
-build/rayview [file.ray]     # default out.ray; follows the file while ray writes it
-./doit               # ray at 3200x2400 in the background, then rayview
-build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in the cwd
+./doit [more ray options]    # 3200x2400, pushing tiles to a tev on localhost
 ```
 
-- `-o` picks the output by its extension. `.png` (the default, 8-bit sRGB) and
-  `.pfm` (the linear floats) are written from the `framebuffer` when the
-  render ends; `.ray` streams tiles into the file as they finish (what
-  `rayview` follows).
+- `-o` picks the output by its extension: `.png` (the default, 8-bit sRGB) or
+  `.pfm` (the linear floats), written from the `framebuffer` when the render
+  ends.
 - `--display HOST[:PORT]` pushes tiles to a running tev viewer
   (https://github.com/Tom94/tev, port 14158 by default) as they finish. tev is
   the server: if nothing is listening the render goes on without it, retries
   the connection once a second, and sends the whole image so far when a viewer
   appears. The image is named after the output file, so a re-render replaces it.
-- `rayview` polls the file every 100 ms until it sees `ray_data_type::eof`, waiting up
-  to 10 s for the header, so it can start before or after `ray`. Esc or closing
-  the window exits immediately. Renders up to 2048x1600 open a 1:1 window;
-  larger ones open 800x600 and scale the full-resolution texture to fit.
 
 ## Layout
 
 - The root holds only the build files, scripts and docs.
 - `ray/`: the renderer library: `scene*`, `scene_library*`, `tracer*`,
-  `trace_master*`, `render_surface*`, `framebuffer*`, `png*`, `pfm*`, `tev_display*`,
-  `ray_file*` (the `.ray` format), `hit.h`,
+  `trace_master*`, `framebuffer*`, `png*`, `pfm*`, `tev_display*`, `hit.h`,
   `ray.h`, `color.h`, `bounding_sphere.h`, `cpp.h` (the `DISALLOW_*` class
   macros), and `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry
   containers and the OBJ loader).
-- `tools/`: the programs: `ray.cpp` (the renderer's CLI), `rayview.cpp`,
-  `raysplit.cpp`.
+- `tools/`: `ray.cpp`, the renderer's CLI.
 - `libvec/` (vector math), `external/` (vendored third-party code), `tests/`
   (with `golden/` references), `resources/` (`.obj` assets).
 
@@ -105,21 +95,18 @@ Everything includes from the repo root (`-I.`), so headers are written as
 
 **Render pipeline (`tools/ray.cpp`)**
 
-1. The output is a `render_surface`: `render_surface_file` streams into a
-   `.ray` file via `ray_file::open_write`, or a `framebuffer` holds float RGB
-   in memory and `write_png` (sRGB encoded) or `write_pfm` saves it once the
-   threads are joined.
+1. A `framebuffer` holds the image as float RGB; `write_png` (sRGB encoded)
+   or `write_pfm` saves it once the threads are joined.
 2. A `trace_master` owns the tile list (`kWorkUnitSize` = 16 pixel squares,
    row-major, or shuffled with `--seed` when `--random`). `get_work_unit` fills a
    `trace_work_unit` rectangle; `return_work_unit` writes its `colorf` rows to the
-   surface under `lock_` (the only thing serializing `ray_file`) and signals
-   done when the last tile comes back.
+   framebuffer under `lock_` and signals done when the last tile comes back.
 3. `--cpus` `std::thread`s each run a `tracer`, which loops
    `get_work_unit` → trace every pixel → `return_work_unit` until it returns false.
 4. `main` blocks in `trace_master::wait_for_done`, then joins the threads.
-5. With `--display`, a `tee_surface` also feeds a `framebuffer`, and
-   `display_thread` sends its dirty rectangle (`framebuffer::take_dirty`) to a
-   `tev_display` every 100 ms, with one last pass after the workers are joined.
+5. With `--display`, `display_thread` sends the framebuffer's dirty rectangle
+   (`framebuffer::take_dirty`) to a `tev_display` every 100 ms, with one last
+   pass after the workers are joined.
 
 **Ray casting (`ray/tracer.cpp`)**
 
@@ -167,15 +154,5 @@ by shaders).
   `mode::normal` and `mode::depth`.
 - `mesh/`: `geometry` (shared vertex/normal/tangent/uv pools) owning `mesh` →
   `surface` index lists; `obj_loader` is the only importer.
-- `ray/color.h`: `colorf` is double RGB (unclamped, additive); `color32` clamps to
-  bytes (`rayview` packs it with `rgbx()`).
-
-**`.ray` file format (`ray/ray_file.h`)**
-
-Append-only stream: `ray_header {magic kRayHeaderMagic ('RAY1'), width, height}`
-then packets of `uint32 type` followed by `ray_data_pixel`, `ray_data_pixel_run`
-(+ `length` float triples) or `ray_data_type::eof`. `ray_stream_reader` parses it
-incrementally (`need_data` at the end of the data so far, `eof` after the EOF
-packet) and `ray_file::parse`/`read_into_buffer`, used by `raysplit` and
-`test_golden`, are built on it, as is `rayview`, which keeps pumping the reader
-while the file grows.
+- `ray/color.h`: `colorf` is double RGB, unclamped and additive; the
+  framebuffer stores it as float and `write_png` clamps and sRGB-encodes.

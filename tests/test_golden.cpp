@@ -1,8 +1,8 @@
-// Compares a render against a reference .ray file channel by channel.
+// Compares a render against a reference .pfm channel by channel.
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
-#include <ray/ray_file.h>
+#include <ray/pfm.h>
 #include <vector>
 
 namespace {
@@ -10,13 +10,9 @@ namespace {
 // Sub-visible (an 8-bit step is ~4e-3) yet far above FMA and libm noise.
 constexpr float kTolerance = 1e-3f;
 
-bool load(const char *path, ray_file &f, std::vector<float> &pixels) {
-    if (f.open(path) < 0) {
-        std::fprintf(stderr, "cannot open %s\n", path);
-        return false;
-    }
-    if (f.read_into_buffer(pixels) < 0) {
-        std::fprintf(stderr, "cannot parse %s\n", path);
+bool load(const char *path, int &w, int &h, std::vector<float> &pixels) {
+    if (!read_pfm(path, w, h, pixels)) {
+        std::fprintf(stderr, "cannot read %s\n", path);
         return false;
     }
     return true;
@@ -26,18 +22,17 @@ bool load(const char *path, ray_file &f, std::vector<float> &pixels) {
 
 int main(int argc, char **argv) {
     if (argc != 3) {
-        std::fprintf(stderr, "usage: %s <render.ray> <reference.ray>\n", argv[0]);
+        std::fprintf(stderr, "usage: %s <render.pfm> <reference.pfm>\n", argv[0]);
         return 2;
     }
 
-    ray_file a, b;
+    int wa = 0, ha = 0, wb = 0, hb = 0;
     std::vector<float> pa, pb;
-    if (!load(argv[1], a, pa) || !load(argv[2], b, pb)) {
+    if (!load(argv[1], wa, ha, pa) || !load(argv[2], wb, hb, pb)) {
         return 1;
     }
-    if (a.width() != b.width() || a.height() != b.height()) {
-        std::fprintf(stderr, "size mismatch: %ux%u vs %ux%u\n", a.width(), a.height(), b.width(),
-                     b.height());
+    if (wa != wb || ha != hb) {
+        std::fprintf(stderr, "size mismatch: %dx%d vs %dx%d\n", wa, ha, wb, hb);
         return 1;
     }
 

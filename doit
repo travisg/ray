@@ -1,6 +1,4 @@
 #!/bin/sh
-# Renders at 3200x2400 in the background and watches the output arrive.
+# Renders at 3200x2400 and pushes tiles to a tev viewer on this machine as they finish.
 cd "$(dirname "$0")" || exit 1
-build/ray --xres 3200 --yres 2400 &
-sleep 1
-build/rayview out.ray
+exec build/ray --xres 3200 --yres 2400 --display localhost "$@"

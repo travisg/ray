@@ -50,18 +50,12 @@ if(RAY_LTO)
     endif()
 endif()
 
-# .ray stream reader/writer, shared by the renderer and the tools.
-add_library(rayfile STATIC ray/ray_file.cpp)
-target_include_directories(rayfile PUBLIC ${PROJECT_SOURCE_DIR})
-target_link_libraries(rayfile PUBLIC ray_flags)
-
 # Renderer core: scene, tracing, work distribution, drawables, shaders, meshes.
 add_library(raycore STATIC
     ray/scene.cpp
     ray/scene_library.cpp
     ray/tracer.cpp
     ray/trace_master.cpp
-    ray/render_surface.cpp
     ray/framebuffer.cpp
     ray/pfm.cpp
     ray/png.cpp
@@ -77,37 +71,14 @@ add_library(raycore STATIC
     ray/mesh/obj_loader.cpp
     ray/mesh/surface.cpp
 )
-target_link_libraries(raycore PUBLIC rayfile Threads::Threads)
+target_include_directories(raycore PUBLIC ${PROJECT_SOURCE_DIR})
+target_link_libraries(raycore PUBLIC ray_flags Threads::Threads)
 # vendored headers; a system directory so their warnings stay quiet
 target_include_directories(raycore SYSTEM PUBLIC ${PROJECT_SOURCE_DIR}/external)
 
 add_executable(ray tools/ray.cpp)
 target_link_libraries(ray PRIVATE raycore)
 
-
-add_executable(raysplit tools/raysplit.cpp)
-target_link_libraries(raysplit PRIVATE rayfile)
-
-# rayview needs SDL2: prefer SDL2's CMake config, fall back to pkg-config, and
-# skip the target when neither finds it.
-find_package(SDL2 CONFIG QUIET)
-if(TARGET SDL2::SDL2)
-    set(RAY_SDL2 SDL2::SDL2)
-else()
-    find_package(PkgConfig QUIET)
-    if(PkgConfig_FOUND)
-        pkg_check_modules(SDL2 QUIET IMPORTED_TARGET sdl2)
-        if(TARGET PkgConfig::SDL2)
-            set(RAY_SDL2 PkgConfig::SDL2)
-        endif()
-    endif()
-endif()
-if(RAY_SDL2)
-    add_executable(rayview tools/rayview.cpp)
-    target_link_libraries(rayview PRIVATE rayfile ${RAY_SDL2} Threads::Threads)
-else()
-    message(STATUS "SDL2 not found; rayview will not be built")
-endif()
 
 if(RAY_BUILD_TESTS)
     enable_testing()

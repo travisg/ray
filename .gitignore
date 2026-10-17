@@ -14,8 +14,7 @@ compile_commands.json
 .vscode/
 
 # render output
-*.ray
-!tests/golden/*.ray
-*.tga
-*.float
+*.png
+*.pfm
+!tests/golden/*.pfm
 *.orig

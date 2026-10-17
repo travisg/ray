@@ -28,7 +28,7 @@
 #include <cstdint>
 #include <mutex>
 #include <ray/cpp.h>
-#include <ray/render_surface.h>
+#include <ray/framebuffer.h>
 #include <vector>
 
 // Tiles are kWorkUnitSize x kWorkUnitSize pixels, clipped at the image edge.
@@ -53,7 +53,7 @@ enum class tile_order { sequential, random };
 // Hands out tiles to the tracer threads and writes finished tiles to the surface.
 class trace_master {
   public:
-    trace_master(render_surface &surface, tile_order order, uint32_t seed);
+    trace_master(framebuffer &surface, tile_order order, uint32_t seed);
     DISALLOW_COPY_ASSIGN_AND_MOVE(trace_master);
 
     // false once every tile has been issued
@@ -65,12 +65,12 @@ class trace_master {
   private:
     void fill_unit(uint32_t tile, trace_work_unit &unit) const;
 
-    render_surface &surface_;
+    framebuffer &surface_;
     const int tiles_x_;
     const int tiles_y_;
     std::vector<uint32_t> order_; // tile indices in issue order
 
-    // guards everything below and the surface writes (ray_file is not thread-safe)
+    // guards everything below
     std::mutex lock_;
     std::condition_variable done_cond_;
     size_t next_ = 0;

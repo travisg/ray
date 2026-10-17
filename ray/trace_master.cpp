@@ -33,7 +33,7 @@ int div_round_up(int x, int d) {
 
 } // namespace
 
-trace_master::trace_master(render_surface &surface, tile_order order, uint32_t seed)
+trace_master::trace_master(framebuffer &surface, tile_order order, uint32_t seed)
     : surface_(surface), tiles_x_(div_round_up(surface.width(), kWorkUnitSize)),
       tiles_y_(div_round_up(surface.height(), kWorkUnitSize)),
       order_(static_cast<size_t>(tiles_x_) * tiles_y_) {

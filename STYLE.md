@@ -72,7 +72,7 @@ Google's declaration order, with the copy-control block written as a macro:
 ```cpp
 class tile_queue final {
   public:
-    tile_queue(render_surface &surface, tile_order order, uint32_t seed);
+    tile_queue(framebuffer &surface, tile_order order, uint32_t seed);
     ~tile_queue();
 
     DISALLOW_COPY_ASSIGN_AND_MOVE(tile_queue);
@@ -95,7 +95,7 @@ class tile_queue final {
     void fill_unit(const tile &t, work_unit *out) const;
 
     // members
-    render_surface &surface_;
+    framebuffer &surface_;
     tile_order order_;
     size_t tiles_x_ = 0;
     std::vector<tile> tiles_;

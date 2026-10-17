@@ -29,7 +29,7 @@
 
 using libvec::vector3d;
 
-tracer::tracer(const render_surface &surface, const scene &s, trace_master &master)
+tracer::tracer(const framebuffer &surface, const scene &s, trace_master &master)
     : surface_(surface), scene_(s), master_(master) {}
 
 std::optional<colorf> tracer::cast(const ray &r) {

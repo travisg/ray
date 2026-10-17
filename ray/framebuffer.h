@@ -26,13 +26,12 @@
 #include <mutex>
 #include <optional>
 #include <ray/color.h>
-#include <ray/render_surface.h>
 #include <vector>
 
 // Keeps the rendered image in memory as float RGB, row-major, top row first, and tracks the
 // rectangle touched since the last take_dirty so a display thread can follow the render.
 // Writes and take_dirty lock; at() and data() are for once the writers are done.
-class framebuffer : public render_surface {
+class framebuffer {
   public:
     struct rect {
         int x = 0, y = 0, w = 0, h = 0;
@@ -40,8 +39,11 @@ class framebuffer : public render_surface {
 
     framebuffer(int width, int height);
 
-    void set_xy(int x, int y, colorf color) override;
-    void set_xy_run(int x, int y, int count, const colorf *color) override;
+    int width() const { return width_; }
+    int height() const { return height_; }
+
+    void set_xy(int x, int y, colorf color);
+    void set_xy_run(int x, int y, int count, const colorf *color);
 
     // copies the pixels of the dirty rectangle into out (w * h * 3 floats, row-major) and
     // clears it; nullopt when nothing was written since the last call
@@ -57,6 +59,8 @@ class framebuffer : public render_surface {
   private:
     void touch(int x0, int y0, int x1, int y1); // exclusive upper bounds, lock_ held
 
+    int width_;
+    int height_;
     std::vector<float> pixels_;
     std::mutex lock_;
     bool dirty_ = false;

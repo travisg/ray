@@ -24,8 +24,8 @@
 
 #include <libvec/vector3.h>
 #include <optional>
+#include <ray/framebuffer.h>
 #include <ray/ray.h>
-#include <ray/render_surface.h>
 #include <ray/trace_master.h>
 
 class scene;
@@ -33,14 +33,14 @@ class scene;
 // One per worker thread: pulls tiles from the trace_master and casts the rays.
 class tracer {
   public:
-    tracer(const render_surface &surface, const scene &s, trace_master &master);
+    tracer(const framebuffer &surface, const scene &s, trace_master &master);
 
     void trace();
     // nullopt when the ray leaves the scene or the recursion limit is hit
     std::optional<colorf> cast(const ray &r);
 
   private:
-    const render_surface &surface_;
+    const framebuffer &surface_;
     const scene &scene_;
     trace_master &master_;
 

@@ -36,7 +36,7 @@ void store(float *p, colorf color) {
 } // namespace
 
 framebuffer::framebuffer(int width, int height)
-    : render_surface(width, height), pixels_(static_cast<size_t>(width) * height * 3) {}
+    : width_(width), height_(height), pixels_(static_cast<size_t>(width) * height * 3) {}
 
 void framebuffer::set_xy(int x, int y, colorf color) {
     std::lock_guard<std::mutex> guard(lock_);

@@ -23,18 +23,30 @@
 #pragma once
 
 #include <cstddef>
+#include <mutex>
+#include <optional>
 #include <ray/color.h>
 #include <ray/render_surface.h>
 #include <vector>
 
-// Keeps the rendered image in memory as float RGB, row-major, top row first.
-// Writes come through trace_master under its lock, so there is no locking here.
+// Keeps the rendered image in memory as float RGB, row-major, top row first, and tracks the
+// rectangle touched since the last take_dirty so a display thread can follow the render.
+// Writes and take_dirty lock; at() and data() are for once the writers are done.
 class framebuffer : public render_surface {
   public:
+    struct rect {
+        int x = 0, y = 0, w = 0, h = 0;
+    };
+
     framebuffer(int width, int height);
 
     void set_xy(int x, int y, colorf color) override;
     void set_xy_run(int x, int y, int count, const colorf *color) override;
+
+    // copies the pixels of the dirty rectangle into out (w * h * 3 floats, row-major) and
+    // clears it; nullopt when nothing was written since the last call
+    std::optional<rect> take_dirty(std::vector<float> &out);
+    void mark_all_dirty();
 
     colorf at(int x, int y) const;
 
@@ -43,5 +55,10 @@ class framebuffer : public render_surface {
     size_t size() const { return pixels_.size(); }
 
   private:
+    void touch(int x0, int y0, int x1, int y1); // exclusive upper bounds, lock_ held
+
     std::vector<float> pixels_;
+    std::mutex lock_;
+    bool dirty_ = false;
+    int dx0_ = 0, dy0_ = 0, dx1_ = 0, dy1_ = 0; // exclusive upper bounds
 };

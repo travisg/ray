@@ -2,8 +2,9 @@
 
 Small multithreaded CPU ray tracer (C++20, CMake) plus three helper tools that
 consume its streaming `.ray` output. `ctest` covers the vector math,
-intersections, the tracer, the `.ray` reader/writer, the PFM writer, the OBJ
-loader and a golden render of every scene; `./doit` is the eyeball check.
+intersections, the tracer, the `.ray` reader/writer, the PFM writer, the tev
+client, the OBJ loader and a golden render of every scene; `./doit` is the
+eyeball check.
 
 ## Build
 
@@ -60,6 +61,7 @@ cp build/tests/golden-<scene>.ray tests/golden/<scene>.ray
 
 ```sh
 build/ray [-x 800] [-y 600] [-c N] [-o out.ray|out.pfm] [-s SCENE] [-r] [--seed N]
+          [--display HOST[:PORT]]
 build/ray --list-scenes
 build/rayview [file.ray]     # default out.ray; follows the file while ray writes it
 ./doit               # ray at 3200x2400 in the background, then rayview
@@ -70,6 +72,11 @@ build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in 
 - `-o` picks the output by its extension: `.ray` streams tiles into the file as
   they finish (what `rayview` follows), `.pfm` keeps the image in a
   `framebuffer` and writes a portable float map when the render ends.
+- `--display HOST[:PORT]` pushes tiles to a running tev viewer
+  (https://github.com/Tom94/tev, port 14158 by default) as they finish. tev is
+  the server: if nothing is listening the render goes on without it, retries
+  the connection once a second, and sends the whole image so far when a viewer
+  appears. The image is named after the output file, so a re-render replaces it.
 - `rayview` polls the file every 100 ms until it sees `ray_data_type::eof`, waiting up
   to 10 s for the header, so it can start before or after `ray`. Esc or closing
   the window exits immediately. Renders up to 2048x1600 open a 1:1 window;
@@ -79,8 +86,8 @@ build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in 
 
 - The root holds only the build files, scripts and docs.
 - `ray/`: the renderer library: `scene*`, `scene_library*`, `tracer*`,
-  `trace_master*`, `render_surface*`, `framebuffer*`, `pfm*`, `ray_file*` (the
-  `.ray` format), `hit.h`,
+  `trace_master*`, `render_surface*`, `framebuffer*`, `pfm*`, `tev_display*`,
+  `ray_file*` (the `.ray` format), `hit.h`,
   `ray.h`, `color.h`, `bounding_sphere.h`, `cpp.h` (the `DISALLOW_*` class
   macros), and `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry
   containers and the OBJ loader).
@@ -107,6 +114,9 @@ Everything includes from the repo root (`-I.`), so headers are written as
 3. `--cpus` `std::thread`s each run a `tracer`, which loops
    `get_work_unit` → trace every pixel → `return_work_unit` until it returns false.
 4. `main` blocks in `trace_master::wait_for_done`, then joins the threads.
+5. With `--display`, a `tee_surface` also feeds a `framebuffer`, and
+   `display_thread` sends its dirty rectangle (`framebuffer::take_dirty`) to a
+   `tev_display` every 100 ms, with one last pass after the workers are joined.
 
 **Ray casting (`ray/tracer.cpp`)**
 

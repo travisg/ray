@@ -56,9 +56,9 @@ bool write_pfm(const std::string &path, int width, int height, const float *rgb)
     if (fprintf(fp.get(), "PF\n%d %d\n%s\n", width, height, kLittleEndian ? "-1.0" : "1.0") < 0) {
         return false;
     }
-    const size_t row = size_t(width) * 3;
+    const size_t row = static_cast<size_t>(width) * 3;
     for (int y = height - 1; y >= 0; y--) {
-        if (fwrite(rgb + size_t(y) * row, sizeof(float), row, fp.get()) != row) {
+        if (fwrite(rgb + static_cast<size_t>(y) * row, sizeof(float), row, fp.get()) != row) {
             return false;
         }
     }
@@ -78,10 +78,10 @@ bool read_pfm(const std::string &path, int &width, int &height, std::vector<floa
         fgetc(fp.get()) == EOF) {
         return false;
     }
-    const size_t row = size_t(width) * 3;
+    const size_t row = static_cast<size_t>(width) * 3;
     rgb.assign(row * height, 0.0f);
     for (int y = height - 1; y >= 0; y--) {
-        if (fread(rgb.data() + size_t(y) * row, sizeof(float), row, fp.get()) != row) {
+        if (fread(rgb.data() + static_cast<size_t>(y) * row, sizeof(float), row, fp.get()) != row) {
             return false;
         }
     }

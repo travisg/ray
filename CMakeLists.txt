@@ -64,6 +64,7 @@ add_library(raycore STATIC
     ray/render_surface.cpp
     ray/framebuffer.cpp
     ray/pfm.cpp
+    ray/tev_display.cpp
     ray/drawables/mesh_drawable.cpp
     ray/drawables/plane.cpp
     ray/drawables/sphere.cpp

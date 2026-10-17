@@ -20,10 +20,13 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+#include <atomic>
 #include <charconv>
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
+#include <filesystem>
 #include <functional>
 #include <getopt.h>
 #include <iostream>
@@ -32,6 +35,7 @@
 #include <string>
 #include <string_view>
 #include <thread>
+#include <utility>
 #include <vector>
 
 #include <ray/framebuffer.h>
@@ -40,6 +44,7 @@
 #include <ray/render_surface.h>
 #include <ray/scene.h>
 #include <ray/scene_library.h>
+#include <ray/tev_display.h>
 #include <ray/trace_master.h>
 #include <ray/tracer.h>
 
@@ -59,9 +64,10 @@ struct options {
     uint32_t seed = 1;
     std::string scene = std::string(kDefaultSceneName);
     bool list_scenes = false;
+    std::string display; // HOST[:PORT] of a tev viewer, empty for none
 };
 
-enum { opt_seed = 256, opt_list_scenes };
+enum { opt_seed = 256, opt_list_scenes, opt_display };
 
 void usage(FILE *fp, const char *argv0) {
     fprintf(fp,
@@ -75,6 +81,8 @@ void usage(FILE *fp, const char *argv0) {
             "      --list-scenes\n"
             "  -r, --random      trace tiles in random order\n"
             "      --seed N      seed for --random and the random scenes (default 1)\n"
+            "      --display HOST[:PORT]\n"
+            "                    push tiles to a tev viewer as they finish (port 14158)\n"
             "  -h, --help        this message\n",
             argv0);
 }
@@ -102,6 +110,7 @@ bool parse_options(int argc, char **argv, options &opts, int &exit_code) {
         { "list-scenes", no_argument, nullptr, opt_list_scenes },
         { "random", no_argument, nullptr, 'r' },
         { "seed", required_argument, nullptr, opt_seed },
+        { "display", required_argument, nullptr, opt_display },
         { "help", no_argument, nullptr, 'h' },
         { nullptr, 0, nullptr, 0 },
     };
@@ -140,6 +149,9 @@ bool parse_options(int argc, char **argv, options &opts, int &exit_code) {
                     return false;
                 }
                 break;
+            case opt_display:
+                opts.display = optarg;
+                break;
             case 'h':
                 usage(stdout, argv[0]);
                 exit_code = 0;
@@ -154,6 +166,67 @@ bool parse_options(int argc, char **argv, options &opts, int &exit_code) {
         return false;
     }
     return true;
+}
+
+// HOST[:PORT]; tev listens on 14158 unless told otherwise
+std::pair<std::string, std::string> split_host_port(const std::string &spec) {
+    const size_t colon = spec.rfind(':');
+    if (colon == std::string::npos) {
+        return { spec, "14158" };
+    }
+    return { spec.substr(0, colon), spec.substr(colon + 1) };
+}
+
+// Forwards every write to two surfaces: the output file and the framebuffer the display reads.
+class tee_surface : public render_surface {
+  public:
+    tee_surface(render_surface &a, render_surface &b)
+        : render_surface(a.width(), a.height()), a_(a), b_(b) {}
+
+    void set_xy(int x, int y, colorf color) override {
+        a_.set_xy(x, y, color);
+        b_.set_xy(x, y, color);
+    }
+    void set_xy_run(int x, int y, int count, const colorf *color) override {
+        a_.set_xy_run(x, y, count, color);
+        b_.set_xy_run(x, y, count, color);
+    }
+
+  private:
+    render_surface &a_;
+    render_surface &b_;
+};
+
+constexpr auto kDisplayRefresh = std::chrono::milliseconds(100);
+constexpr auto kDisplayRetry = std::chrono::seconds(1);
+
+// Pushes what changed to the viewer every kDisplayRefresh. A viewer that appears late, or comes
+// back after dropping the connection, gets the whole image so far; one last pass after stop
+// flushes the final tiles.
+void display_thread(std::atomic<bool> &stop, framebuffer &fb, tev_display &display) {
+    std::vector<float> pixels;
+    auto last_try = std::chrono::steady_clock::now();
+    for (;;) {
+        const bool last = stop.load();
+        if (!display.connected()) {
+            const auto now = std::chrono::steady_clock::now();
+            if (now - last_try >= kDisplayRetry) {
+                last_try = now;
+                if (display.connect()) {
+                    fb.mark_all_dirty();
+                }
+            }
+        }
+        if (display.connected()) {
+            if (std::optional<framebuffer::rect> r = fb.take_dirty(pixels)) {
+                display.update(r->x, r->y, r->w, r->h, pixels.data(), r->w);
+            }
+        }
+        if (last) {
+            return;
+        }
+        std::this_thread::sleep_for(kDisplayRefresh);
+    }
 }
 
 void tracer_thread(const render_surface &rs, const scene &s, trace_master &master) {
@@ -195,10 +268,11 @@ int main(int argc, char *argv[]) {
 
     // the extension picks the output: a .ray file receives tiles as they finish, a .pfm
     // image is written from the framebuffer once the render ends
+    const bool to_pfm = opts.outfile.ends_with(".pfm");
     std::unique_ptr<framebuffer> fb;
     std::unique_ptr<render_surface_file> file;
     render_surface *rs = nullptr;
-    if (opts.outfile.ends_with(".pfm")) {
+    if (to_pfm) {
         fb = std::make_unique<framebuffer>(opts.xres, opts.yres);
         rs = fb.get();
     } else if (opts.outfile.ends_with(".ray")) {
@@ -213,7 +287,34 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // the live view reads from a framebuffer; a .ray output gets one alongside
+    std::unique_ptr<tev_display> display;
+    std::unique_ptr<tee_surface> tee;
+    if (!opts.display.empty()) {
+        const auto [host, port] = split_host_port(opts.display);
+        if (!fb) {
+            fb = std::make_unique<framebuffer>(opts.xres, opts.yres);
+            tee = std::make_unique<tee_surface>(*rs, *fb);
+            rs = tee.get();
+        }
+        // the image is named after the output file, so re-rendering replaces it in the viewer
+        display = std::make_unique<tev_display>(
+            host, port, std::filesystem::path(opts.outfile).filename().string(), opts.xres,
+            opts.yres);
+        if (!display->connect()) {
+            std::cerr << "display: nothing listening on " << host << ":" << port
+                      << ", will keep trying\n";
+        }
+    }
+
     trace_master master(*rs, opts.random ? tile_order::random : tile_order::sequential, opts.seed);
+
+    std::atomic<bool> stop_display{ false };
+    std::thread display_worker;
+    if (display) {
+        display_worker =
+            std::thread(display_thread, std::ref(stop_display), std::ref(*fb), std::ref(*display));
+    }
 
     std::vector<std::thread> threads;
     threads.reserve(opts.cpus);
@@ -228,8 +329,12 @@ int main(int argc, char *argv[]) {
     for (auto &t : threads) {
         t.join();
     }
+    if (display_worker.joinable()) {
+        stop_display = true;
+        display_worker.join();
+    }
 
-    if (fb && !write_pfm(opts.outfile, fb->width(), fb->height(), fb->data())) {
+    if (to_pfm && !write_pfm(opts.outfile, fb->width(), fb->height(), fb->data())) {
         std::cerr << "error writing " << opts.outfile << std::endl;
         return 1;
     }

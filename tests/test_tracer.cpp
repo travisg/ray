@@ -1,3 +1,4 @@
+#include <cmath>
 #include <memory>
 #include <ray/drawables/plane.h>
 #include <ray/drawables/sphere.h>
@@ -55,6 +56,21 @@ int main() {
         render(s, surface);
         CHECK(surface.at(10, 2).r == 0);
         CHECK(surface.at(10, 18).r > 0);
+    }
+
+    // passes accumulate into a running mean
+    {
+        framebuffer fb(2, 1);
+        const colorf p0[2] = { colorf(1, 0, 0), colorf(2, 2, 2) };
+        const colorf p1[2] = { colorf(0, 1, 0), colorf(0, 0, 0) };
+        const colorf p2[2] = { colorf(0, 0, 3), colorf(1, 1, 1) };
+        fb.accumulate_run(0, 0, 2, p0, 0);
+        fb.accumulate_run(0, 0, 2, p1, 1);
+        CHECK(fb.at(0, 0).r == 0.5 && fb.at(0, 0).g == 0.5 && fb.at(0, 0).b == 0);
+        CHECK(fb.at(1, 0).r == 1);
+        fb.accumulate_run(0, 0, 2, p2, 2);
+        CHECK(std::fabs(fb.at(0, 0).b - 1.0) < 1e-6 && std::fabs(fb.at(0, 0).r - 1.0 / 3) < 1e-6);
+        CHECK(std::fabs(fb.at(1, 0).g - 1.0) < 1e-6);
     }
 
     // indirect light: a white floor under a white sky, with a sphere resting on it. Seen from

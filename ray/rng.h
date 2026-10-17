@@ -24,6 +24,17 @@
 
 #include <cstdint>
 
+// splitmix64's finaliser: a cheap hash to fold seeds, pass numbers and pixel coordinates
+// into one 64-bit value
+inline uint64_t mix64(uint64_t v) {
+    v ^= v >> 30;
+    v *= 0xbf58476d1ce4e5b9ULL;
+    v ^= v >> 27;
+    v *= 0x94d049bb133111ebULL;
+    v ^= v >> 31;
+    return v;
+}
+
 // PCG32 (https://www.pcg-random.org): 64 bits of state, 32-bit output, cheap enough to seed
 // once per pixel, which is what keeps a render independent of thread scheduling.
 class rng {

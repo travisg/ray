@@ -29,6 +29,7 @@ build/ray --scene spheres -x 1280 -y 960              # render to out.png
 build/ray --scene spheres -o out.pfm                  # or keep the floats
 build/ray --scene spheres --display localhost         # watch in tev while it renders
 build/ray --scene cornell --gi 64 --bounces 3         # bounced light, Monte Carlo style
+build/ray --scene cornell --gi 16 --passes 0 --display localhost   # refine in tev until Ctrl-C
 ./doit                                                # the same at 3200x2400
 ```
 

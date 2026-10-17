@@ -44,6 +44,9 @@ class framebuffer {
 
     void set_xy(int x, int y, colorf color);
     void set_xy_run(int x, int y, int count, const colorf *color);
+    // folds a run from render pass `pass` into the running mean: pass 0 stores it, pass k
+    // moves each pixel 1/(k+1) of the way toward the new value
+    void accumulate_run(int x, int y, int count, const colorf *color, int pass);
 
     // copies the pixels of the dirty rectangle into out (w * h * 3 floats, row-major) and
     // clears it; nullopt when nothing was written since the last call

@@ -74,7 +74,7 @@ cp build/tests/golden-<scene>.pfm tests/golden/<scene>.pfm
 
 ```sh
 build/ray [-x 800] [-y 600] [-c N] [-o out.png|out.pfm] [-s SCENE] [-r] [--seed N]
-          [--gi N] [--bounces N] [--display HOST[:PORT]]
+          [--gi N] [--bounces N] [--passes N] [--display HOST[:PORT]]
 build/ray --list-scenes
 ./doit [more ray options]    # 3200x2400, pushing tiles to a tev on localhost
 ```
@@ -89,6 +89,12 @@ build/ray --list-scenes
   as a uniform sky, which is also what the background shows. Cost grows with
   N; 64 is a usable preview, 256 is smooth. Off (the default) keeps the
   constant ambient term.
+- `--passes N` renders the image N times, each pass with fresh random sequences
+  and the primary ray jittered within its pixel, and keeps the running mean
+  (`framebuffer::accumulate_run`), so noise falls and edges anti-alias as the
+  passes go by; with `--display` the viewer shows it converging. `--passes 0`
+  runs until Ctrl-C, which ends the render after the current pass and writes
+  the image so far; a second Ctrl-C kills it.
 - `--display HOST[:PORT]` pushes tiles to a running tev viewer
   (https://github.com/Tom94/tev, port 14158 by default) as they finish. tev is
   the server: if nothing is listening the render goes on without it, retries
@@ -116,10 +122,12 @@ Everything includes from the repo root (`-I.`), so headers are written as
 
 1. A `framebuffer` holds the image as float RGB; `write_png` (sRGB encoded)
    or `write_pfm` saves it once the threads are joined.
-2. A `trace_master` owns the tile list (`kWorkUnitSize` = 16 pixel squares,
-   row-major, or shuffled with `--seed` when `--random`). `get_work_unit` fills a
-   `trace_work_unit` rectangle; `return_work_unit` writes its `colorf` rows to the
-   framebuffer under `lock_` and signals done when the last tile comes back.
+2. A `trace_master` per pass owns the tile list (`kWorkUnitSize` = 16 pixel
+   squares, row-major, or shuffled with `--seed` when `--random`).
+   `get_work_unit` fills a `trace_work_unit` rectangle; `return_work_unit`
+   folds its `colorf` rows into the framebuffer's running mean
+   (`accumulate_run` with the pass number) under `lock_` and signals done when
+   the last tile comes back.
 3. `--cpus` `std::thread`s each run a `tracer`, which loops
    `get_work_unit` → trace every pixel → `return_work_unit` until it returns false.
 4. `main` blocks in `trace_master::wait_for_done`, then joins the threads.
@@ -132,11 +140,12 @@ Everything includes from the repo root (`-I.`), so headers are written as
 - `tracer::trace` builds the camera basis from `scene::camera/target`
   with +z up (+y when looking along z) and casts one primary ray per pixel
   through an image plane one unit ahead spanning [-1, 1] across its width
-  (about a 90° horizontal field of view; no multisampling). Each pixel reseeds
-  the tracer's PCG32 `rng` from `--seed` and its coordinates, so a render is
-  the same whichever thread drew which tile. `render_settings` carries the
-  `--gi`, `--bounces` and `--seed` values to the shaders through
-  `tracer::settings()`.
+  (about a 90° horizontal field of view). Each pixel reseeds the tracer's
+  PCG32 `rng` from `--seed`, the pass number and its coordinates, so a render
+  is the same whichever thread drew which tile; on multi-pass renders the ray
+  goes through a random point in the pixel instead of its centre.
+  `render_settings` carries the `--gi`, `--bounces`, `--seed` and pass values
+  to the shaders through `tracer::settings()`.
 - `tracer::cast` asks `scene::intersect` for the nearest `hit` (a linear scan
   over the drawables, nearest by `t`; a `mesh_drawable` walks a `bvh` over its
   faces, see below), then calls

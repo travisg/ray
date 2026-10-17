@@ -23,6 +23,7 @@
 #include <atomic>
 #include <charconv>
 #include <chrono>
+#include <csignal>
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
@@ -67,9 +68,10 @@ struct options {
     std::string display; // HOST[:PORT] of a tev viewer, empty for none
     int gi_samples = 0;
     int bounces = 1;
+    int passes = 1; // 0: until interrupted
 };
 
-enum { opt_seed = 256, opt_list_scenes, opt_display, opt_gi, opt_bounces };
+enum { opt_seed = 256, opt_list_scenes, opt_display, opt_gi, opt_bounces, opt_passes };
 
 void usage(FILE *fp, const char *argv0) {
     fprintf(fp,
@@ -86,6 +88,9 @@ void usage(FILE *fp, const char *argv0) {
             "      --gi N        indirect light: N hemisphere rays per hit, rounded up to a\n"
             "                    grid of strata (default 0, off)\n"
             "      --bounces N   bounces of indirect light (default 1)\n"
+            "      --passes N    render N passes and average them, each with fresh random\n"
+            "                    numbers and the ray jittered within its pixel (default 1;\n"
+            "                    0 keeps going until Ctrl-C, which writes the image so far)\n"
             "      --display HOST[:PORT]\n"
             "                    push tiles to a tev viewer as they finish (port 14158)\n"
             "  -h, --help        this message\n",
@@ -118,6 +123,7 @@ bool parse_options(int argc, char **argv, options &opts, int &exit_code) {
         { "display", required_argument, nullptr, opt_display },
         { "gi", required_argument, nullptr, opt_gi },
         { "bounces", required_argument, nullptr, opt_bounces },
+        { "passes", required_argument, nullptr, opt_passes },
         { "help", no_argument, nullptr, 'h' },
         { nullptr, 0, nullptr, 0 },
     };
@@ -173,6 +179,13 @@ bool parse_options(int argc, char **argv, options &opts, int &exit_code) {
                     return false;
                 }
                 break;
+            case opt_passes:
+                if (!parse_int(optarg, 0, INT32_MAX, opts.passes)) {
+                    fprintf(stderr, "%s: --passes needs a non-negative integer, got '%s'\n",
+                            argv[0], optarg);
+                    return false;
+                }
+                break;
             case 'h':
                 usage(stdout, argv[0]);
                 exit_code = 0;
@@ -187,6 +200,15 @@ bool parse_options(int argc, char **argv, options &opts, int &exit_code) {
         return false;
     }
     return true;
+}
+
+// Set by the first Ctrl-C; the render ends after the current pass and writes its image. The
+// handler restores the default so a second Ctrl-C kills the process as usual.
+volatile std::sig_atomic_t g_interrupted = 0;
+
+void on_interrupt(int) {
+    g_interrupted = 1;
+    signal(SIGINT, SIG_DFL);
 }
 
 // HOST[:PORT]; tev listens on 14158 unless told otherwise
@@ -272,6 +294,11 @@ int main(int argc, char *argv[]) {
         printf(", %d indirect rays per hit (%dx%d strata), %d bounce%s", grid.count(), grid.x,
                grid.y, opts.bounces, opts.bounces == 1 ? "" : "s");
     }
+    if (opts.passes == 0) {
+        printf(", passes until Ctrl-C");
+    } else if (opts.passes > 1) {
+        printf(", %d passes", opts.passes);
+    }
     printf("\n");
 
     std::mt19937 rng(opts.seed);
@@ -295,8 +322,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    trace_master master(fb, opts.random ? tile_order::random : tile_order::sequential, opts.seed);
-
     std::atomic<bool> stop_display{ false };
     std::thread display_worker;
     if (display) {
@@ -308,24 +333,40 @@ int main(int argc, char *argv[]) {
     settings.gi_samples = opts.gi_samples;
     settings.bounces = opts.bounces;
     settings.seed = opts.seed;
+    settings.jitter = opts.passes != 1;
 
+    signal(SIGINT, on_interrupt);
+
+    // one trace_master per pass; the framebuffer keeps the running mean of the passes
     const auto start = std::chrono::steady_clock::now();
     std::atomic<int64_t> thread_us{ 0 };
-    std::vector<std::thread> threads;
-    threads.reserve(opts.cpus);
-    for (int i = 0; i < opts.cpus; i++) {
-        threads.emplace_back(tracer_thread, std::cref(fb), std::cref(*s), std::ref(master),
-                             std::cref(settings), std::ref(thread_us));
-    }
-
-    // wait for the trace master to hand out and collect every tile
-    master.wait_for_done();
-    for (auto &t : threads) {
-        t.join();
+    int passes = 0;
+    for (; (opts.passes == 0 || passes < opts.passes) && !g_interrupted; passes++) {
+        settings.pass = passes;
+        trace_master master(fb, opts.random ? tile_order::random : tile_order::sequential,
+                            opts.seed + static_cast<uint32_t>(passes), passes);
+        std::vector<std::thread> threads;
+        threads.reserve(opts.cpus);
+        for (int i = 0; i < opts.cpus; i++) {
+            threads.emplace_back(tracer_thread, std::cref(fb), std::cref(*s), std::ref(master),
+                                 std::cref(settings), std::ref(thread_us));
+        }
+        // wait for the trace master to hand out and collect every tile
+        master.wait_for_done();
+        for (auto &t : threads) {
+            t.join();
+        }
     }
     const double wall =
         std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-    printf("rendered in %.3f s wall, %.1f s across %d threads\n", wall, thread_us / 1e6, opts.cpus);
+    if (opts.passes == 1) {
+        printf("rendered in %.3f s wall, %.1f s across %d threads\n", wall, thread_us / 1e6,
+               opts.cpus);
+    } else {
+        printf("%s %d pass%s in %.3f s wall, %.1f s across %d threads\n",
+               g_interrupted ? "interrupted after" : "rendered", passes, passes == 1 ? "" : "es",
+               wall, thread_us / 1e6, opts.cpus);
+    }
 
     if (display_worker.joinable()) {
         stop_display = true;

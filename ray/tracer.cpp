@@ -82,14 +82,24 @@ void tracer::trace() {
     while (master_.get_work_unit(unit)) {
         for (int y = unit.starty; y <= unit.endy; y++) {
             for (int x = unit.startx; x <= unit.endx; x++) {
-                vector3d dir = forward + right * ((x - width / 2.0) * pixpitch) +
-                               down * ((y - height / 2.0) * pixpitch);
-                dir.normalize();
-
                 // the pixel's own random sequence, so the image does not depend on which
                 // thread drew it
-                rng_ = rng((static_cast<uint64_t>(settings_.seed) << 40) ^
-                           (static_cast<uint64_t>(y) << 20) ^ static_cast<uint64_t>(x));
+                rng_ = rng(
+                    mix64(mix64(settings_.seed ^ (static_cast<uint64_t>(settings_.pass) << 32)) ^
+                          (static_cast<uint64_t>(y) << 32) ^ static_cast<uint64_t>(x)));
+
+                // the ray goes through the pixel's reference point, or when jittering through
+                // a random point within half a pixel of it, so the passes average to an image
+                // centred on the same rays
+                double px = x;
+                double py = y;
+                if (settings_.jitter) {
+                    px += rng_.next_double() - 0.5;
+                    py += rng_.next_double() - 0.5;
+                }
+                vector3d dir = forward + right * ((px - width / 2.0) * pixpitch) +
+                               down * ((py - height / 2.0) * pixpitch);
+                dir.normalize();
 
                 // where the ray exits the world: the sky the indirect light comes from, or black
                 // when there is no indirect light

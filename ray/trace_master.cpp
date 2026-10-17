@@ -33,8 +33,8 @@ int div_round_up(int x, int d) {
 
 } // namespace
 
-trace_master::trace_master(framebuffer &surface, tile_order order, uint32_t seed)
-    : surface_(surface), tiles_x_(div_round_up(surface.width(), kWorkUnitSize)),
+trace_master::trace_master(framebuffer &surface, tile_order order, uint32_t seed, int pass)
+    : surface_(surface), pass_(pass), tiles_x_(div_round_up(surface.width(), kWorkUnitSize)),
       tiles_y_(div_round_up(surface.height(), kWorkUnitSize)),
       order_(static_cast<size_t>(tiles_x_) * tiles_y_) {
     std::iota(order_.begin(), order_.end(), uint32_t{ 0 });
@@ -75,7 +75,7 @@ void trace_master::return_work_unit(const trace_work_unit &unit) {
     const colorf *c = unit.result.data();
     int runlen = unit.width();
     for (int y = unit.starty; y <= unit.endy; y++) {
-        surface_.set_xy_run(unit.startx, y, runlen, c);
+        surface_.accumulate_run(unit.startx, y, runlen, c, pass_);
         c += runlen;
     }
 

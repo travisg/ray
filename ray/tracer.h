@@ -38,8 +38,12 @@ struct render_settings {
     int gi_samples = 0;
     // how many times indirect light may bounce; each bounce after the first follows one ray
     int bounces = 1;
-    // every pixel's random sequence is derived from this and its coordinates
+    // every pixel's random sequence is derived from this, the pass and its coordinates
     uint32_t seed = 1;
+    // which render pass this is; each pass gets fresh random sequences
+    int pass = 0;
+    // offset each primary ray randomly within its pixel (anti-aliasing over passes)
+    bool jitter = false;
 };
 
 // One per worker thread: pulls tiles from the trace_master and casts the rays.

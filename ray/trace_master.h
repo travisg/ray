@@ -50,10 +50,11 @@ struct trace_work_unit {
 
 enum class tile_order { sequential, random };
 
-// Hands out tiles to the tracer threads and writes finished tiles to the surface.
+// Hands out tiles to the tracer threads and folds finished tiles into the framebuffer as
+// render pass `pass` (see framebuffer::accumulate_run). One per pass.
 class trace_master {
   public:
-    trace_master(framebuffer &surface, tile_order order, uint32_t seed);
+    trace_master(framebuffer &surface, tile_order order, uint32_t seed, int pass = 0);
     DISALLOW_COPY_ASSIGN_AND_MOVE(trace_master);
 
     // false once every tile has been issued
@@ -66,6 +67,7 @@ class trace_master {
     void fill_unit(uint32_t tile, trace_work_unit &unit) const;
 
     framebuffer &surface_;
+    const int pass_;
     const int tiles_x_;
     const int tiles_y_;
     std::vector<uint32_t> order_; // tile indices in issue order

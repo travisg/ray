@@ -52,6 +52,23 @@ void framebuffer::set_xy_run(int x, int y, int count, const colorf *color) {
     touch(x, y, x + count, y + 1);
 }
 
+void framebuffer::accumulate_run(int x, int y, int count, const colorf *color, int pass) {
+    if (pass == 0) {
+        set_xy_run(x, y, count, color);
+        return;
+    }
+    const float weight = 1.0f / static_cast<float>(pass + 1);
+    std::lock_guard<std::mutex> guard(lock_);
+    float *p = &pixels_[(static_cast<size_t>(y) * width() + x) * 3];
+    for (int i = 0; i < count; i++) {
+        p[0] += (static_cast<float>(color[i].r) - p[0]) * weight;
+        p[1] += (static_cast<float>(color[i].g) - p[1]) * weight;
+        p[2] += (static_cast<float>(color[i].b) - p[2]) * weight;
+        p += 3;
+    }
+    touch(x, y, x + count, y + 1);
+}
+
 void framebuffer::touch(int x0, int y0, int x1, int y1) {
     if (!dirty_) {
         dx0_ = x0;

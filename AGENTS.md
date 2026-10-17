@@ -2,7 +2,7 @@
 
 Small multithreaded CPU ray tracer (C++20, CMake) plus two helper tools that
 consume its streaming `.ray` output. `ctest` covers the vector math,
-intersections, the tracer, the `.ray` reader/writer, the PFM writer, the tev
+intersections, the tracer, the `.ray` reader/writer, the PNG and PFM writers, the tev
 client, the OBJ loader and a golden render of every scene; `./doit` is the
 eyeball check.
 
@@ -30,7 +30,9 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
 - Portability: the tree must build with Apple's libc++, which lags on
   `std::jthread`, `std::format` and floating-point `std::from_chars`; use
   `std::thread` with explicit joins, `snprintf`/`std::to_string` and `strtof`.
-- `libvec/` is the vendored, header-only vector math (`vector3.h`).
+- `libvec/` is the vendored, header-only vector math (`vector3.h`);
+  `external/` holds third-party code (`stb/stb_image_write.h` for PNG), on
+  the include path as a system directory so its warnings stay quiet.
 - Style: `STYLE.md` (snake_case types and functions, `name_` members, `kName`
   constants, class layout). `./codestyle <files>` runs `clang-format -i` with
   the repo's `.clang-format` (LLVM base, 4-space indent, attached braces,
@@ -60,7 +62,7 @@ cp build/tests/golden-<scene>.ray tests/golden/<scene>.ray
 ## Run
 
 ```sh
-build/ray [-x 800] [-y 600] [-c N] [-o out.ray|out.pfm] [-s SCENE] [-r] [--seed N]
+build/ray [-x 800] [-y 600] [-c N] [-o out.png|out.pfm|out.ray] [-s SCENE] [-r] [--seed N]
           [--display HOST[:PORT]]
 build/ray --list-scenes
 build/rayview [file.ray]     # default out.ray; follows the file while ray writes it
@@ -68,9 +70,10 @@ build/rayview [file.ray]     # default out.ray; follows the file while ray write
 build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in the cwd
 ```
 
-- `-o` picks the output by its extension: `.ray` streams tiles into the file as
-  they finish (what `rayview` follows), `.pfm` keeps the image in a
-  `framebuffer` and writes a portable float map when the render ends.
+- `-o` picks the output by its extension. `.png` (the default, 8-bit sRGB) and
+  `.pfm` (the linear floats) are written from the `framebuffer` when the
+  render ends; `.ray` streams tiles into the file as they finish (what
+  `rayview` follows).
 - `--display HOST[:PORT]` pushes tiles to a running tev viewer
   (https://github.com/Tom94/tev, port 14158 by default) as they finish. tev is
   the server: if nothing is listening the render goes on without it, retries
@@ -85,15 +88,15 @@ build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in 
 
 - The root holds only the build files, scripts and docs.
 - `ray/`: the renderer library: `scene*`, `scene_library*`, `tracer*`,
-  `trace_master*`, `render_surface*`, `framebuffer*`, `pfm*`, `tev_display*`,
+  `trace_master*`, `render_surface*`, `framebuffer*`, `png*`, `pfm*`, `tev_display*`,
   `ray_file*` (the `.ray` format), `hit.h`,
   `ray.h`, `color.h`, `bounding_sphere.h`, `cpp.h` (the `DISALLOW_*` class
   macros), and `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry
   containers and the OBJ loader).
 - `tools/`: the programs: `ray.cpp` (the renderer's CLI), `rayview.cpp`,
   `raysplit.cpp`.
-- `libvec/` (vector math), `tests/` (with `golden/` references), `resources/`
-  (`.obj` assets).
+- `libvec/` (vector math), `external/` (vendored third-party code), `tests/`
+  (with `golden/` references), `resources/` (`.obj` assets).
 
 ## Architecture
 
@@ -104,7 +107,8 @@ Everything includes from the repo root (`-I.`), so headers are written as
 
 1. The output is a `render_surface`: `render_surface_file` streams into a
    `.ray` file via `ray_file::open_write`, or a `framebuffer` holds float RGB
-   in memory and `write_pfm` saves it once the threads are joined.
+   in memory and `write_png` (sRGB encoded) or `write_pfm` saves it once the
+   threads are joined.
 2. A `trace_master` owns the tile list (`kWorkUnitSize` = 16 pixel squares,
    row-major, or shuffled with `--seed` when `--random`). `get_work_unit` fills a
    `trace_work_unit` rectangle; `return_work_unit` writes its `colorf` rows to the

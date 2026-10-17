@@ -64,6 +64,7 @@ add_library(raycore STATIC
     ray/render_surface.cpp
     ray/framebuffer.cpp
     ray/pfm.cpp
+    ray/png.cpp
     ray/tev_display.cpp
     ray/drawables/mesh_drawable.cpp
     ray/drawables/plane.cpp
@@ -77,6 +78,8 @@ add_library(raycore STATIC
     ray/mesh/surface.cpp
 )
 target_link_libraries(raycore PUBLIC rayfile Threads::Threads)
+# vendored headers; a system directory so their warnings stay quiet
+target_include_directories(raycore SYSTEM PUBLIC ${PROJECT_SOURCE_DIR}/external)
 
 add_executable(ray tools/ray.cpp)
 target_link_libraries(ray PRIVATE raycore)

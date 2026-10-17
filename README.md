@@ -8,8 +8,8 @@ scenes.
 The renderer streams finished tiles into an append-only `.ray` file as they
 complete, and `rayview` follows that file while it grows, so you watch the
 picture fill in tile by tile. It can also push tiles to a running
-[tev](https://github.com/Tom94/tev) viewer, and write a plain float image
-(`.pfm`) when the render ends.
+[tev](https://github.com/Tom94/tev) viewer, and writes a PNG, or a float
+image (`.pfm`), when the render ends.
 
 ## Build
 
@@ -25,9 +25,10 @@ ctest --test-dir build
 
 ```sh
 build/ray --list-scenes
-build/ray --scene spheres -x 1280 -y 960 -o out.ray   # render
-build/ray --scene spheres -o out.pfm                  # or a float image at the end
-build/ray --scene spheres -o out.pfm --display localhost   # watch in tev while it renders
+build/ray --scene spheres -x 1280 -y 960              # render to out.png
+build/ray --scene spheres -o out.pfm                  # or keep the floats
+build/ray --scene spheres --display localhost         # watch in tev while it renders
+build/ray --scene spheres -x 1280 -y 960 -o out.ray   # or stream to a .ray file
 build/rayview out.ray                                 # watch it arrive
 ./doit                                                # both, at 3200x2400
 ```

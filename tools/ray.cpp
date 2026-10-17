@@ -40,6 +40,7 @@
 
 #include <ray/framebuffer.h>
 #include <ray/pfm.h>
+#include <ray/png.h>
 #include <ray/ray.h>
 #include <ray/render_surface.h>
 #include <ray/scene.h>
@@ -59,7 +60,7 @@ struct options {
     int xres = 800;
     int yres = 600;
     int cpus = default_cpus();
-    std::string outfile = "out.ray";
+    std::string outfile = "out.png";
     bool random = false;
     uint32_t seed = 1;
     std::string scene = std::string(kDefaultSceneName);
@@ -75,8 +76,9 @@ void usage(FILE *fp, const char *argv0) {
             "  -x, --xres N      image width (default 800)\n"
             "  -y, --yres N      image height (default 600)\n"
             "  -c, --cpus N      worker threads (default: hardware threads)\n"
-            "  -o, --out FILE    output: .ray streams tiles as they finish, .pfm is written\n"
-            "                    when the render ends (default out.ray)\n"
+            "  -o, --out FILE    output, by extension: .png (8-bit sRGB) or .pfm (float) written\n"
+            "                    when the render ends, .ray streamed as tiles finish\n"
+            "                    (default out.png)\n"
             "  -s, --scene NAME  scene to render (default: default)\n"
             "      --list-scenes\n"
             "  -r, --random      trace tiles in random order\n"
@@ -266,13 +268,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // the extension picks the output: a .ray file receives tiles as they finish, a .pfm
-    // image is written from the framebuffer once the render ends
+    // the extension picks the output: a .ray file receives tiles as they finish, a .png or
+    // .pfm image is written from the framebuffer once the render ends
+    const bool to_png = opts.outfile.ends_with(".png");
     const bool to_pfm = opts.outfile.ends_with(".pfm");
     std::unique_ptr<framebuffer> fb;
     std::unique_ptr<render_surface_file> file;
     render_surface *rs = nullptr;
-    if (to_pfm) {
+    if (to_png || to_pfm) {
         fb = std::make_unique<framebuffer>(opts.xres, opts.yres);
         rs = fb.get();
     } else if (opts.outfile.ends_with(".ray")) {
@@ -283,7 +286,8 @@ int main(int argc, char *argv[]) {
         }
         rs = file.get();
     } else {
-        std::cerr << "output file " << opts.outfile << " must end in .ray or .pfm" << std::endl;
+        std::cerr << "output file " << opts.outfile << " must end in .png, .pfm or .ray"
+                  << std::endl;
         return 1;
     }
 
@@ -334,9 +338,13 @@ int main(int argc, char *argv[]) {
         display_worker.join();
     }
 
-    if (to_pfm && !write_pfm(opts.outfile, fb->width(), fb->height(), fb->data())) {
-        std::cerr << "error writing " << opts.outfile << std::endl;
-        return 1;
+    if (to_png || to_pfm) {
+        const bool ok = to_png ? write_png(opts.outfile, fb->width(), fb->height(), fb->data())
+                               : write_pfm(opts.outfile, fb->width(), fb->height(), fb->data());
+        if (!ok) {
+            std::cerr << "error writing " << opts.outfile << std::endl;
+            return 1;
+        }
     }
 
     std::cout << "shutting down" << std::endl;

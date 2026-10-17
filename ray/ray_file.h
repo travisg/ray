@@ -138,6 +138,3 @@ class ray_file {
     uint32_t width_ = 0, height_ = 0;
     std::vector<float> scratch_;
 };
-
-// Writes the image as a 24-bit uncompressed TGA.
-int convert_to_tga(ray_file &file, const std::string &filename);

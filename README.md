@@ -1,6 +1,6 @@
 # ray
 
-A small multithreaded CPU ray tracer, written for fun, plus three tools that
+A small multithreaded CPU ray tracer, written for fun, plus two tools that
 work on its output. Spheres, planes, triangles and Wavefront `.obj` meshes,
 point lights with shadows, mirror reflections, and a handful of built-in
 scenes.
@@ -29,7 +29,6 @@ build/ray --scene spheres -x 1280 -y 960 -o out.ray   # render
 build/ray --scene spheres -o out.pfm                  # or a float image at the end
 build/ray --scene spheres -o out.pfm --display localhost   # watch in tev while it renders
 build/rayview out.ray                                 # watch it arrive
-build/ray2tga out.ray out.tga                         # convert when done
 ./doit                                                # both, at 3200x2400
 ```
 

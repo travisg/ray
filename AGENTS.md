@@ -1,6 +1,6 @@
 # ray
 
-Small multithreaded CPU ray tracer (C++20, CMake) plus three helper tools that
+Small multithreaded CPU ray tracer (C++20, CMake) plus two helper tools that
 consume its streaming `.ray` output. `ctest` covers the vector math,
 intersections, the tracer, the `.ray` reader/writer, the PFM writer, the tev
 client, the OBJ loader and a golden render of every scene; `./doit` is the
@@ -10,7 +10,7 @@ eyeball check.
 
 ```sh
 cmake -S . -B build -G Ninja           # configure; RelWithDebInfo (-O2 -g, asserts on)
-cmake --build build                    # ray, ray2tga, raysplit, rayview (if SDL2 is found)
+cmake --build build                    # ray, raysplit, rayview (if SDL2 is found)
 cmake --build build --target rayview   # one target
 cmake --build build -v                 # echo the compiler command lines
 cmake --build build --target clean     # objects only; rm -rf build for a full reset
@@ -65,7 +65,6 @@ build/ray [-x 800] [-y 600] [-c N] [-o out.ray|out.pfm] [-s SCENE] [-r] [--seed 
 build/ray --list-scenes
 build/rayview [file.ray]     # default out.ray; follows the file while ray writes it
 ./doit               # ray at 3200x2400 in the background, then rayview
-build/ray2tga out.ray out.tga
 build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in the cwd
 ```
 
@@ -92,7 +91,7 @@ build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in 
   macros), and `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry
   containers and the OBJ loader).
 - `tools/`: the programs: `ray.cpp` (the renderer's CLI), `rayview.cpp`,
-  `ray2tga.cpp`, `raysplit.cpp`.
+  `raysplit.cpp`.
 - `libvec/` (vector math), `tests/` (with `golden/` references), `resources/`
   (`.obj` assets).
 
@@ -165,8 +164,7 @@ by shaders).
 - `mesh/`: `geometry` (shared vertex/normal/tangent/uv pools) owning `mesh` →
   `surface` index lists; `obj_loader` is the only importer.
 - `ray/color.h`: `colorf` is double RGB (unclamped, additive); `color32` clamps to
-  bytes (used directly as `b, g, r` by `convert_to_tga` and via packed `rgbx()`
-  by `rayview`).
+  bytes (`rayview` packs it with `rgbx()`).
 
 **`.ray` file format (`ray/ray_file.h`)**
 
@@ -174,6 +172,6 @@ Append-only stream: `ray_header {magic kRayHeaderMagic ('RAY1'), width, height}`
 then packets of `uint32 type` followed by `ray_data_pixel`, `ray_data_pixel_run`
 (+ `length` float triples) or `ray_data_type::eof`. `ray_stream_reader` parses it
 incrementally (`need_data` at the end of the data so far, `eof` after the EOF
-packet) and `ray_file::parse`/`read_into_buffer`, used by `ray2tga` and
-`raysplit`, are built on it, as is `rayview`, which keeps pumping the reader
+packet) and `ray_file::parse`/`read_into_buffer`, used by `raysplit` and
+`test_golden`, are built on it, as is `rayview`, which keeps pumping the reader
 while the file grows.

@@ -81,8 +81,6 @@ target_link_libraries(raycore PUBLIC rayfile Threads::Threads)
 add_executable(ray tools/ray.cpp)
 target_link_libraries(ray PRIVATE raycore)
 
-add_executable(ray2tga tools/ray2tga.cpp)
-target_link_libraries(ray2tga PRIVATE rayfile)
 
 add_executable(raysplit tools/raysplit.cpp)
 target_link_libraries(raysplit PRIVATE rayfile)

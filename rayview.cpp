@@ -23,21 +23,21 @@
 // ray.cpp : Defines the entry point for the console application.
 //
 
-#include <cstdio>
-#include <iostream>
-#include <unistd.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <time.h>
 #include <assert.h>
+#include <cstdio>
+#include <fcntl.h>
+#include <iostream>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
 #include <SDL2/SDL.h>
 
-#include <RayFile.h>
 #include <Color.h>
+#include <RayFile.h>
 
-#include <thread>
 #include <mutex>
+#include <thread>
 
 static std::mutex lock;
 static SDL_Window *window;
@@ -77,13 +77,13 @@ static void WindowUpdate() {
     SDL_RenderPresent(renderer);
     lock.unlock();
 
-    //SDL_FreeSurface(destsurface);
+    // SDL_FreeSurface(destsurface);
 }
 
 static Uint32 TimerTick(Uint32 interval, void *) {
-    //printf("tick\n");
-    SDL_Event event {};
-    SDL_UserEvent userevent {};
+    // printf("tick\n");
+    SDL_Event event{};
+    SDL_UserEvent userevent{};
 
     userevent.type = SDL_USEREVENT;
     userevent.code = 0;
@@ -101,15 +101,16 @@ static Uint32 TimerTick(Uint32 interval, void *) {
 static int SetupSDL() {
     atexit(SDL_Quit);
 
-    SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER);
-    //SDL_EnableUNICODE(1);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER);
+    // SDL_EnableUNICODE(1);
 
     return 0;
 }
 
 static int OpenWindow() {
     lock.lock();
-    window = SDL_CreateWindow("rayview", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow("rayview", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width,
+                              height, SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, -1, 0);
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -127,15 +128,16 @@ static ssize_t ReadData(void *_buf, size_t len) {
     uint8_t *buf = (uint8_t *)_buf;
     size_t pos;
 
-    for (pos = 0; pos < len; ) {
+    for (pos = 0; pos < len;) {
         size_t toread = len - pos;
         ssize_t r = read(fd, &buf[pos], toread);
-        if (r < 0)
+        if (r < 0) {
             return r;
+        }
 
         // TODO: poll instead of sleeping
         if ((size_t)r != toread) {
-//          printf("read %d, toread %d\n", read, toread);
+            //          printf("read %d, toread %d\n", read, toread);
             usleep(100000);
         }
 
@@ -150,9 +152,10 @@ static int ReaderThread() {
     for (;;) {
         uint32_t type;
 
-        if (ReadData(&type, sizeof(type)) < 0)
+        if (ReadData(&type, sizeof(type)) < 0) {
             goto done;
-        //printf("type %d\n", type);
+        }
+        // printf("type %d\n", type);
         count++;
         if ((count % 1000) == 0) {
             printf("reader thread: handled %zu packets\n", count);
@@ -162,15 +165,17 @@ static int ReaderThread() {
             case TYPE_PIXEL: {
                 RayDataPixel pixel;
 
-                if (ReadData(&pixel, sizeof(pixel)) < 0)
+                if (ReadData(&pixel, sizeof(pixel)) < 0) {
                     goto done;
+                }
 
-                //printf("pixel data: x %d y %d, r %f g %f b %f\n", pixel.x, pixel.y, pixel.r, pixel.g, pixel.b);
+                // printf("pixel data: x %d y %d, r %f g %f b %f\n", pixel.x, pixel.y, pixel.r,
+                // pixel.g, pixel.b);
 
                 colorf cf(pixel.r, pixel.g, pixel.b);
                 color32 c32 = cf;
 
-                //printf("pixels %p pixel val %#x\n", pixels, c32.rgbx());
+                // printf("pixels %p pixel val %#x\n", pixels, c32.rgbx());
                 pixels[pixel.y * inwidth + pixel.x] = c32.rgbx();
                 // SDL_UnlockTexture(tex);
                 break;
@@ -178,20 +183,22 @@ static int ReaderThread() {
             case TYPE_PIXEL_RUN: {
                 RayDataPixelRun run;
 
-                if (ReadData(&run, sizeof(run)) < 0)
+                if (ReadData(&run, sizeof(run)) < 0) {
                     goto done;
+                }
 
-                //printf("pixel run data: x %d y %d, len %d\n", run.x, run.y, run.length);
+                // printf("pixel run data: x %d y %d, len %d\n", run.x, run.y, run.length);
 
                 for (size_t i = 0; i < run.length; i++) {
                     float c[3];
-                    if (ReadData(&c, sizeof(c)) < 0)
+                    if (ReadData(&c, sizeof(c)) < 0) {
                         goto done;
+                    }
 
                     colorf cf(c[0], c[1], c[2]);
                     color32 c32 = cf;
 
-                    //printf("pixels %p pixel val %#x\n", pixels, c32.rgbx());
+                    // printf("pixels %p pixel val %#x\n", pixels, c32.rgbx());
                     pixels[run.y * inwidth + run.x + i] = c32.rgbx();
                 }
                 break;
@@ -199,13 +206,12 @@ static int ReaderThread() {
             case TYPE_EOF:
                 goto done;
             case TYPE_NULL:
-            default:
-                ;
+            default:;
         }
 
         // send a SDL_USEREVENT to update the window
-        SDL_Event event {};
-        SDL_UserEvent userevent {};
+        SDL_Event event{};
+        SDL_UserEvent userevent{};
         userevent.type = SDL_USEREVENT;
         userevent.code = 0;
         userevent.data1 = NULL;
@@ -215,13 +221,13 @@ static int ReaderThread() {
         SDL_PushEvent(&event);
 
         // XXX remove
-        //SDL_Delay(50);
+        // SDL_Delay(50);
     }
 done:
     printf("hit EOF\n");
 
     // stop the timer
-    //SDL_RemoveTimer(timer);
+    // SDL_RemoveTimer(timer);
 
     // one last window update
     WindowUpdate();
@@ -266,17 +272,19 @@ int main(int /* argc */, char ** /* argv */) {
     OpenWindow();
 
     // create the intermediate surface
-    //surface = SDL_CreateRGBSurface(SDL_SWSURFACE, inwidth, inheight, 32,
+    // surface = SDL_CreateRGBSurface(SDL_SWSURFACE, inwidth, inheight, 32,
     //                               0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
-    tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBX8888, SDL_TEXTUREACCESS_STREAMING, inwidth, inheight);
+    tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBX8888, SDL_TEXTUREACCESS_STREAMING,
+                            inwidth, inheight);
     if (!tex) {
         std::cerr << "failed to allocate texture for rendering" << std::endl;
         abort();
     }
-    //SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_NONE);
+    // SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_NONE);
 
     // allocate a buffer to render into
-    pixels = (uint32_t *)calloc(1, inwidth * inheight * SDL_BYTESPERPIXEL(SDL_PIXELFORMAT_RGBX8888));
+    pixels =
+        (uint32_t *)calloc(1, inwidth * inheight * SDL_BYTESPERPIXEL(SDL_PIXELFORMAT_RGBX8888));
 
     // start the reader thread
     std::thread reader(&ReaderThread);
@@ -291,7 +299,8 @@ int main(int /* argc */, char ** /* argv */) {
         switch (event.type) {
             case SDL_WINDOWEVENT: {
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    std::cout << "resize x " << std::dec << event.window.data1 << " y " << event.window.data2 << std::endl;
+                    std::cout << "resize x " << std::dec << event.window.data1 << " y "
+                              << event.window.data2 << std::endl;
                     lock.lock();
                     width = event.window.data1;
                     height = event.window.data2;
@@ -299,7 +308,8 @@ int main(int /* argc */, char ** /* argv */) {
                     lock.unlock();
                     WindowUpdate();
                 } else {
-                    //std::cout << "unhandled SDL_WINDOWEVENT event 0x" << std::hex << (int)event.window.event << std::endl;
+                    // std::cout << "unhandled SDL_WINDOWEVENT event 0x" << std::hex <<
+                    // (int)event.window.event << std::endl;
                 }
                 break;
             }
@@ -336,4 +346,3 @@ int main(int /* argc */, char ** /* argv */) {
 
     return 0;
 }
-

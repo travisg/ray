@@ -26,7 +26,7 @@
 #include "Mesh.h"
 
 class Geometry {
-public:
+  public:
     Geometry();
     ~Geometry();
 
@@ -49,7 +49,7 @@ public:
 
     void Dump() const;
 
-private:
+  private:
     MeshList m_Meshes;
 
     // shared verts

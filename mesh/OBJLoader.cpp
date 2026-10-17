@@ -1,31 +1,33 @@
 #define _CRT_SECURE_NO_DEPRECATE
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
-#include <string.h>
 #include <iostream>
 #include <sstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "Mesh.h"
 #include "Geometry.h"
+#include "Mesh.h"
 
-static int read_line(FILE *infp, char *line, int len)
-{
+static int read_line(FILE *infp, char *line, int len) {
 retry:
-    if (fgets(line, len, infp) == NULL)
+    if (fgets(line, len, infp) == NULL) {
         return -1; // end of file
+    }
 
     size_t read_len = strlen(line);
-    if (read_len == 0)
+    if (read_len == 0) {
         goto retry;
+    }
 
     // trim crlf
     for (;;) {
-        if (line[read_len-1] == '\r' || line[read_len - 1] == '\n') {
-            line[read_len-1] = 0;
+        if (line[read_len - 1] == '\r' || line[read_len - 1] == '\n') {
+            line[read_len - 1] = 0;
             read_len--;
-            if (read_len == 0)
+            if (read_len == 0) {
                 goto retry;
+            }
         } else {
             break;
         }
@@ -34,20 +36,15 @@ retry:
     return (int)read_len;
 }
 
-static int tokenize(char *str, const char sep, char **tokens, int num_tokens)
-{
+static int tokenize(char *str, const char sep, char **tokens, int num_tokens) {
     int pos = 0;
     int curr_token = -1;
-    enum {
-        INITIAL,
-        SEEN_SEP,
-        IN_SEP,
-        IN_TOKEN
-    } state = INITIAL;
+    enum { INITIAL, SEEN_SEP, IN_SEP, IN_TOKEN } state = INITIAL;
 
     for (;;) {
-        if (str[pos] == 0)
+        if (str[pos] == 0) {
             break;
+        }
 
         switch (state) {
             case INITIAL:
@@ -64,8 +61,9 @@ static int tokenize(char *str, const char sep, char **tokens, int num_tokens)
                 pos++;
                 state = IN_SEP;
                 // if there are no more tokens available in the array, end here
-                if (curr_token == num_tokens - 1)
+                if (curr_token == num_tokens - 1) {
                     break;
+                }
                 break;
             case IN_SEP:
                 if (str[pos] == sep) {
@@ -90,8 +88,7 @@ static int tokenize(char *str, const char sep, char **tokens, int num_tokens)
     return curr_token + 1;
 }
 
-int obj_load(FILE *infp, Geometry **new_geometry)
-{
+int obj_load(FILE *infp, Geometry **new_geometry) {
     Geometry *g;
     Mesh *mesh = 0;
     char line[1024];
@@ -104,8 +101,9 @@ int obj_load(FILE *infp, Geometry **new_geometry)
     std::string nextname = "default0";
     for (;;) {
         int len = read_line(infp, line, sizeof(line));
-        if (len < 0)
+        if (len < 0) {
             break;
+        }
 
         if (strncmp(line, "v ", 2) == 0) {
             if (addedSurfaces) {
@@ -123,8 +121,6 @@ int obj_load(FILE *infp, Geometry **new_geometry)
                 nextname = tempname;
             } else if (seenUnsupp) {
                 //
-
-
             }
 
             Vertex v;
@@ -159,12 +155,15 @@ int obj_load(FILE *infp, Geometry **new_geometry)
                 int posindex, normindex, uvindex;
                 posindex = normindex = uvindex = 0;
 
-                if (num_subtokens > 0)
+                if (num_subtokens > 0) {
                     posindex = atoi(subtokens[0]);
-                if (num_subtokens > 1)
+                }
+                if (num_subtokens > 1) {
                     uvindex = atoi(subtokens[1]);
-                if (num_subtokens > 2)
+                }
+                if (num_subtokens > 2) {
                     normindex = atoi(subtokens[2]);
+                }
                 s->AddIndex(posindex - 1, normindex - 1, uvindex - 1);
             }
 
@@ -212,7 +211,7 @@ int obj_load(FILE *infp, Geometry **new_geometry)
         } else {
             // unknown
             std::cerr << "unknown .obj file line '" << line << "'" << std::endl;
-//          assert(0);
+            //          assert(0);
         }
     }
 

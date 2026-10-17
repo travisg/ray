@@ -23,23 +23,22 @@
 #ifndef __TRIANGLE_H
 #define __TRIANGLE_H
 
-#include <libvec/Vector3.h>
 #include <Ray.h>
+#include <libvec/Vector3.h>
 
 #include "Drawable.h"
 
 class Triangle : public Drawable {
-public:
+  public:
     Triangle(const Libvec::Vector3d &v0, const Libvec::Vector3d &v1, const Libvec::Vector3d &v2);
     virtual ~Triangle();
 
     virtual bool Intersect(const Ray &ray) const;
     virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const;
 
-private:
+  private:
     Libvec::Vector3d m_v[3];
     Libvec::Vector3d m_normal;
 };
 
 #endif
-

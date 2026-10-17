@@ -24,11 +24,9 @@
 #define __LIGHT_H
 
 class Light {
-public:
+  public:
     Light() {}
     virtual ~Light() {}
-
 };
 
 #endif
-

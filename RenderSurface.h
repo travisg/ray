@@ -27,18 +27,18 @@
 #include <string>
 
 class RenderSurface {
-public:
+  public:
     RenderSurface(int width, int height);
     virtual ~RenderSurface();
 
-//  int OpenOutFile(const std::string &name);
+    //  int OpenOutFile(const std::string &name);
 
     int Width() const { return m_Width; }
     int Height() const { return m_Height; }
 
     virtual void SetXY(int x, int y, colorf color) = 0;
     virtual void SetXYRun(int x, int y, int count, const colorf *color) = 0;
-//  colorf GetXY(int x, int y) const { return m_Buffer[y * m_Width + x]; }
+    //  colorf GetXY(int x, int y) const { return m_Buffer[y * m_Width + x]; }
 
 #if 0
     class RenderSurfaceNotifyReceiver {
@@ -52,18 +52,18 @@ public:
     int WriteTGAFile(std::string filename);
 #endif
 
-private:
+  private:
     int m_Width;
     int m_Height;
-//  colorf *m_Buffer;
-//  RenderSurfaceNotifyReceiver *m_Notify;
-//  FILE *m_fp;
+    //  colorf *m_Buffer;
+    //  RenderSurfaceNotifyReceiver *m_Notify;
+    //  FILE *m_fp;
 };
 
 class RayFile;
 
 class RenderSurfaceFile : public RenderSurface {
-public:
+  public:
     RenderSurfaceFile(int width, int height);
     virtual ~RenderSurfaceFile();
 
@@ -72,7 +72,7 @@ public:
     virtual void SetXY(int x, int y, colorf color);
     virtual void SetXYRun(int x, int y, int count, const colorf *color);
 
-private:
+  private:
     RayFile *m_file;
 };
 

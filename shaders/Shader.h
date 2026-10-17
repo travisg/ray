@@ -42,7 +42,7 @@ struct ShaderArgs {
 };
 
 class Shader {
-public:
+  public:
     Shader() {}
     virtual ~Shader() {}
 
@@ -52,4 +52,3 @@ public:
 typedef std::shared_ptr<Shader> ShaderPtr;
 
 #endif
-

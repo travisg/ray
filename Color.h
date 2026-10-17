@@ -23,15 +23,15 @@
 #ifndef __COLOR_H
 #define __COLOR_H
 
-#include <ostream>
 #include <cstdlib>
 #include <libvec/Random.h>
+#include <ostream>
 
 struct color32;
 struct colorf;
 
 struct color32 {
-public:
+  public:
     unsigned char r;
     unsigned char g;
     unsigned char b;
@@ -49,7 +49,7 @@ public:
 };
 
 struct colorf {
-public:
+  public:
     double r;
     double g;
     double b;
@@ -61,21 +61,19 @@ public:
     colorf operator*(double f);
     colorf operator*(const colorf &c);
 
-    colorf & operator+=(const colorf &c);
-    colorf & operator*=(double f);
+    colorf &operator+=(const colorf &c);
+    colorf &operator*=(double f);
 
     static colorf RandColor();
 };
 
-inline color32::color32(const colorf &c)
-{
+inline color32::color32(const colorf &c) {
     r = (c.r < 0.0f) ? 0 : ((c.r > 1.0f) ? 255 : ((unsigned char)(255.0 * c.r)));
     g = (c.g < 0.0f) ? 0 : ((c.g > 1.0f) ? 255 : ((unsigned char)(255.0 * c.g)));
     b = (c.b < 0.0f) ? 0 : ((c.b > 1.0f) ? 255 : ((unsigned char)(255.0 * c.b)));
 }
 
-inline colorf & colorf::operator+=(const colorf &c)
-{
+inline colorf &colorf::operator+=(const colorf &c) {
     r += c.r;
     g += c.g;
     b += c.b;
@@ -83,8 +81,7 @@ inline colorf & colorf::operator+=(const colorf &c)
     return *this;
 }
 
-inline colorf & colorf::operator*=(double f)
-{
+inline colorf &colorf::operator*=(double f) {
     r *= f;
     g *= f;
     b *= f;
@@ -92,26 +89,21 @@ inline colorf & colorf::operator*=(double f)
     return *this;
 }
 
-inline colorf colorf::operator*(double f)
-{
+inline colorf colorf::operator*(double f) {
     return colorf(r * f, g * f, b * f);
 }
 
-inline colorf colorf::operator*(const colorf &c)
-{
+inline colorf colorf::operator*(const colorf &c) {
     return colorf(r * c.r, g * c.g, b * c.b);
 }
 
-inline std::ostream &operator<<(std::ostream &os, const colorf &c)
-{
+inline std::ostream &operator<<(std::ostream &os, const colorf &c) {
     os << "< " << c.r << " " << c.g << " " << c.b << " >";
     return os;
 }
 
-inline colorf colorf::RandColor()
-{
+inline colorf colorf::RandColor() {
     return colorf(Libvec::Random(), Libvec::Random(), Libvec::Random());
 }
 
 #endif
-

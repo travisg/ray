@@ -28,18 +28,11 @@
 
 using Libvec::Vector3d;
 
-Sphere::Sphere(const Libvec::Vector3d &pos, double radius)
-    :   m_Center(pos),
-        m_Radius(radius)
-{
-}
+Sphere::Sphere(const Libvec::Vector3d &pos, double radius) : m_Center(pos), m_Radius(radius) {}
 
-Sphere::~Sphere()
-{
-}
+Sphere::~Sphere() {}
 
-bool Sphere::Intersect(const Ray &ray) const
-{
+bool Sphere::Intersect(const Ray &ray) const {
     double radius2 = m_Radius * m_Radius;
 
     Vector3d oc = m_Center - ray.origin;
@@ -58,8 +51,7 @@ bool Sphere::Intersect(const Ray &ray) const
     return false;
 }
 
-bool Sphere::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const
-{
+bool Sphere::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const {
     double radius2 = m_Radius * m_Radius;
 
     Vector3d oc = m_Center - ray.origin;
@@ -86,4 +78,3 @@ bool Sphere::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const
 
     return false;
 }
-

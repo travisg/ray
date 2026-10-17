@@ -23,8 +23,8 @@
 #ifndef __BOUNDING_SPHERE_H
 #define __BOUNDING_SPHERE_H
 
-#include <libvec/Vector3.h>
 #include <Ray.h>
+#include <libvec/Vector3.h>
 
 /* simple bounding sphere implementation */
 struct BoundingSphere {
@@ -52,4 +52,3 @@ struct BoundingSphere {
 };
 
 #endif
-

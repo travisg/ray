@@ -22,23 +22,23 @@
  */
 #include <cstdio>
 #include <iostream>
-#include <time.h>
 #include <thread>
+#include <time.h>
 
 #include <Ray.h>
 #include <RenderSurface.h>
-#include <Tracer.h>
 #include <Scene.h>
+#include <Tracer.h>
 
 #include <boost/program_options/option.hpp>
 #include <boost/program_options/options_description.hpp>
-#include <boost/program_options/variables_map.hpp>
 #include <boost/program_options/parsers.hpp>
+#include <boost/program_options/variables_map.hpp>
 
 namespace po = boost::program_options;
 
 int TracerThread(RenderSurface *rs, Scene *scene, TraceMaster *trace_master) {
-//  std::cout << "TracerThread start" << std::endl;
+    //  std::cout << "TracerThread start" << std::endl;
     time_t start = time(NULL);
 
     Tracer *tracer = new Tracer(*rs, *scene, *trace_master);
@@ -49,12 +49,12 @@ int TracerThread(RenderSurface *rs, Scene *scene, TraceMaster *trace_master) {
 
     delete tracer;
 
-//  std::cout << "TracerThread end" << std::endl;
+    //  std::cout << "TracerThread end" << std::endl;
 
     return 0;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     srand(time(NULL));
 
     int xres, yres, cpus;
@@ -63,14 +63,13 @@ int main(int argc, char* argv[]) {
 
     // deal with options
     po::options_description desc("Allowed options");
-    desc.add_options()
-    ("help,h", "help message")
-    ("xres", po::value<int>(&xres)->default_value(800), "x resolution")
-    ("yres", po::value<int>(&yres)->default_value(600), "y resolution")
-    ("cpus,c", po::value<int>(&cpus)->default_value(8), "number cpus")
-    ("out,o", po::value<std::string>(&outfile)->default_value(std::string("out.ray")), "output file")
-    ("random,r", po::value<bool>(&random)->implicit_value(false), "random trace order")
-    ;
+    desc.add_options()("help,h", "help message")("xres", po::value<int>(&xres)->default_value(800),
+                                                 "x resolution")(
+        "yres", po::value<int>(&yres)->default_value(600),
+        "y resolution")("cpus,c", po::value<int>(&cpus)->default_value(8), "number cpus")(
+        "out,o", po::value<std::string>(&outfile)->default_value(std::string("out.ray")),
+        "output file")("random,r", po::value<bool>(&random)->implicit_value(false),
+                       "random trace order");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -84,7 +83,7 @@ int main(int argc, char* argv[]) {
     printf("xres %d yres %d cpus %d\n", xres, yres, cpus);
     std::cout << "outfile " << outfile << std::endl;
 
-    auto *rs= new RenderSurfaceFile(xres, yres);
+    auto *rs = new RenderSurfaceFile(xres, yres);
 
     rs->OpenOutFile(outfile);
 
@@ -117,9 +116,9 @@ int main(int argc, char* argv[]) {
         delete t;
     }
 
-//  std::cout << "writing output file..." << std::flush;
-//  gRenderSurface->WriteTGAFile("foo.tga");
-//  std::cout << "done" << std::endl;
+    //  std::cout << "writing output file..." << std::flush;
+    //  gRenderSurface->WriteTGAFile("foo.tga");
+    //  std::cout << "done" << std::endl;
 
     std::cout << "shutting down" << std::endl;
 
@@ -129,4 +128,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-

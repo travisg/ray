@@ -20,35 +20,28 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <iostream>
 #include "RayFile.h"
+#include <iostream>
 
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include <fcntl.h>
 
+RayFile::RayFile() : m_fp(NULL), m_write(false), m_width(0), m_height(0) {}
 
-RayFile::RayFile()
-    :   m_fp(NULL),
-        m_write(false),
-        m_width(0),
-        m_height(0)
-{
-}
-
-RayFile::~RayFile()
-{
+RayFile::~RayFile() {
     Close();
 }
 
-int RayFile::Open(const std::string &name)
-{
-    if (m_fp)
+int RayFile::Open(const std::string &name) {
+    if (m_fp) {
         Close();
+    }
 
     m_fp = fopen(name.c_str(), "rb");
-    if (!m_fp)
+    if (!m_fp) {
         return -1;
+    }
 
     m_write = false;
 
@@ -67,19 +60,21 @@ int RayFile::Open(const std::string &name)
     m_width = header.width;
     m_height = header.height;
 
-//  std::cout << __PRETTY_FUNCTION__ << " width " << m_width << " height " << m_height << std::endl;
+    //  std::cout << __PRETTY_FUNCTION__ << " width " << m_width << " height " << m_height <<
+    //  std::endl;
 
     return 0;
 }
 
-int RayFile::OpenWrite(const std::string &name, uint32_t width, uint32_t height)
-{
-    if (m_fp)
+int RayFile::OpenWrite(const std::string &name, uint32_t width, uint32_t height) {
+    if (m_fp) {
         Close();
+    }
 
     m_fp = fopen(name.c_str(), "wb+");
-    if (!m_fp)
+    if (!m_fp) {
         return -1;
+    }
 
     m_write = true;
 
@@ -94,13 +89,13 @@ int RayFile::OpenWrite(const std::string &name, uint32_t width, uint32_t height)
 
     fwrite(&header, sizeof(header), 1, m_fp);
 
-//  std::cout << __PRETTY_FUNCTION__ << " width " << m_width << " height " << m_height << std::endl;
+    //  std::cout << __PRETTY_FUNCTION__ << " width " << m_width << " height " << m_height <<
+    //  std::endl;
 
     return 0;
 }
 
-void RayFile::Close()
-{
+void RayFile::Close() {
     if (m_fp) {
         if (m_write) {
             // write EOF token
@@ -114,8 +109,7 @@ void RayFile::Close()
     }
 }
 
-void RayFile::SetXY(int x, int y, colorf color)
-{
+void RayFile::SetXY(int x, int y, colorf color) {
     // write a pixel packet
     if (m_fp && m_write) {
         uint32_t type = TYPE_PIXEL;
@@ -132,9 +126,8 @@ void RayFile::SetXY(int x, int y, colorf color)
     }
 }
 
-void RayFile::SetXYRun(int x, int y, int count, const colorf *color)
-{
-//  std::cout << __PRETTY_FUNCTION__ << " " << x << " " << y << " " << count << std::endl;
+void RayFile::SetXYRun(int x, int y, int count, const colorf *color) {
+    //  std::cout << __PRETTY_FUNCTION__ << " " << x << " " << y << " " << count << std::endl;
     if (m_fp && m_write) {
         uint32_t type = TYPE_PIXEL_RUN;
 
@@ -159,9 +152,8 @@ void RayFile::SetXYRun(int x, int y, int count, const colorf *color)
     }
 }
 
-void RayFile::SetXYRun(int x, int y, int count, const float *color)
-{
-//  std::cout << __PRETTY_FUNCTION__ << " " << x << " " << y << " " << count << std::endl;
+void RayFile::SetXYRun(int x, int y, int count, const float *color) {
+    //  std::cout << __PRETTY_FUNCTION__ << " " << x << " " << y << " " << count << std::endl;
     if (m_fp && m_write) {
         uint32_t type = TYPE_PIXEL_RUN;
 
@@ -177,83 +169,88 @@ void RayFile::SetXYRun(int x, int y, int count, const float *color)
         float colors[3];
 
         for (int i = 0; i < count; i++) {
-            colors[0] = color[i*3];
-            colors[1] = color[i*3+1];
-            colors[2] = color[i*3+2];
+            colors[0] = color[i * 3];
+            colors[1] = color[i * 3 + 1];
+            colors[2] = color[i * 3 + 2];
             fwrite(colors, sizeof(colors), 1, m_fp);
         }
     }
 }
 
-static int ReadData(FILE *fp, void *_buf, size_t len)
-{
-    if (fread(_buf, len, 1, fp) < 1)
+static int ReadData(FILE *fp, void *_buf, size_t len) {
+    if (fread(_buf, len, 1, fp) < 1) {
         return -1;
+    }
 
     return len;
 }
 
-int RayFile::Parse(int (*callback)(RayFile &ray, void *, int x, int y, const float rgb[3]), void *arg)
-{
-    if (!m_fp || m_write)
+int RayFile::Parse(int (*callback)(RayFile &ray, void *, int x, int y, const float rgb[3]),
+                   void *arg) {
+    if (!m_fp || m_write) {
         return -1;
+    }
 
     for (;;) {
         uint32_t type;
 
-        if (ReadData(m_fp, &type, sizeof(type)) < 0)
+        if (ReadData(m_fp, &type, sizeof(type)) < 0) {
             goto done;
-//      printf("type %d\n", type);
+        }
+        //      printf("type %d\n", type);
 
         switch (type) {
             case TYPE_PIXEL: {
                 RayDataPixel pixel;
 
-                if (ReadData(m_fp, &pixel, sizeof(pixel)) < 0)
+                if (ReadData(m_fp, &pixel, sizeof(pixel)) < 0) {
                     goto done;
+                }
 
-//              printf("pixel data: x %d y %d, r %f g %f b %f\n", pixel.x, pixel.y, pixel.r, pixel.g, pixel.b);
+                //              printf("pixel data: x %d y %d, r %f g %f b %f\n", pixel.x, pixel.y,
+                //              pixel.r, pixel.g, pixel.b);
 
                 float rgb[3] = { pixel.r, pixel.g, pixel.b };
-                if (callback(*this, arg, pixel.x, pixel.y, rgb) < 0)
+                if (callback(*this, arg, pixel.x, pixel.y, rgb) < 0) {
                     return -1;
+                }
                 break;
             }
             case TYPE_PIXEL_RUN: {
                 RayDataPixelRun run;
 
-                if (ReadData(m_fp, &run, sizeof(run)) < 0)
+                if (ReadData(m_fp, &run, sizeof(run)) < 0) {
                     goto done;
+                }
 
-//              printf("pixel run data: x %d y %d, len %d\n", run.x, run.y, run.length);
+                //              printf("pixel run data: x %d y %d, len %d\n", run.x, run.y,
+                //              run.length);
 
                 for (unsigned int i = 0; i < run.length; i++) {
                     float c[3];
-                    if (ReadData(m_fp, &c, sizeof(c)) < 0)
+                    if (ReadData(m_fp, &c, sizeof(c)) < 0) {
                         goto done;
+                    }
 
-                    if (callback(*this, arg, run.x + i, run.y, c) < 0)
+                    if (callback(*this, arg, run.x + i, run.y, c) < 0) {
                         return -1;
+                    }
                 }
                 break;
             }
             case TYPE_EOF:
                 goto done;
             case TYPE_NULL:
-            default:
-                ;
+            default:;
         }
-
     }
 done:
     printf("hit EOF\n");
 
     return 0;
-
 }
 
-static int BufferCallback(RayFile &file, void *_buf, int x, int y, const float rgb[3])
-{
+static int BufferCallback(RayFile &file, void *_buf, int x, int y, const float rgb[3]) {
     float *buf = (float *)_buf;
 
     buf[(y * file.Width() + x) * 3] = rgb[0];
@@ -263,17 +260,16 @@ static int BufferCallback(RayFile &file, void *_buf, int x, int y, const float r
     return 0;
 }
 
-int RayFile::ReadIntoBuffer(float *buf)
-{
+int RayFile::ReadIntoBuffer(float *buf) {
     return Parse(&BufferCallback, (void *)buf);
 }
 
-int ReadIntoMmap(RayFile &file, const std::string &mmapfile, float **buf, uint64_t *len)
-{
+int ReadIntoMmap(RayFile &file, const std::string &mmapfile, float **buf, uint64_t *len) {
     // read in the input file into a memory mapped file
     int fd = open(mmapfile.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0644);
-    if (fd < 0)
+    if (fd < 0) {
         return -1;
+    }
 
     *len = file.GetPixelCount() * 3;
 
@@ -287,7 +283,7 @@ int ReadIntoMmap(RayFile &file, const std::string &mmapfile, float **buf, uint64
         goto err;
     }
 
-//  std::cout << "converting " << argv[1] << " to pure float array" << std::endl;
+    //  std::cout << "converting " << argv[1] << " to pure float array" << std::endl;
     if (file.ReadIntoBuffer(*buf) < 0) {
         goto err1;
     }
@@ -314,8 +310,7 @@ struct TGACallbackArgs {
     long lastOffset;
 };
 
-static int TGACallback(RayFile &file, void *_buf, int x, int y, const float rgb[3])
-{
+static int TGACallback(RayFile &file, void *_buf, int x, int y, const float rgb[3]) {
     TGACallbackArgs *args = (TGACallbackArgs *)_buf;
 
     long seekto = args->dataOffset + (y * file.Width() + x) * 3;
@@ -336,8 +331,7 @@ static int TGACallback(RayFile &file, void *_buf, int x, int y, const float rgb[
     return 0;
 }
 
-int ConvertToTGA(RayFile &file, const std::string &filename)
-{
+int ConvertToTGA(RayFile &file, const std::string &filename) {
     FILE *fp;
 
     fp = fopen(filename.c_str(), "w+");
@@ -374,7 +368,7 @@ int ConvertToTGA(RayFile &file, const std::string &filename)
     fwrite(&s, 2, 1, fp);
     b = 24; // bits per pixel - 24
     fwrite(&b, 1, 1, fp);
-    b = (1<<5); // descriptor bits - upper left
+    b = (1 << 5); // descriptor bits - upper left
     fwrite(&b, 1, 1, fp);
 
     TGACallbackArgs args;
@@ -389,5 +383,3 @@ int ConvertToTGA(RayFile &file, const std::string &filename)
 
     return 0;
 }
-
-

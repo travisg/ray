@@ -6,4 +6,3 @@
 int obj_load(FILE *infp, Geometry **new_geometry);
 
 #endif
-

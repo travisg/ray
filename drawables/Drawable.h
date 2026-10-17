@@ -29,24 +29,23 @@
 struct Ray;
 
 class Drawable {
-protected:
+  protected:
     Drawable();
 
-public:
+  public:
     virtual ~Drawable();
 
     virtual int Prepare() { return 0; }
 
     virtual bool Intersect(const Ray &ray) const = 0;
-    virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const = 0;
+    virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos,
+                           Libvec::Vector3d &normal) const = 0;
 
     void SetShader(ShaderPtr s) { m_Shader = s; }
     ShaderPtr GetShader() const { return m_Shader; }
 
-private:
+  private:
     ShaderPtr m_Shader;
 };
 
-
 #endif
-

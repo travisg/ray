@@ -22,47 +22,45 @@
  */
 #include <iostream>
 
-#include <Ray.h>
 #include "Triangle.h"
+#include <Ray.h>
 
 using Libvec::Vector3d;
 
 // http://graphics.stanford.edu/~mdfisher/Code/Engine/Intersect.cpp.html
 
-Triangle::Triangle(const Libvec::Vector3d &v0, const Libvec::Vector3d &v1, const Libvec::Vector3d &v2)
-{
+Triangle::Triangle(const Libvec::Vector3d &v0, const Libvec::Vector3d &v1,
+                   const Libvec::Vector3d &v2) {
     m_v[0] = v0;
     m_v[1] = v1;
     m_v[2] = v2;
 
-    m_normal = Cross(v1 - v0,  v2 - v0);
+    m_normal = Cross(v1 - v0, v2 - v0);
     m_normal.Normalize();
 
     std::cout << "Triangle: normal " << v0 << " " << m_normal << std::endl;
 }
 
-Triangle::~Triangle()
-{
-}
+Triangle::~Triangle() {}
 
-bool Triangle::Intersect(const Ray &ray) const
-{
-//  std::cout << ray.dir << std::endl;
+bool Triangle::Intersect(const Ray &ray) const {
+    //  std::cout << ray.dir << std::endl;
     Vector3d dir = ray.dir;
     dir.Normalize();
 
-    if (Dot(dir, m_normal) > 0.0)
+    if (Dot(dir, m_normal) > 0.0) {
         return false;
+    }
 
-//  std::cout << "intersected" << std::endl;
+    //  std::cout << "intersected" << std::endl;
 
     return true;
 }
 
-bool Triangle::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const
-{
-    if (!Intersect(ray))
+bool Triangle::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const {
+    if (!Intersect(ray)) {
         return false;
+    }
 
     // t = ((P - P0) . N) / (V . N)
     // P = P0 + tV
@@ -73,7 +71,8 @@ bool Triangle::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const
     pos = ray.origin + ray.dir * t;
     normal = m_normal;
 
-    // it intersects the plane the triangle is in, now calc the u/v coordinates and see if it's in the triangle
+    // it intersects the plane the triangle is in, now calc the u/v coordinates and see if it's in
+    // the triangle
     float uu, uv, vv, wu, wv, D;
 
     Vector3d u = m_v[1] - m_v[0];
@@ -89,7 +88,7 @@ bool Triangle::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const
 
     // get and test parametric coords
     double s = (uv * wv - vv * wu) * D;
-    if (s < 0.0f || s > 1.0f) {      // I is outside T
+    if (s < 0.0f || s > 1.0f) { // I is outside T
         return false;
     }
     t = (uv * wu - uu * wv) * D;
@@ -97,8 +96,7 @@ bool Triangle::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const
         return false;
     }
 
-//  std::cout << "s " << s << " t " << t << std::endl;
+    //  std::cout << "s " << s << " t " << t << std::endl;
 
     return true;
 }
-

@@ -23,10 +23,10 @@
 #ifndef __RAYFILE_H
 #define __RAYFILE_H
 
+#include "Color.h"
 #include <cstdint>
 #include <cstdio>
 #include <string>
-#include "Color.h"
 
 // 'RAY1' stored little-endian: the file starts with the bytes 31 59 41 52.
 constexpr uint32_t kRayHeaderMagic = 0x52415931;
@@ -57,10 +57,11 @@ struct RayDataPixelRun {
     uint32_t length;
 };
 
-static_assert(sizeof(RayHeader) == 12 && sizeof(RayDataPixel) == 20 && sizeof(RayDataPixelRun) == 12);
+static_assert(sizeof(RayHeader) == 12 && sizeof(RayDataPixel) == 20 &&
+              sizeof(RayDataPixelRun) == 12);
 
 class RayFile {
-public:
+  public:
     RayFile();
     ~RayFile();
 
@@ -86,8 +87,7 @@ public:
     /* read the file in, parsing it, calling back on every pixel */
     int Parse(int (*callback)(RayFile &, void *, int x, int y, const float rgb[3]), void *arg);
 
-
-private:
+  private:
     FILE *m_fp;
     bool m_write;
     uint32_t m_width, m_height;

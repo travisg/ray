@@ -36,7 +36,7 @@ typedef std::vector<SurfaceIndex>::iterator SurfaceIndexListIterator;
 typedef std::vector<SurfaceIndex>::const_iterator SurfaceIndexListIteratorConst;
 
 class Surface {
-public:
+  public:
     void AddIndex(int posIndex, int normIndex, int uvIndex);
 
     SurfaceIndexList m_Indexes;

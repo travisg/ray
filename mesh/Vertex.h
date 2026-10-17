@@ -26,7 +26,7 @@
 #include <vector>
 
 class Vertex {
-public:
+  public:
     Vertex() {}
     ~Vertex() {}
     Vertex(float inx, float iny, float inz, float inw) : x(inx), y(iny), z(inz), w(inw) {}

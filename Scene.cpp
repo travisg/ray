@@ -20,25 +20,24 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <cstdio>
-#include <iostream>
-#include <vector>
 #include <Scene.h>
-#include <libvec/Vector3.h>
-#include <libvec/Random.h>
-#include <drawables/Sphere.h>
-#include <drawables/Plane.h>
-#include <drawables/Triangle.h>
+#include <cstdio>
 #include <drawables/Mesh.h>
-#include <shaders/DefaultShader.h>
-#include <shaders/DebugShader.h>
+#include <drawables/Plane.h>
+#include <drawables/Sphere.h>
+#include <drawables/Triangle.h>
+#include <iostream>
+#include <libvec/Random.h>
+#include <libvec/Vector3.h>
 #include <lights/SimpleLight.h>
 #include <mesh/OBJLoader.h>
+#include <shaders/DebugShader.h>
+#include <shaders/DefaultShader.h>
+#include <vector>
 
 using Libvec::Vector3d;
 
-static MeshDrawable *LoadMesh(const std::string &filename)
-{
+static MeshDrawable *LoadMesh(const std::string &filename) {
     Geometry *g;
     std::cout << "loading " << filename << std::endl;
     FILE *fp = fopen(filename.c_str(), "r");
@@ -62,10 +61,7 @@ static MeshDrawable *LoadMesh(const std::string &filename)
     return md;
 }
 
-
-Scene::Scene()
-    :   m_AmbientLight(0)
-{
+Scene::Scene() : m_AmbientLight(0) {
 #if 0
 #if 1
     for (int i=0; i < 100; i++) {
@@ -154,10 +150,12 @@ Scene::Scene()
         m_DrawableList.push_back(p);
     }
 
-//  m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0, 1.0, 100.0), colorf(1.0, 0.0, 0.0), 100));
-//  m_SimpleLightList.push_back(new SimpleLight(Vector3d(100.0, 1.0, 5.0), colorf(0.0, 1.0, 0.0), 100));
-//  m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0, 100.0, 5.0), colorf(0.0, 0.0, 1.0), 100));
-    m_SimpleLightList.push_back(new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
+    //  m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0, 1.0, 100.0), colorf(1.0, 0.0,
+    //  0.0), 100)); m_SimpleLightList.push_back(new SimpleLight(Vector3d(100.0, 1.0, 5.0),
+    //  colorf(0.0, 1.0, 0.0), 100)); m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0,
+    //  100.0, 5.0), colorf(0.0, 0.0, 1.0), 100));
+    m_SimpleLightList.push_back(
+        new SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
 #endif
 
 #if 0
@@ -203,8 +201,8 @@ Scene::Scene()
         DefaultShader *ds = new DefaultShader;
         ds->SetDiffuseColor(colorf(1.0, 1.0, 0.0));
         ds->SetShinyness(0.0f);
-//          DebugShader *ds = new DebugShader;
-//          ds->SetMode(DebugShader::MODE_NORMAL);
+        //          DebugShader *ds = new DebugShader;
+        //          ds->SetMode(DebugShader::MODE_NORMAL);
         md->SetShader(ShaderPtr(ds));
         md->Prepare();
         m_DrawableList.push_back(md);
@@ -245,17 +243,18 @@ Scene::Scene()
         m_DrawableList.push_back(md);
     }
 
-  m_SimpleLightList.push_back(new SimpleLight(Vector3d(0.0, 0.0, 20), colorf(1.0, 1.0, 1.0), 100));
+    m_SimpleLightList.push_back(
+        new SimpleLight(Vector3d(0.0, 0.0, 20), colorf(1.0, 1.0, 1.0), 100));
 
-//    m_Camera = Libvec::Vector3d(2.0f, 2.0f, 2.0f);
-//  m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0f, 4.0f, 7.0f), colorf(0.5, 1.0, 0.5), 100));
-  m_Camera = Libvec::Vector3d(20.0f, 20.0f, 20.0f);
+    //    m_Camera = Libvec::Vector3d(2.0f, 2.0f, 2.0f);
+    //  m_SimpleLightList.push_back(new SimpleLight(Vector3d(1.0f, 4.0f, 7.0f), colorf(0.5, 1.0,
+    //  0.5), 100));
+    m_Camera = Libvec::Vector3d(20.0f, 20.0f, 20.0f);
 
     m_Target = Libvec::Vector3d(0.0f, 0.0f, 0.0f);
 }
 
-Scene::~Scene()
-{
+Scene::~Scene() {
     // empty our lists
     while (!m_DrawableList.empty()) {
         Drawable *d = m_DrawableList.back();
@@ -270,20 +269,21 @@ Scene::~Scene()
     }
 }
 
-const Drawable *Scene::Intersect(const Ray &ray)
-{
+const Drawable *Scene::Intersect(const Ray &ray) {
     bool hit = false;
     Vector3d closestPos = 0;
     Drawable *closest = NULL;
 
-    for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin(); i != m_DrawableList.end(); i++) {
+    for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin();
+         i != m_DrawableList.end(); i++) {
         Drawable *d = *i;
 
         Vector3d pos;
         Vector3d normal;
         if (d->Intersect(ray, pos, normal)) {
-//              std::cout << "collision ray " << ray << " pos " << pos << std::endl;
-            if (!hit || (pos - ray.origin).LengthSquared() < (closestPos - ray.origin).LengthSquared()) {
+            //              std::cout << "collision ray " << ray << " pos " << pos << std::endl;
+            if (!hit ||
+                (pos - ray.origin).LengthSquared() < (closestPos - ray.origin).LengthSquared()) {
                 closestPos = pos;
                 closest = d;
             }
@@ -291,15 +291,16 @@ const Drawable *Scene::Intersect(const Ray &ray)
         }
     }
 
-    if (hit)
+    if (hit) {
         return closest;
+    }
 
     return NULL;
 }
 
-bool Scene::DoesIntersect(const Ray &ray)
-{
-    for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin(); i != m_DrawableList.end(); i++) {
+bool Scene::DoesIntersect(const Ray &ray) {
+    for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin();
+         i != m_DrawableList.end(); i++) {
         Drawable *d = *i;
 
         if (d->Intersect(ray)) {
@@ -310,19 +311,19 @@ bool Scene::DoesIntersect(const Ray &ray)
     return false;
 }
 
-bool Scene::DoesIntersect(const Ray &ray, double maxDistance)
-{
-    for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin(); i != m_DrawableList.end(); i++) {
+bool Scene::DoesIntersect(const Ray &ray, double maxDistance) {
+    for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin();
+         i != m_DrawableList.end(); i++) {
         Drawable *d = *i;
 
         Vector3d pos;
         Vector3d normal;
         if (d->Intersect(ray, pos, normal)) {
-            if ((ray.origin - pos).Length() < maxDistance)
+            if ((ray.origin - pos).Length() < maxDistance) {
                 return true;
+            }
         }
     }
 
     return false;
 }
-

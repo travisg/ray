@@ -23,16 +23,16 @@
 #ifndef __SCENE_H
 #define __SCENE_H
 
-#include <vector>
 #include "Color.h"
 #include <libvec/Vector3.h>
+#include <vector>
 
 class Drawable;
 struct Ray;
 class SimpleLight;
 
 class Scene {
-public:
+  public:
     Scene();
     virtual ~Scene();
 
@@ -46,8 +46,9 @@ public:
     const Libvec::Vector3d &GetCamera() const { return m_Camera; }
     const Libvec::Vector3d &GetTarget() const { return m_Target; }
 
-private:
-    std::vector<Drawable *> m_DrawableList;;
+  private:
+    std::vector<Drawable *> m_DrawableList;
+    ;
     std::vector<SimpleLight *> m_SimpleLightList;
     colorf m_AmbientLight;
 
@@ -55,6 +56,4 @@ private:
     Libvec::Vector3d m_Target;
 };
 
-
 #endif
-

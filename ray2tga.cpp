@@ -20,25 +20,23 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <iostream>
-#include <inttypes.h>
 #include "RayFile.h"
+#include <inttypes.h>
+#include <iostream>
 
-#include <unistd.h>
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/types.h>
-#include <string.h>
-#include <stdlib.h>
+#include <unistd.h>
 
-static void usage(char **argv)
-{
+static void usage(char **argv) {
     fprintf(stderr, "usage: %s <input file> <output file>\n", argv[0]);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     if (argc < 3) {
         usage(argv);
         exit(1);

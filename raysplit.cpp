@@ -20,25 +20,23 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <iostream>
-#include <inttypes.h>
 #include "RayFile.h"
+#include <inttypes.h>
+#include <iostream>
 
-#include <unistd.h>
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/types.h>
-#include <string.h>
-#include <stdlib.h>
+#include <unistd.h>
 
-static void usage(char **argv)
-{
+static void usage(char **argv) {
     fprintf(stderr, "usage: %s <input file> <x> <y>\n", argv[0]);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     if (argc < 4) {
         usage(argv);
         exit(1);
@@ -79,15 +77,17 @@ int main(int argc, char **argv)
     for (uint32_t y = 0; y < file.Height(); y += sizey) {
         // see how much we can actually do in this chunk
         uint32_t runy = sizey;
-        if (y + runy > file.Height())
+        if (y + runy > file.Height()) {
             runy = file.Height() - y;
+        }
         for (uint32_t x = 0; x < file.Width(); x += sizex) {
             RayFile outfile;
 
             // how much X can we actually do?
             uint32_t runx = sizex;
-            if (x + runx > file.Width())
+            if (x + runx > file.Width()) {
                 runx = file.Width() - x;
+            }
 
             char name[512];
             snprintf(name, sizeof(name), "%s-%d.%d", outname.c_str(), x, y);
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
             outfile.OpenWrite(name, runx, runy);
 
             for (uint32_t y1 = y; y1 < y + runy; y1++) {
-//              printf("setxyrun %d %d %d\n", x, y1, runx);
+                //              printf("setxyrun %d %d %d\n", x, y1, runx);
                 outfile.SetXYRun(0, y1 - y, runx, &buf[(y1 * file.Width() + x) * 3]);
             }
             outfile.Close();

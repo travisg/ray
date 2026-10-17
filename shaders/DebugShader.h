@@ -23,11 +23,11 @@
 #ifndef __DEBUG_SHADER_H
 #define __DEBUG_SHADER_H
 
-#include "Shader.h"
 #include "Color.h"
+#include "Shader.h"
 
 class DebugShader : public Shader {
-public:
+  public:
     DebugShader();
     virtual ~DebugShader();
 
@@ -39,9 +39,8 @@ public:
     };
     void SetMode(DebugMode _mode) { mode = _mode; }
 
-private:
+  private:
     DebugMode mode;
 };
 
 #endif
-

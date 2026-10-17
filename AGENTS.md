@@ -27,8 +27,9 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
   macOS: `-DCMAKE_PREFIX_PATH=/opt/local` or `/opt/homebrew` if SDL2 isn't found.
 - `libvec` is a symlink to `../libvec`, a sibling checkout with its own git repo.
   The build fails without it. Don't edit it from here unless the task is about it.
-- Formatting: `./codestyle <files>` runs astyle (4-space indent, `-A4`). Match
-  the existing style by hand if astyle is missing.
+- Formatting: `./codestyle <files>` runs `clang-format -i` with the repo's
+  `.clang-format` (LLVM base, 4-space indent, attached braces, braces on every
+  `if`/`for` body, 100 columns, sorted includes).
 
 ## Run
 

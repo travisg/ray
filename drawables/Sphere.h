@@ -23,12 +23,12 @@
 #ifndef __SPHERE_H
 #define __SPHERE_H
 
-#include <libvec/Vector3.h>
 #include <Ray.h>
 #include <drawables/Drawable.h>
+#include <libvec/Vector3.h>
 
 class Sphere : public Drawable {
-public:
+  public:
     Sphere(const Libvec::Vector3d &pos, double radius);
     virtual ~Sphere();
 
@@ -38,10 +38,9 @@ public:
     virtual bool Intersect(const Ray &ray) const;
     virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const;
 
-private:
+  private:
     Libvec::Vector3d m_Center;
     double m_Radius;
 };
 
 #endif
-

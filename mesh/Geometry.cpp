@@ -20,49 +20,38 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <iostream>
 #include "Geometry.h"
+#include <iostream>
 
-Geometry::Geometry()
-{
-}
+Geometry::Geometry() {}
 
-Geometry::~Geometry()
-{
-}
+Geometry::~Geometry() {}
 
-void Geometry::AddMesh(Mesh *m)
-{
+void Geometry::AddMesh(Mesh *m) {
     m_Meshes.push_back(m);
 }
 
-void Geometry::AddVert(const Vertex &v)
-{
+void Geometry::AddVert(const Vertex &v) {
     m_Verts.push_back(v);
 }
 
-void Geometry::AddNormalVert(const Vertex &v)
-{
+void Geometry::AddNormalVert(const Vertex &v) {
     m_NormalVerts.push_back(v);
 }
 
-void Geometry::AddTangentVert(const Vertex &v)
-{
+void Geometry::AddTangentVert(const Vertex &v) {
     m_TangentVerts.push_back(v);
 }
 
-void Geometry::AddUVVert(const Vertex &v)
-{
+void Geometry::AddUVVert(const Vertex &v) {
     m_UVVerts.push_back(v);
 }
 
-Mesh *Geometry::CreateMesh()
-{
+Mesh *Geometry::CreateMesh() {
     return new Mesh(m_Verts, m_NormalVerts, m_TangentVerts, m_UVVerts);
 }
 
-void Geometry::Dump() const
-{
+void Geometry::Dump() const {
     std::cout << "Geometry at " << (void *)this << std::endl;
 
     std::cout << "\t" << m_Meshes.size() << " meshes" << std::endl;

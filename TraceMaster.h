@@ -24,12 +24,16 @@
 #define __TRACEMASTER_H
 
 #include <RenderSurface.h>
-#include <mutex>
 #include <condition_variable>
+#include <mutex>
 
 struct TraceWorkUnit {
     TraceWorkUnit() : startx(0), starty(0), endx(0), endy(0), result(0) {}
-    ~TraceWorkUnit() { if (result) delete[] result; }
+    ~TraceWorkUnit() {
+        if (result) {
+            delete[] result;
+        }
+    }
 
     int startx, starty;
     int endx, endy;
@@ -38,19 +42,15 @@ struct TraceWorkUnit {
     colorf *result;
 
     /* some accessors */
-    void SetResult(int x, int y, colorf c) {
-        result[(y - starty) * Width() + (x - startx)] = c;
-    }
-    colorf GetResult(int x, int y) {
-        return result[(y - starty) * Width() + (x - startx)];
-    }
+    void SetResult(int x, int y, colorf c) { result[(y - starty) * Width() + (x - startx)] = c; }
+    colorf GetResult(int x, int y) { return result[(y - starty) * Width() + (x - startx)]; }
 
     int Width() const { return endx + 1 - startx; }
     int Height() const { return endy + 1 - starty; }
 };
 
 class TraceMaster {
-public:
+  public:
     TraceMaster(RenderSurface &surface);
     virtual ~TraceMaster();
 
@@ -59,14 +59,14 @@ public:
 
     void WaitForDone();
 
-protected:
+  protected:
     bool Isdone() const { return m_Done; }
     void SetDone();
     RenderSurface &GetSurface() { return m_Surface; }
 
     std::mutex m_Lock;
 
-private:
+  private:
     std::condition_variable m_DoneCond;
 
     RenderSurface &m_Surface;
@@ -75,34 +75,31 @@ private:
 
 // simple tracemaster that breaks the work into chunks and hands them out in order
 class TraceMasterSimple : public TraceMaster {
-public:
+  public:
     TraceMasterSimple(RenderSurface &surface);
     virtual ~TraceMasterSimple();
 
     virtual int GetWorkUnit(TraceWorkUnit &);
     virtual int ReturnWorkUnit(TraceWorkUnit &);
 
-private:
+  private:
     int m_Nextx, m_Nexty;
     bool m_IssuedLast;
     int m_PendingCount;
 };
 
 class TraceMasterRandom : public TraceMaster {
-public:
+  public:
     TraceMasterRandom(RenderSurface &surface);
     virtual ~TraceMasterRandom();
 
     virtual int GetWorkUnit(TraceWorkUnit &);
     virtual int ReturnWorkUnit(TraceWorkUnit &);
 
-private:
+  private:
     bool *m_Bitmap;
     int m_Count;
     int m_PendingCount;
 };
 
-
-
 #endif
-

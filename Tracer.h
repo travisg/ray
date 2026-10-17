@@ -23,22 +23,22 @@
 #ifndef __TRACER_H
 #define __TRACER_H
 
-#include <RenderSurface.h>
-#include <libvec/Vector3.h>
 #include <Ray.h>
+#include <RenderSurface.h>
 #include <TraceMaster.h>
+#include <libvec/Vector3.h>
 
 class Scene;
 
 class Tracer {
-public:
+  public:
     Tracer(RenderSurface &surface, Scene &scene, TraceMaster &master);
     virtual ~Tracer();
 
     void Trace();
     bool Cast(colorf &color, const Ray &ray);
 
-private:
+  private:
     RenderSurface &m_Surface;
 
     Scene &m_Scene;
@@ -50,4 +50,3 @@ private:
 };
 
 #endif
-

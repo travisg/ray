@@ -20,30 +20,22 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+#include "TraceMaster.h"
 #include <iostream>
 #include <mutex>
-#include "TraceMaster.h"
 
 #define WORKUNITSIZE 16
 
-TraceMaster::TraceMaster(RenderSurface &surface)
-    :   m_Surface(surface),
-        m_Done(false)
-{
-}
+TraceMaster::TraceMaster(RenderSurface &surface) : m_Surface(surface), m_Done(false) {}
 
-TraceMaster::~TraceMaster()
-{
-}
+TraceMaster::~TraceMaster() {}
 
-void TraceMaster::SetDone()
-{
+void TraceMaster::SetDone() {
     m_Done = true;
     m_DoneCond.notify_all();
 }
 
-void TraceMaster::WaitForDone()
-{
+void TraceMaster::WaitForDone() {
     std::unique_lock<std::mutex> lock(m_Lock);
     while (!m_Done) {
         m_DoneCond.wait(lock);
@@ -52,22 +44,14 @@ void TraceMaster::WaitForDone()
 
 // simple tracer
 TraceMasterSimple::TraceMasterSimple(RenderSurface &surface)
-    :   TraceMaster(surface),
-        m_Nextx(0),
-        m_Nexty(0),
-        m_IssuedLast(false),
-        m_PendingCount(0)
-{
-}
+    : TraceMaster(surface), m_Nextx(0), m_Nexty(0), m_IssuedLast(false), m_PendingCount(0) {}
 
-TraceMasterSimple::~TraceMasterSimple()
-{
-}
+TraceMasterSimple::~TraceMasterSimple() {}
 
-int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit)
-{
-    if (m_IssuedLast)
+int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit) {
+    if (m_IssuedLast) {
         return -1;
+    }
 
     RenderSurface &surface = GetSurface();
 
@@ -92,8 +76,9 @@ int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit)
             m_Nexty += WORKUNITSIZE;
         }
 
-        if (m_Nexty >= surface.Height())
+        if (m_Nexty >= surface.Height()) {
             m_IssuedLast = true;
+        }
     }
 
     /* trim the result */
@@ -110,20 +95,21 @@ int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit)
         unit.result = 0;
     }
 
-    if (!unit.result)
+    if (!unit.result) {
         unit.result = new colorf[WORKUNITSIZE * WORKUNITSIZE];
+    }
 
     return 0;
 }
 
-int TraceMasterSimple::ReturnWorkUnit(TraceWorkUnit &unit)
-{
+int TraceMasterSimple::ReturnWorkUnit(TraceWorkUnit &unit) {
     colorf *c = unit.result;
 
     {
         std::lock_guard<std::mutex> guard(m_Lock);
 
-//      std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << " " << unit.endy << std::endl;
+        //      std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << "
+        //      " << unit.endy << std::endl;
         for (int y = unit.starty; y <= unit.endy; y++) {
             int runlen = unit.endx + 1 - unit.startx;
             GetSurface().SetXYRun(unit.startx, y, runlen, c);
@@ -131,8 +117,9 @@ int TraceMasterSimple::ReturnWorkUnit(TraceWorkUnit &unit)
         }
 
         m_PendingCount--;
-        if (m_IssuedLast && m_PendingCount == 0)
+        if (m_IssuedLast && m_PendingCount == 0) {
             SetDone();
+        }
     }
 
     return 0;
@@ -144,38 +131,38 @@ inline int roundup(int x, int roundto) {
 
 // random Tracer
 TraceMasterRandom::TraceMasterRandom(RenderSurface &surface)
-    :   TraceMaster(surface),
-        m_PendingCount(0)
-{
-    m_Count = (roundup(surface.Width(), WORKUNITSIZE) * roundup(surface.Height(), WORKUNITSIZE)) / (WORKUNITSIZE * WORKUNITSIZE);
+    : TraceMaster(surface), m_PendingCount(0) {
+    m_Count = (roundup(surface.Width(), WORKUNITSIZE) * roundup(surface.Height(), WORKUNITSIZE)) /
+              (WORKUNITSIZE * WORKUNITSIZE);
     m_Bitmap = new bool[m_Count];
 
-    for (int i = 0; i < m_Count; i++)
+    for (int i = 0; i < m_Count; i++) {
         m_Bitmap[i] = false;
+    }
 }
 
-TraceMasterRandom::~TraceMasterRandom()
-{
+TraceMasterRandom::~TraceMasterRandom() {
     delete[] m_Bitmap;
 }
 
-int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit)
-{
+int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit) {
     RenderSurface &surface = GetSurface();
 
     {
         std::lock_guard<std::mutex> guard(m_Lock);
 
-        if (m_Count == 0)
+        if (m_Count == 0) {
             return -1;
+        }
 
         for (;;) {
             unsigned int x = (lrand48() % surface.Width()) / WORKUNITSIZE;
             unsigned int y = (lrand48() % surface.Height()) / WORKUNITSIZE;
 
-            //printf("trying with x %u y %u\n", x, y);
+            // printf("trying with x %u y %u\n", x, y);
 
-            if (m_Bitmap[y * (roundup(surface.Width(), WORKUNITSIZE) / WORKUNITSIZE) + x] == false) {
+            if (m_Bitmap[y * (roundup(surface.Width(), WORKUNITSIZE) / WORKUNITSIZE) + x] ==
+                false) {
                 m_Bitmap[y * (roundup(surface.Width(), WORKUNITSIZE) / WORKUNITSIZE) + x] = true;
                 m_Count--;
 
@@ -200,22 +187,22 @@ int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit)
     }
 
     /* allocate a new result array */
-    if (unit.result)
+    if (unit.result) {
         delete[] unit.result;
+    }
     unit.result = new colorf[WORKUNITSIZE * WORKUNITSIZE];
 
     return 0;
 }
 
-
-int TraceMasterRandom::ReturnWorkUnit(TraceWorkUnit &unit)
-{
+int TraceMasterRandom::ReturnWorkUnit(TraceWorkUnit &unit) {
     colorf *c = unit.result;
 
     {
         std::lock_guard<std::mutex> guard(m_Lock);
 
-        //std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << " " << unit.endy << std::endl;
+        // std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << " " <<
+        // unit.endy << std::endl;
         for (int y = unit.starty; y <= unit.endy; y++) {
             int runlen = unit.endx + 1 - unit.startx;
             GetSurface().SetXYRun(unit.startx, y, runlen, c);
@@ -223,12 +210,11 @@ int TraceMasterRandom::ReturnWorkUnit(TraceWorkUnit &unit)
         }
 
         m_PendingCount--;
-        //printf("count %d pendingcount %d\n", m_Count, m_PendingCount);
-        if (m_Count == 0 && m_PendingCount == 0)
+        // printf("count %d pendingcount %d\n", m_Count, m_PendingCount);
+        if (m_Count == 0 && m_PendingCount == 0) {
             SetDone();
+        }
     }
 
     return 0;
 }
-
-

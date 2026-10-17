@@ -26,8 +26,8 @@
 #include <math.h>
 #include <vector>
 
-#include <Scene.h>
 #include <Ray.h>
+#include <Scene.h>
 #include <Tracer.h>
 #include <drawables/Sphere.h>
 
@@ -36,21 +36,14 @@
 using Libvec::Vector3d;
 
 Tracer::Tracer(RenderSurface &surface, Scene &scene, TraceMaster &tracemaster)
-    :   m_Surface(surface),
-        m_Scene(scene),
-        m_Master(tracemaster),
-        m_Depth(0)
-{
-}
+    : m_Surface(surface), m_Scene(scene), m_Master(tracemaster), m_Depth(0) {}
 
-Tracer::~Tracer()
-{
-}
+Tracer::~Tracer() {}
 
-bool Tracer::Cast(colorf &color, const Ray &ray)
-{
-    if (m_Depth == kMaxTraceDepth)
+bool Tracer::Cast(colorf &color, const Ray &ray) {
+    if (m_Depth == kMaxTraceDepth) {
         return false;
+    }
 
     // tell the scene graph to find an object to intersect
     const Drawable *d = m_Scene.Intersect(ray);
@@ -85,13 +78,12 @@ bool Tracer::Cast(colorf &color, const Ray &ray)
     return false;
 }
 
-void Tracer::Trace()
-{
+void Tracer::Trace() {
     int width = m_Surface.Width();
     int height = m_Surface.Height();
 
-//  std::cout << "Camera " << m_Camera << std::endl;
-//  std::cout << "Target " << m_Target << std::endl;
+    //  std::cout << "Camera " << m_Camera << std::endl;
+    //  std::cout << "Target " << m_Target << std::endl;
 
     Libvec::Vector3d target = m_Scene.GetTarget();
     target -= m_Scene.GetCamera();
@@ -100,11 +92,11 @@ void Tracer::Trace()
 
     Vector3d lin = target - m_Scene.GetCamera();
 
-//  std::cout << "Lin " << lin << std::endl;
+    //  std::cout << "Lin " << lin << std::endl;
 
-//  int multisample = 1;
-    float pixpitch = 2.0/width;
-//  float subpitch = pixpitch / ((float)multisample + 1.0);
+    //  int multisample = 1;
+    float pixpitch = 2.0 / width;
+    //  float subpitch = pixpitch / ((float)multisample + 1.0);
 
     TraceWorkUnit unit;
     while (m_Master.GetWorkUnit(unit) >= 0) {
@@ -143,4 +135,3 @@ void Tracer::Trace()
 
     std::cout << "end trace" << std::endl;
 }
-

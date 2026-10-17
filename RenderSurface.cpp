@@ -20,39 +20,28 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <cstdio>
-#include <iostream>
 #include <RenderSurface.h>
+#include <cstdio>
 #include <inttypes.h>
+#include <iostream>
 
 #include <RayFile.h>
 
-RenderSurface::RenderSurface(int width, int height)
-    :   m_Width(width),
-        m_Height(height)
-{
-}
+RenderSurface::RenderSurface(int width, int height) : m_Width(width), m_Height(height) {}
 
-RenderSurface::~RenderSurface()
-{
-}
+RenderSurface::~RenderSurface() {}
 
 RenderSurfaceFile::RenderSurfaceFile(int width, int height)
-    :   RenderSurface(width, height),
-        m_file(NULL)
-{
-}
+    : RenderSurface(width, height), m_file(NULL) {}
 
-RenderSurfaceFile::~RenderSurfaceFile()
-{
+RenderSurfaceFile::~RenderSurfaceFile() {
     if (m_file) {
         m_file->Close();
         delete m_file;
     }
 }
 
-int RenderSurfaceFile::OpenOutFile(const std::string &name)
-{
+int RenderSurfaceFile::OpenOutFile(const std::string &name) {
     if (m_file) {
         m_file->Close();
         delete m_file;
@@ -62,14 +51,14 @@ int RenderSurfaceFile::OpenOutFile(const std::string &name)
     return m_file->OpenWrite(name, Width(), Height());
 }
 
-void RenderSurfaceFile::SetXY(int x, int y, colorf color)
-{
-    if (m_file)
+void RenderSurfaceFile::SetXY(int x, int y, colorf color) {
+    if (m_file) {
         m_file->SetXY(x, y, color);
+    }
 }
 
-void RenderSurfaceFile::SetXYRun(int x, int y, int count, const colorf *color)
-{
-    if (m_file)
+void RenderSurfaceFile::SetXYRun(int x, int y, int count, const colorf *color) {
+    if (m_file) {
         m_file->SetXYRun(x, y, count, color);
+    }
 }

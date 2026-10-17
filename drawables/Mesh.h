@@ -23,16 +23,16 @@
 #ifndef __DRAWABLE_MESH_H
 #define __DRAWABLE_MESH_H
 
-#include <libvec/Vector3.h>
-#include <Ray.h>
 #include <BoundingSphere.h>
+#include <Ray.h>
 #include <drawables/Drawable.h>
+#include <libvec/Vector3.h>
 #include <memory>
 
 class Geometry;
 
 class MeshDrawable : public Drawable {
-public:
+  public:
     MeshDrawable(std::shared_ptr<Geometry>);
     virtual ~MeshDrawable();
 
@@ -41,11 +41,10 @@ public:
     virtual bool Intersect(const Ray &ray) const;
     virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const;
 
-private:
+  private:
     std::shared_ptr<Geometry> m_Geom;
 
     BoundingSphere m_BSphere;
 };
 
 #endif
-

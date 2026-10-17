@@ -22,26 +22,20 @@
  */
 #include <iostream>
 
-#include <Scene.h>
+#include "DebugShader.h"
 #include <Ray.h>
+#include <Scene.h>
 #include <Tracer.h>
 #include <lights/SimpleLight.h>
-#include "DebugShader.h"
 
 using Libvec::Vector3d;
 
-DebugShader::DebugShader()
-    :   mode(MODE_NORMAL)
-{
-}
+DebugShader::DebugShader() : mode(MODE_NORMAL) {}
 
-DebugShader::~DebugShader()
-{
-}
+DebugShader::~DebugShader() {}
 
-colorf DebugShader::Run(const ShaderArgs &args)
-{
-//  std::cout << "DebugShader Run" << std::endl;
+colorf DebugShader::Run(const ShaderArgs &args) {
+    //  std::cout << "DebugShader Run" << std::endl;
 
     colorf color;
     switch (mode) {
@@ -55,8 +49,6 @@ colorf DebugShader::Run(const ShaderArgs &args)
             color = 0;
     }
 
-
-//  std::cout << "debug shader color " << color << std::endl;
+    //  std::cout << "debug shader color " << color << std::endl;
     return color;
 }
-

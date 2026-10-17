@@ -21,14 +21,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "default_shader.h"
-#include <ray.h>
-#include <scene.h>
-#include <tracer.h>
 #include <algorithm>
 #include <lights/simple_light.h>
 #include <optional>
+#include <ray.h>
+#include <scene.h>
+#include <tracer.h>
 
-using Libvec::Vector3d;
+using libvec::vector3d;
 
 namespace {
 
@@ -37,32 +37,32 @@ constexpr double kBias = 0.001;
 
 } // namespace
 
-colorf DefaultShader::Run(const ShaderArgs &args) const {
-    const Hit &hit = args.hit;
-    const Vector3d origin = hit.pos + hit.normal * kBias;
-    colorf color = args.scene.GetAmbientLight();
+colorf default_shader::run(const shader_args &args) const {
+    const hit &h = args.hit;
+    const vector3d origin = h.pos + h.normal * kBias;
+    colorf color = args.scene.ambient_light();
 
-    for (const SimpleLight &l : args.scene.GetLightList()) {
+    for (const simple_light &l : args.scene.lights()) {
         // shadow ray toward the light
-        Vector3d tolight = l.GetPos() - origin;
-        const double distance = tolight.Length();
-        tolight.Normalize();
-        if (args.scene.DoesIntersect(Ray(origin, tolight), distance)) {
+        vector3d tolight = l.position() - origin;
+        const double distance = tolight.length();
+        tolight.normalize();
+        if (args.scene.does_intersect(ray(origin, tolight), distance)) {
             continue;
         }
 
-        const double diffuse = std::max(0.0, Dot(tolight, hit.normal));
-        color += (l.GetColor() * diffuse) * m_DiffuseColor;
+        const double diffuse = std::max(0.0, dot(tolight, h.normal));
+        color += (l.color() * diffuse) * diffuse_color_;
     }
 
-    if (m_Shinyness > 0.0) {
+    if (shinyness_ > 0.0) {
         // mirror reflection
-        const double d = Dot(args.ray.dir, hit.normal);
-        const Ray reflected(origin, args.ray.dir - hit.normal * (2.0 * d));
+        const double d = dot(args.ray.dir, h.normal);
+        const ray reflected(origin, args.ray.dir - h.normal * (2.0 * d));
 
-        color *= (1.0 - m_Shinyness);
-        if (std::optional<colorf> reflection = args.tracer.Cast(reflected)) {
-            color += *reflection * m_Shinyness;
+        color *= (1.0 - shinyness_);
+        if (std::optional<colorf> reflection = args.tracer.cast(reflected)) {
+            color += *reflection * shinyness_;
         }
     }
 

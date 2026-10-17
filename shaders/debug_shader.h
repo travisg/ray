@@ -26,17 +26,17 @@
 #include "shader.h"
 
 // Visualizes the surface normal or the hit distance instead of shading.
-class DebugShader : public Shader {
+class debug_shader : public shader {
   public:
-    enum DebugMode {
-        MODE_NORMAL = 0,
-        MODE_DEPTH,
+    enum class mode {
+        normal = 0,
+        depth,
     };
 
-    colorf Run(const ShaderArgs &args) const override;
+    colorf run(const shader_args &args) const override;
 
-    void SetMode(DebugMode mode) { m_Mode = mode; }
+    void set_mode(mode m) { mode_ = m; }
 
   private:
-    DebugMode m_Mode = MODE_NORMAL;
+    mode mode_ = mode::normal;
 };

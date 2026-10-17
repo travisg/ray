@@ -27,17 +27,17 @@
 #include <span>
 #include <string_view>
 
-class Scene;
+class scene;
 
-struct SceneInfo {
+struct scene_info {
     std::string_view name;
     std::string_view description;
 };
 
 inline constexpr std::string_view kDefaultSceneName = "default";
 
-std::span<const SceneInfo> ListScenes();
+std::span<const scene_info> list_scenes();
 
-// Builds the named scene with Prepare() already run. Returns nullptr, after
+// Builds the named scene with prepare() already run. Returns nullptr, after
 // reporting on stderr, when the name is unknown or an asset fails to load.
-std::unique_ptr<Scene> BuildScene(std::string_view name, std::mt19937 &rng);
+std::unique_ptr<scene> build_scene(std::string_view name, std::mt19937 &rng);

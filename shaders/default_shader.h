@@ -28,15 +28,15 @@
 
 // Ambient + diffuse point lights with shadow rays, plus a mirror reflection
 // weighted by shininess.
-class DefaultShader : public Shader {
+class default_shader : public shader {
   public:
-    colorf Run(const ShaderArgs &args) const override;
+    colorf run(const shader_args &args) const override;
 
     // 0 = matte, 1 = perfect mirror
-    void SetShinyness(double shiny) { m_Shinyness = std::clamp(shiny, 0.0, 1.0); }
-    void SetDiffuseColor(colorf diffuse) { m_DiffuseColor = diffuse; }
+    void set_shinyness(double shiny) { shinyness_ = std::clamp(shiny, 0.0, 1.0); }
+    void set_diffuse_color(colorf diffuse) { diffuse_color_ = diffuse; }
 
   private:
-    double m_Shinyness = 0.0;
-    colorf m_DiffuseColor = colorf(1.0, 1.0, 1.0);
+    double shinyness_ = 0.0;
+    colorf diffuse_color_ = colorf(1.0, 1.0, 1.0);
 };

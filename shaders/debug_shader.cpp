@@ -23,11 +23,11 @@
 #include "debug_shader.h"
 #include <ray.h>
 
-colorf DebugShader::Run(const ShaderArgs &args) const {
-    switch (m_Mode) {
-        case MODE_NORMAL:
-            return colorf(args.hit.normal.getx(), args.hit.normal.gety(), args.hit.normal.getz());
-        case MODE_DEPTH:
+colorf debug_shader::run(const shader_args &args) const {
+    switch (mode_) {
+        case mode::normal:
+            return colorf(args.hit.normal.x, args.hit.normal.y, args.hit.normal.z);
+        case mode::depth:
             return args.hit.t;
     }
     return 0;

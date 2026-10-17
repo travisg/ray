@@ -33,7 +33,7 @@
 
 namespace {
 
-bool ParseSize(const char *s, uint32_t &out) {
+bool parse_size(const char *s, uint32_t &out) {
     char *end = nullptr;
     errno = 0;
     unsigned long v = strtoul(s, &end, 10);
@@ -60,42 +60,42 @@ int main(int argc, char **argv) {
     printf("outfile = %s\n", outname.c_str());
 
     uint32_t sizex, sizey;
-    if (!ParseSize(argv[2], sizex) || !ParseSize(argv[3], sizey)) {
+    if (!parse_size(argv[2], sizex) || !parse_size(argv[3], sizey)) {
         std::cerr << "invalid X or Y argument" << std::endl;
         return 1;
     }
 
-    RayFile file;
-    if (file.Open(inname) < 0) {
+    ray_file file;
+    if (file.open(inname) < 0) {
         std::cerr << "error opening file " << inname << std::endl;
         return 1;
     }
 
     std::vector<float> buf;
-    if (file.ReadIntoBuffer(buf) < 0) {
+    if (file.read_into_buffer(buf) < 0) {
         std::cerr << "error parsing " << inname << std::endl;
         return 1;
     }
 
-    const uint32_t width = file.Width();
+    const uint32_t width = file.width();
     printf("sizex %u sizey %u\n", sizex, sizey);
-    for (uint32_t y = 0; y < file.Height(); y += sizey) {
-        const uint32_t runy = std::min(sizey, file.Height() - y);
+    for (uint32_t y = 0; y < file.height(); y += sizey) {
+        const uint32_t runy = std::min(sizey, file.height() - y);
         for (uint32_t x = 0; x < width; x += sizex) {
             const uint32_t runx = std::min(sizex, width - x);
 
             const std::string name = outname + "-" + std::to_string(x) + "." + std::to_string(y);
             printf("outputting %s: size %ux%u, x %u y %u\n", name.c_str(), runx, runy, x, y);
 
-            RayFile outfile;
-            if (outfile.OpenWrite(name, runx, runy) < 0) {
+            ray_file outfile;
+            if (outfile.open_write(name, runx, runy) < 0) {
                 std::cerr << "error creating " << name << std::endl;
                 return 1;
             }
             for (uint32_t y1 = 0; y1 < runy; y1++) {
-                outfile.SetXYRun(0, y1, runx, &buf[(size_t(y + y1) * width + x) * 3]);
+                outfile.set_xy_run(0, y1, runx, &buf[(size_t(y + y1) * width + x) * 3]);
             }
-            outfile.Close();
+            outfile.close();
         }
     }
 

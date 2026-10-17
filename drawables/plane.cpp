@@ -23,14 +23,14 @@
 #include "plane.h"
 #include <ray.h>
 
-using Libvec::Vector3d;
+using libvec::vector3d;
 
-Plane::Plane(const Ray &normal) : m_Normal(normal) {
-    m_Normal.dir.Normalize();
+plane::plane(const ray &normal) : normal_(normal) {
+    normal_.dir.normalize();
 }
 
-std::optional<Hit> Plane::Intersect(const Ray &ray) const {
-    double denom = Dot(ray.dir, m_Normal.dir);
+std::optional<hit> plane::intersect(const ray &r) const {
+    double denom = dot(r.dir, normal_.dir);
     if (denom >= 0.0) {
         // back face or parallel
         return std::nullopt;
@@ -38,15 +38,15 @@ std::optional<Hit> Plane::Intersect(const Ray &ray) const {
 
     // t = ((P - P0) . N) / (V . N)
     // P = P0 + tV
-    double t = Dot(m_Normal.origin - ray.origin, m_Normal.dir) / denom;
+    double t = dot(normal_.origin - r.origin, normal_.dir) / denom;
     if (t <= 0.0) {
         // behind the origin
         return std::nullopt;
     }
 
-    Hit hit;
-    hit.t = t;
-    hit.pos = ray.origin + ray.dir * t;
-    hit.normal = m_Normal.dir;
-    return hit;
+    hit h;
+    h.t = t;
+    h.pos = r.origin + r.dir * t;
+    h.normal = normal_.dir;
+    return h;
 }

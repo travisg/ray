@@ -23,6 +23,7 @@
 #pragma once
 
 #include "color.h"
+#include <cpp.h>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
@@ -33,111 +34,110 @@
 // 'RAY1' stored little-endian: the file starts with the bytes 31 59 41 52.
 constexpr uint32_t kRayHeaderMagic = 0x52415931;
 
-struct RayHeader {
+struct ray_header {
     uint32_t magic;
     uint32_t width;
     uint32_t height;
 };
 
-enum RayDataType : uint32_t {
-    TYPE_NULL = 0,
-    TYPE_PIXEL,
-    TYPE_PIXEL_RUN,
-    TYPE_EOF,
+enum class ray_data_type : uint32_t {
+    null = 0,
+    pixel,
+    pixel_run,
+    eof,
 };
 
-struct RayDataPixel {
+struct ray_data_pixel {
     uint32_t x;
     uint32_t y;
     float r, g, b;
 };
 
 // Followed by length float triples.
-struct RayDataPixelRun {
+struct ray_data_pixel_run {
     uint32_t x;
     uint32_t y;
     uint32_t length;
 };
 
-static_assert(sizeof(RayHeader) == 12 && sizeof(RayDataPixel) == 20 &&
-              sizeof(RayDataPixelRun) == 12);
+static_assert(sizeof(ray_header) == 12 && sizeof(ray_data_pixel) == 20 &&
+              sizeof(ray_data_pixel_run) == 12);
 
 // Receives one horizontal run of count pixels starting at (x, y); rgb holds
 // count * 3 floats.
-using RayRunCallback =
+using ray_run_callback =
     std::function<void(uint32_t x, uint32_t y, uint32_t count, const float *rgb)>;
 
-// Incremental parser over a FILE* that may still be growing: each Pump()
+// Incremental parser over a FILE* that may still be growing: each pump()
 // consumes every complete packet available and stops at the first incomplete
 // one, so a viewer can follow a render in progress.
-class RayStreamReader {
+class ray_stream_reader {
   public:
-    enum class Status { Ok, NeedData, Eof, Error };
+    enum class status { ok, need_data, eof, error };
 
-    explicit RayStreamReader(FILE *fp) : m_fp(fp) {}
+    explicit ray_stream_reader(FILE *fp) : fp_(fp) {}
 
-    // Ok once the header is in; NeedData until then; Error on a bad magic.
-    Status ReadHeader();
-    // NeedData at the end of the data so far, Eof after the EOF packet,
-    // Error on a malformed packet.
-    Status Pump(const RayRunCallback &cb);
+    // ok once the header is in; need_data until then; error on a bad magic.
+    status read_header();
+    // need_data at the end of the data so far, eof after the EOF packet,
+    // error on a malformed packet.
+    status pump(const ray_run_callback &cb);
 
-    bool HaveHeader() const { return m_haveHeader; }
-    uint32_t Width() const { return m_width; }
-    uint32_t Height() const { return m_height; }
+    bool have_header() const { return have_header_; }
+    uint32_t width() const { return width_; }
+    uint32_t height() const { return height_; }
 
   private:
     // buffers at least n unread bytes, reading more if needed; false if they
     // are not available yet
-    bool Need(size_t n);
-    bool Fill();
+    bool need(size_t n);
+    bool fill();
 
-    FILE *m_fp;
-    std::vector<uint8_t> m_buf;
-    size_t m_pos = 0;
-    std::vector<float> m_run;
-    bool m_haveHeader = false;
-    uint32_t m_width = 0, m_height = 0;
+    FILE *fp_;
+    std::vector<uint8_t> buf_;
+    size_t pos_ = 0;
+    std::vector<float> run_;
+    bool have_header_ = false;
+    uint32_t width_ = 0, height_ = 0;
 };
 
-class RayFile {
+class ray_file {
   public:
-    RayFile() = default;
-    ~RayFile();
-    RayFile(const RayFile &) = delete;
-    RayFile &operator=(const RayFile &) = delete;
+    ray_file() = default;
+    ~ray_file();
+    DISALLOW_COPY_ASSIGN_AND_MOVE(ray_file);
 
     // reads and checks the header
-    int Open(const std::string &name);
-    int OpenWrite(const std::string &name, uint32_t width, uint32_t height);
+    int open(const std::string &name);
+    int open_write(const std::string &name, uint32_t width, uint32_t height);
     // writes the EOF packet when the file was opened for writing
-    void Close();
+    void close();
 
-    uint64_t GetPixelCount() const { return uint64_t(m_width) * m_height; }
-    uint32_t Width() const { return m_width; }
-    uint32_t Height() const { return m_height; }
+    uint64_t pixel_count() const { return uint64_t(width_) * height_; }
+    uint32_t width() const { return width_; }
+    uint32_t height() const { return height_; }
 
-    void SetXY(int x, int y, colorf color);
+    void set_xy(int x, int y, colorf color);
     // one write per run, then fflush so a viewer sees it promptly
-    void SetXYRun(int x, int y, int count, const colorf *color);
+    void set_xy_run(int x, int y, int count, const colorf *color);
     // one write per run, no flush
-    void SetXYRun(int x, int y, int count, const float *rgb);
+    void set_xy_run(int x, int y, int count, const float *rgb);
 
     // Parses the whole file from the start: 0 at the EOF packet or the end of
     // the data, -1 on a malformed packet.
-    int Parse(const RayRunCallback &cb);
+    int parse(const ray_run_callback &cb);
     // Resizes buf to width * height * 3 and fills it row-major RGB; pixels
     // the file never wrote stay 0.
-    int ReadIntoBuffer(std::vector<float> &buf);
+    int read_into_buffer(std::vector<float> &buf);
 
   private:
-    void WriteRun(uint32_t x, uint32_t y, uint32_t count, const float *rgb);
+    void write_run(uint32_t x, uint32_t y, uint32_t count, const float *rgb);
 
-    FILE *m_fp = nullptr;
-    bool m_write = false;
-    uint32_t m_width = 0, m_height = 0;
-    std::vector<float> m_scratch;
+    FILE *fp_ = nullptr;
+    bool write_ = false;
+    uint32_t width_ = 0, height_ = 0;
+    std::vector<float> scratch_;
 };
 
 // Writes the image as a 24-bit uncompressed TGA.
-int ConvertToTGA(RayFile &file, const std::string &filename);
+int convert_to_tga(ray_file &file, const std::string &filename);

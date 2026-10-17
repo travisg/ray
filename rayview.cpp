@@ -51,94 +51,94 @@ constexpr Uint32 kRefreshMs = 100;
 constexpr auto kTailPoll = std::chrono::milliseconds(100);
 constexpr auto kHeaderTimeout = std::chrono::seconds(10);
 
-struct SdlDeleter {
+struct sdl_deleter {
     void operator()(SDL_Window *p) const { SDL_DestroyWindow(p); }
     void operator()(SDL_Renderer *p) const { SDL_DestroyRenderer(p); }
     void operator()(SDL_Texture *p) const { SDL_DestroyTexture(p); }
 };
-template <typename T> using SdlPtr = std::unique_ptr<T, SdlDeleter>;
+template <typename T> using sdl_ptr = std::unique_ptr<T, sdl_deleter>;
 
-struct FileCloser {
+struct file_closer {
     void operator()(FILE *fp) const { fclose(fp); }
 };
 
 // Pixels received so far plus the rectangle touched since the last upload.
-// SetRun runs on the reader thread; ConsumeDirty on the main thread.
-class Frame {
+// set_run runs on the reader thread; consume_dirty on the main thread.
+class frame {
   public:
-    Frame(uint32_t width, uint32_t height)
-        : m_width(width), m_height(height), m_pixels(size_t(width) * height, 0) {}
+    frame(uint32_t width, uint32_t height)
+        : width_(width), height_(height), pixels_(size_t(width) * height, 0) {}
 
-    uint32_t Width() const { return m_width; }
-    uint32_t Height() const { return m_height; }
-    bool Dirty() const { return m_dirty.load(); }
+    uint32_t width() const { return width_; }
+    uint32_t height() const { return height_; }
+    bool dirty() const { return dirty_.load(); }
 
-    void SetRun(uint32_t x, uint32_t y, uint32_t count, const float *rgb) {
-        if (x >= m_width || y >= m_height) {
+    void set_run(uint32_t x, uint32_t y, uint32_t count, const float *rgb) {
+        if (x >= width_ || y >= height_) {
             return;
         }
-        count = std::min(count, m_width - x);
+        count = std::min(count, width_ - x);
 
-        std::lock_guard<std::mutex> guard(m_lock);
-        uint32_t *out = &m_pixels[size_t(y) * m_width + x];
+        std::lock_guard<std::mutex> guard(lock_);
+        uint32_t *out = &pixels_[size_t(y) * width_ + x];
         for (uint32_t i = 0; i < count; i++) {
             out[i] = color32(colorf(rgb[i * 3], rgb[i * 3 + 1], rgb[i * 3 + 2])).rgbx();
         }
         const SDL_Rect touched = { int(x), int(y), int(count), 1 };
-        if (m_dirty) {
-            SDL_UnionRect(&m_rect, &touched, &m_rect);
+        if (dirty_) {
+            SDL_UnionRect(&rect_, &touched, &rect_);
         } else {
-            m_rect = touched;
-            m_dirty = true;
+            rect_ = touched;
+            dirty_ = true;
         }
     }
 
     // Calls f(rect, pixels of the rect's first row, pitch) under the lock and
     // clears the rectangle; false when nothing changed since the last call.
-    bool ConsumeDirty(const std::function<void(const SDL_Rect &, const void *, int)> &f) {
-        std::lock_guard<std::mutex> guard(m_lock);
-        if (!m_dirty) {
+    bool consume_dirty(const std::function<void(const SDL_Rect &, const void *, int)> &f) {
+        std::lock_guard<std::mutex> guard(lock_);
+        if (!dirty_) {
             return false;
         }
-        f(m_rect, &m_pixels[size_t(m_rect.y) * m_width + m_rect.x],
-          int(m_width * sizeof(uint32_t)));
-        m_dirty = false;
+        f(rect_, &pixels_[size_t(rect_.y) * width_ + rect_.x], int(width_ * sizeof(uint32_t)));
+        dirty_ = false;
         return true;
     }
 
   private:
-    const uint32_t m_width;
-    const uint32_t m_height;
-    std::vector<uint32_t> m_pixels; // RGBX8888
-    std::mutex m_lock;
-    std::atomic<bool> m_dirty{ false };
-    SDL_Rect m_rect{};
+    const uint32_t width_;
+    const uint32_t height_;
+    std::vector<uint32_t> pixels_; // RGBX8888
+    std::mutex lock_;
+    std::atomic<bool> dirty_{ false };
+    SDL_Rect rect_{};
 };
 
-// Window, renderer and the streaming texture that mirrors a Frame.
-class Viewer {
+// Window, renderer and the streaming texture that mirrors a frame.
+class viewer {
   public:
-    bool Create(uint32_t imageWidth, uint32_t imageHeight) {
+    bool create(uint32_t image_width, uint32_t image_height) {
         int w = kFallbackWidth, h = kFallbackHeight;
-        if (imageWidth <= uint32_t(kMaxNativeWidth) && imageHeight <= uint32_t(kMaxNativeHeight)) {
-            w = int(imageWidth);
-            h = int(imageHeight);
+        if (image_width <= uint32_t(kMaxNativeWidth) &&
+            image_height <= uint32_t(kMaxNativeHeight)) {
+            w = int(image_width);
+            h = int(image_height);
         }
-        m_window.reset(SDL_CreateWindow("rayview", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                                        w, h, SDL_WINDOW_RESIZABLE));
-        if (!m_window) {
+        window_.reset(SDL_CreateWindow("rayview", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                       w, h, SDL_WINDOW_RESIZABLE));
+        if (!window_) {
             fprintf(stderr, "SDL_CreateWindow: %s\n", SDL_GetError());
             return false;
         }
-        m_renderer.reset(SDL_CreateRenderer(m_window.get(), -1, 0));
-        if (!m_renderer) {
+        renderer_.reset(SDL_CreateRenderer(window_.get(), -1, 0));
+        if (!renderer_) {
             fprintf(stderr, "SDL_CreateRenderer: %s\n", SDL_GetError());
             return false;
         }
-        m_texture.reset(SDL_CreateTexture(m_renderer.get(), SDL_PIXELFORMAT_RGBX8888,
-                                          SDL_TEXTUREACCESS_STREAMING, int(imageWidth),
-                                          int(imageHeight)));
-        if (!m_texture) {
+        texture_.reset(SDL_CreateTexture(renderer_.get(), SDL_PIXELFORMAT_RGBX8888,
+                                         SDL_TEXTUREACCESS_STREAMING, int(image_width),
+                                         int(image_height)));
+        if (!texture_) {
             fprintf(stderr, "SDL_CreateTexture: %s\n", SDL_GetError());
             return false;
         }
@@ -146,26 +146,26 @@ class Viewer {
     }
 
     // uploads whatever changed and redraws the whole window
-    void Present(Frame &frame) {
-        frame.ConsumeDirty([&](const SDL_Rect &rect, const void *pixels, int pitch) {
-            SDL_UpdateTexture(m_texture.get(), &rect, pixels, pitch);
+    void present(frame &f) {
+        f.consume_dirty([&](const SDL_Rect &rect, const void *pixels, int pitch) {
+            SDL_UpdateTexture(texture_.get(), &rect, pixels, pitch);
         });
-        SDL_SetRenderDrawColor(m_renderer.get(), 0, 0, 0, SDL_ALPHA_OPAQUE);
-        SDL_RenderClear(m_renderer.get());
-        SDL_RenderCopy(m_renderer.get(), m_texture.get(), nullptr, nullptr);
-        SDL_RenderPresent(m_renderer.get());
+        SDL_SetRenderDrawColor(renderer_.get(), 0, 0, 0, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(renderer_.get());
+        SDL_RenderCopy(renderer_.get(), texture_.get(), nullptr, nullptr);
+        SDL_RenderPresent(renderer_.get());
     }
 
   private:
-    SdlPtr<SDL_Window> m_window;
-    SdlPtr<SDL_Renderer> m_renderer;
-    SdlPtr<SDL_Texture> m_texture;
+    sdl_ptr<SDL_Window> window_;
+    sdl_ptr<SDL_Renderer> renderer_;
+    sdl_ptr<SDL_Texture> texture_;
 };
 
 // Runs on SDL's timer thread: asks the main loop to redraw when pixels arrived.
-Uint32 TimerTick(Uint32 interval, void *param) {
-    auto *frame = static_cast<Frame *>(param);
-    if (frame->Dirty()) {
+Uint32 timer_tick(Uint32 interval, void *param) {
+    auto *f = static_cast<frame *>(param);
+    if (f->dirty()) {
         SDL_Event event{};
         event.type = SDL_USEREVENT;
         SDL_PushEvent(&event);
@@ -174,16 +174,16 @@ Uint32 TimerTick(Uint32 interval, void *param) {
 }
 
 // Feeds packets into the frame until the EOF packet, an error, or a stop request.
-void ReaderThread(std::atomic<bool> &stop, RayStreamReader &reader, Frame &frame) {
-    const RayRunCallback cb = [&](uint32_t x, uint32_t y, uint32_t count, const float *rgb) {
-        frame.SetRun(x, y, count, rgb);
+void reader_thread(std::atomic<bool> &stop, ray_stream_reader &reader, frame &f) {
+    const ray_run_callback cb = [&](uint32_t x, uint32_t y, uint32_t count, const float *rgb) {
+        f.set_run(x, y, count, rgb);
     };
     while (!stop.load()) {
-        switch (reader.Pump(cb)) {
-            case RayStreamReader::Status::NeedData:
+        switch (reader.pump(cb)) {
+            case ray_stream_reader::status::need_data:
                 std::this_thread::sleep_for(kTailPoll);
                 break;
-            case RayStreamReader::Status::Eof:
+            case ray_stream_reader::status::eof:
                 printf("end of render\n");
                 return;
             default:
@@ -193,7 +193,7 @@ void ReaderThread(std::atomic<bool> &stop, RayStreamReader &reader, Frame &frame
     }
 }
 
-bool WindowNeedsRedraw(const SDL_WindowEvent &e) {
+bool window_needs_redraw(const SDL_WindowEvent &e) {
     return e.event == SDL_WINDOWEVENT_EXPOSED || e.event == SDL_WINDOWEVENT_RESIZED ||
            e.event == SDL_WINDOWEVENT_SIZE_CHANGED;
 }
@@ -209,21 +209,21 @@ int main(int argc, char **argv) {
 
     // ray may not have created the file, or written the header, yet
     const auto deadline = std::chrono::steady_clock::now() + kHeaderTimeout;
-    std::unique_ptr<FILE, FileCloser> fp;
-    std::unique_ptr<RayStreamReader> reader;
+    std::unique_ptr<FILE, file_closer> fp;
+    std::unique_ptr<ray_stream_reader> reader;
     for (;;) {
         if (!fp) {
             fp.reset(fopen(path, "rb"));
             if (fp) {
-                reader = std::make_unique<RayStreamReader>(fp.get());
+                reader = std::make_unique<ray_stream_reader>(fp.get());
             }
         }
         if (reader) {
-            const auto status = reader->ReadHeader();
-            if (status == RayStreamReader::Status::Ok) {
+            const auto status = reader->read_header();
+            if (status == ray_stream_reader::status::ok) {
                 break;
             }
-            if (status == RayStreamReader::Status::Error) {
+            if (status == ray_stream_reader::status::error) {
                 fprintf(stderr, "%s: not a .ray file\n", path);
                 return 1;
             }
@@ -239,25 +239,25 @@ int main(int argc, char **argv) {
         }
         std::this_thread::sleep_for(kTailPoll);
     }
-    printf("%s: %ux%u\n", path, reader->Width(), reader->Height());
+    printf("%s: %ux%u\n", path, reader->width(), reader->height());
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
         fprintf(stderr, "SDL_Init: %s\n", SDL_GetError());
         return 1;
     }
-    struct SdlQuit {
-        ~SdlQuit() { SDL_Quit(); }
-    } sdlQuit;
+    struct sdl_quit {
+        ~sdl_quit() { SDL_Quit(); }
+    } quit_guard;
 
-    Frame frame(reader->Width(), reader->Height());
-    Viewer viewer;
-    if (!viewer.Create(frame.Width(), frame.Height())) {
+    frame f(reader->width(), reader->height());
+    viewer v;
+    if (!v.create(f.width(), f.height())) {
         return 1;
     }
 
     std::atomic<bool> stop{ false };
-    std::thread readerThread(ReaderThread, std::ref(stop), std::ref(*reader), std::ref(frame));
-    const SDL_TimerID timer = SDL_AddTimer(kRefreshMs, TimerTick, &frame);
+    std::thread worker(reader_thread, std::ref(stop), std::ref(*reader), std::ref(f));
+    const SDL_TimerID timer = SDL_AddTimer(kRefreshMs, timer_tick, &f);
 
     // the event loop stays on the main thread, which macOS requires
     bool quit = false;
@@ -277,11 +277,11 @@ int main(int argc, char **argv) {
                 }
                 break;
             case SDL_USEREVENT:
-                viewer.Present(frame);
+                v.present(f);
                 break;
             case SDL_WINDOWEVENT:
-                if (WindowNeedsRedraw(event.window)) {
-                    viewer.Present(frame);
+                if (window_needs_redraw(event.window)) {
+                    v.present(f);
                 }
                 break;
             default:
@@ -291,6 +291,6 @@ int main(int argc, char **argv) {
 
     SDL_RemoveTimer(timer);
     stop = true;
-    readerThread.join();
+    worker.join();
     return 0;
 }

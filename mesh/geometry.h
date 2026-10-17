@@ -23,38 +23,38 @@
 #pragma once
 
 #include "mesh.h"
+#include <cpp.h>
 #include <memory>
 #include <vector>
 
-// Vertex, normal, tangent and uv pools shared by the meshes loaded from one
-// file. Meshes keep a reference to their geometry, so it is never copied.
-class Geometry {
+// vertex, normal, tangent and uv pools shared by the meshes loaded from one
+// file. meshes keep a reference to their geometry, so it is never copied.
+class geometry {
   public:
-    Geometry() = default;
-    Geometry(const Geometry &) = delete;
-    Geometry &operator=(const Geometry &) = delete;
+    geometry() = default;
+    DISALLOW_COPY_ASSIGN_AND_MOVE(geometry);
 
-    void AddVert(const Vertex &v);
-    void AddNormalVert(const Vertex &v);
-    void AddTangentVert(const Vertex &v);
-    void AddUVVert(const Vertex &v);
-    void AddMesh(std::unique_ptr<Mesh> m);
+    void add_vert(const vertex &v);
+    void add_normal_vert(const vertex &v);
+    void add_tangent_vert(const vertex &v);
+    void add_uv_vert(const vertex &v);
+    void add_mesh(std::unique_ptr<mesh> m);
 
-    std::unique_ptr<Mesh> CreateMesh();
+    std::unique_ptr<mesh> create_mesh();
 
-    const std::vector<std::unique_ptr<Mesh>> &Meshes() const { return m_Meshes; }
-    const VertexList &Vertices() const { return m_Verts; }
-    const VertexList &Normals() const { return m_NormalVerts; }
-    const VertexList &Tangents() const { return m_TangentVerts; }
-    const VertexList &UVs() const { return m_UVVerts; }
+    const std::vector<std::unique_ptr<mesh>> &meshes() const { return meshes_; }
+    const vertex_list &vertices() const { return vertices_; }
+    const vertex_list &normals() const { return normals_; }
+    const vertex_list &tangents() const { return tangents_; }
+    const vertex_list &uvs() const { return uvs_; }
 
-    void Dump() const;
+    void dump() const;
 
   private:
-    std::vector<std::unique_ptr<Mesh>> m_Meshes;
+    std::vector<std::unique_ptr<mesh>> meshes_;
 
-    VertexList m_Verts;
-    VertexList m_NormalVerts;
-    VertexList m_TangentVerts;
-    VertexList m_UVVerts;
+    vertex_list vertices_;
+    vertex_list normals_;
+    vertex_list tangents_;
+    vertex_list uvs_;
 };

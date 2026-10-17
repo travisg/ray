@@ -22,76 +22,76 @@
  */
 #include <iostream>
 
+#include <drawables/drawable.h>
 #include <ray.h>
 #include <scene.h>
-#include <tracer.h>
-#include <drawables/drawable.h>
 #include <shaders/shader.h>
+#include <tracer.h>
 
-using Libvec::Vector3d;
+using libvec::vector3d;
 
-Tracer::Tracer(const RenderSurface &surface, const Scene &scene, TraceMaster &tracemaster)
-    : m_Surface(surface), m_Scene(scene), m_Master(tracemaster) {}
+tracer::tracer(const render_surface &surface, const scene &s, trace_master &master)
+    : surface_(surface), scene_(s), master_(master) {}
 
-std::optional<colorf> Tracer::Cast(const Ray &ray) {
-    if (m_Depth == kMaxTraceDepth) {
+std::optional<colorf> tracer::cast(const ray &r) {
+    if (depth_ == kMaxTraceDepth) {
         return std::nullopt;
     }
 
-    std::optional<Hit> hit = m_Scene.Intersect(ray);
+    std::optional<hit> hit = scene_.intersect(r);
     if (!hit) {
         return std::nullopt;
     }
 
-    const ShaderPtr &s = hit->drawable->GetShader();
+    const shader_ptr &s = hit->drawable->shader();
     if (!s) {
         return colorf(0);
     }
 
-    ShaderArgs args{ m_Scene, *this, ray, *hit };
+    shader_args args{ scene_, *this, r, *hit };
 
-    m_Depth++; // track the level of recursion
-    colorf color = s->Run(args);
-    m_Depth--;
+    depth_++; // track the level of recursion
+    colorf color = s->run(args);
+    depth_--;
     return color;
 }
 
-void Tracer::Trace() {
-    const int width = m_Surface.Width();
-    const int height = m_Surface.Height();
-    const Vector3d camera = m_Scene.GetCamera();
+void tracer::trace() {
+    const int width = surface_.width();
+    const int height = surface_.height();
+    const vector3d camera = scene_.camera();
 
     // camera basis: forward toward the target, right and down across the image
-    Vector3d forward = m_Scene.GetTarget() - camera;
-    forward.Normalize();
-    Vector3d up(0, 0, 1);
-    Vector3d right = Cross(forward, up);
-    if (right.LengthSquared() < 1e-12) {
+    vector3d forward = scene_.target() - camera;
+    forward.normalize();
+    vector3d up(0, 0, 1);
+    vector3d right = cross(forward, up);
+    if (right.length_squared() < 1e-12) {
         // looking straight along z
-        up = Vector3d(0, 1, 0);
-        right = Cross(forward, up);
+        up = vector3d(0, 1, 0);
+        right = cross(forward, up);
     }
-    right.Normalize();
-    Vector3d down = Cross(forward, right);
-    down.Normalize();
+    right.normalize();
+    vector3d down = cross(forward, right);
+    down.normalize();
 
     // the image plane sits one unit ahead and spans [-1, 1] across its width
     const double pixpitch = 2.0 / width;
 
-    TraceWorkUnit unit;
-    while (m_Master.GetWorkUnit(unit)) {
+    trace_work_unit unit;
+    while (master_.get_work_unit(unit)) {
         for (int y = unit.starty; y <= unit.endy; y++) {
             for (int x = unit.startx; x <= unit.endx; x++) {
-                Vector3d dir = forward + right * ((x - width / 2.0) * pixpitch) +
+                vector3d dir = forward + right * ((x - width / 2.0) * pixpitch) +
                                down * ((y - height / 2.0) * pixpitch);
-                dir.Normalize();
+                dir.normalize();
 
                 // black where the ray exits the world
-                unit.SetResult(x, y, Cast(Ray(camera, dir)).value_or(colorf(0)));
+                unit.set_result(x, y, cast(ray(camera, dir)).value_or(colorf(0)));
             }
         }
 
-        m_Master.ReturnWorkUnit(unit);
+        master_.return_work_unit(unit);
     }
 
     std::cout << "end trace" << std::endl;

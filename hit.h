@@ -24,13 +24,13 @@
 
 #include <libvec/vector3.h>
 
-class Drawable;
+class drawable;
 
 // Nearest intersection along a ray: pos == ray.origin + ray.dir * t, and
 // normal is unit length and faces the ray.
-struct Hit {
+struct hit {
     double t = 0;
-    Libvec::Vector3d pos;
-    Libvec::Vector3d normal;
-    const Drawable *drawable = nullptr; // set by Scene::Intersect
+    libvec::vector3d pos;
+    libvec::vector3d normal;
+    const ::drawable *drawable = nullptr; // set by scene::intersect
 };

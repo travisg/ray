@@ -24,16 +24,16 @@
 
 #include <vector>
 
-struct SurfaceIndex {
-    int posIndex;
-    int normIndex;
-    int uvIndex;
+struct surface_index {
+    int pos_index;
+    int norm_index;
+    int uv_index;
 };
 
 // One polygon (3 or 4 vertices) as indices into the owning geometry's lists.
-class Surface {
+class surface {
   public:
-    void AddIndex(int posIndex, int normIndex, int uvIndex);
+    void add_index(int pos_index, int norm_index, int uv_index);
 
-    std::vector<SurfaceIndex> m_Indexes;
+    std::vector<surface_index> indexes_;
 };

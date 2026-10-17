@@ -7,7 +7,7 @@
 
 namespace test {
 inline int failures = 0;
-inline void Fail(const char *file, int line, const char *what) {
+inline void fail(const char *file, int line, const char *what) {
     std::fprintf(stderr, "%s:%d: check failed: %s\n", file, line, what);
     failures++;
 }
@@ -16,14 +16,14 @@ inline void Fail(const char *file, int line, const char *what) {
 #define CHECK(expr)                                                                                \
     do {                                                                                           \
         if (!(expr)) {                                                                             \
-            test::Fail(__FILE__, __LINE__, #expr);                                                 \
+            test::fail(__FILE__, __LINE__, #expr);                                                 \
         }                                                                                          \
     } while (0)
 
 #define CHECK_NEAR(a, b, eps)                                                                      \
     do {                                                                                           \
         if (!(std::fabs((a) - (b)) <= (eps))) {                                                    \
-            test::Fail(__FILE__, __LINE__, #a " ~= " #b);                                          \
+            test::fail(__FILE__, __LINE__, #a " ~= " #b);                                          \
         }                                                                                          \
     } while (0)
 

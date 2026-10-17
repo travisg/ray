@@ -26,11 +26,11 @@
 #include <memory>
 #include <string>
 
-class Geometry;
+class geometry;
 
 // Parses Wavefront .obj: v, vn, vt and f (triangles and quads; a, a/b, a/b/c
 // and a//c vertex forms), plus "#  ExternalName:" comments naming the next
 // mesh. Other directives are skipped. Every face needs normals. Returns
 // nullptr after reporting the problem on stderr.
-std::unique_ptr<Geometry> LoadObj(std::istream &in);
-std::unique_ptr<Geometry> LoadObjFile(const std::string &path);
+std::unique_ptr<geometry> load_obj(std::istream &in);
+std::unique_ptr<geometry> load_obj_file(const std::string &path);

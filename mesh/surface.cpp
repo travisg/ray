@@ -22,12 +22,12 @@
  */
 #include "surface.h"
 
-void Surface::AddIndex(int posIndex, int normIndex, int uvIndex) {
-    SurfaceIndex i;
+void surface::add_index(int pos_index, int norm_index, int uv_index) {
+    surface_index i;
 
-    i.posIndex = posIndex;
-    i.normIndex = normIndex;
-    i.uvIndex = uvIndex;
+    i.pos_index = pos_index;
+    i.norm_index = norm_index;
+    i.uv_index = uv_index;
 
-    m_Indexes.push_back(i);
+    indexes_.push_back(i);
 }

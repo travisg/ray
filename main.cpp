@@ -43,25 +43,25 @@
 
 namespace {
 
-int DefaultCpus() {
+int default_cpus() {
     unsigned n = std::thread::hardware_concurrency();
     return n == 0 ? 1 : static_cast<int>(n);
 }
 
-struct Options {
+struct options {
     int xres = 800;
     int yres = 600;
-    int cpus = DefaultCpus();
+    int cpus = default_cpus();
     std::string outfile = "out.ray";
     bool random = false;
     uint32_t seed = 1;
     std::string scene = std::string(kDefaultSceneName);
-    bool listScenes = false;
+    bool list_scenes = false;
 };
 
 enum { kOptSeed = 256, kOptListScenes };
 
-void Usage(FILE *fp, const char *argv0) {
+void usage(FILE *fp, const char *argv0) {
     fprintf(fp,
             "usage: %s [options]\n"
             "  -x, --xres N      image width (default 800)\n"
@@ -77,7 +77,7 @@ void Usage(FILE *fp, const char *argv0) {
 }
 
 // Parses an integer in [min, max]; false on anything else.
-template <typename T> bool ParseInt(const char *s, T min, T max, T &out) {
+template <typename T> bool parse_int(const char *s, T min, T max, T &out) {
     std::string_view sv(s);
     T v = 0;
     auto [end, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), v);
@@ -88,8 +88,8 @@ template <typename T> bool ParseInt(const char *s, T min, T max, T &out) {
     return true;
 }
 
-// Returns true to render; otherwise exitCode holds the status to exit with.
-bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
+// Returns true to render; otherwise exit_code holds the status to exit with.
+bool parse_options(int argc, char **argv, options &opts, int &exit_code) {
     static const option kLongOptions[] = {
         { "xres", required_argument, nullptr, 'x' },
         { "yres", required_argument, nullptr, 'y' },
@@ -103,7 +103,7 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
         { nullptr, 0, nullptr, 0 },
     };
 
-    exitCode = 1;
+    exit_code = 1;
     int c;
     while ((c = getopt_long(argc, argv, "x:y:c:o:s:rh", kLongOptions, nullptr)) != -1) {
         switch (c) {
@@ -111,7 +111,7 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
             case 'y':
             case 'c': {
                 int &target = c == 'x' ? opts.xres : c == 'y' ? opts.yres : opts.cpus;
-                if (!ParseInt(optarg, 1, INT32_MAX, target)) {
+                if (!parse_int(optarg, 1, INT32_MAX, target)) {
                     fprintf(stderr, "%s: -%c needs a positive integer, got '%s'\n", argv[0], c,
                             optarg);
                     return false;
@@ -125,24 +125,24 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
                 opts.scene = optarg;
                 break;
             case kOptListScenes:
-                opts.listScenes = true;
+                opts.list_scenes = true;
                 break;
             case 'r':
                 opts.random = true;
                 break;
             case kOptSeed:
-                if (!ParseInt(optarg, uint32_t{ 0 }, UINT32_MAX, opts.seed)) {
+                if (!parse_int(optarg, uint32_t{ 0 }, UINT32_MAX, opts.seed)) {
                     fprintf(stderr, "%s: --seed needs an unsigned integer, got '%s'\n", argv[0],
                             optarg);
                     return false;
                 }
                 break;
             case 'h':
-                Usage(stdout, argv[0]);
-                exitCode = 0;
+                usage(stdout, argv[0]);
+                exit_code = 0;
                 return false;
             default:
-                Usage(stderr, argv[0]);
+                usage(stderr, argv[0]);
                 return false;
         }
     }
@@ -153,11 +153,11 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
     return true;
 }
 
-void TracerThread(const RenderSurface &rs, const Scene &scene, TraceMaster &master) {
+void tracer_thread(const render_surface &rs, const scene &s, trace_master &master) {
     time_t start = time(nullptr);
 
-    Tracer tracer(rs, scene, master);
-    tracer.Trace();
+    tracer t(rs, s, master);
+    t.trace();
 
     start = time(nullptr) - start;
     std::cout << "trace end, took " << start << " seconds" << std::endl;
@@ -166,14 +166,14 @@ void TracerThread(const RenderSurface &rs, const Scene &scene, TraceMaster &mast
 } // namespace
 
 int main(int argc, char *argv[]) {
-    Options opts;
-    int exitCode = 0;
-    if (!ParseOptions(argc, argv, opts, exitCode)) {
-        return exitCode;
+    options opts;
+    int exit_code = 0;
+    if (!parse_options(argc, argv, opts, exit_code)) {
+        return exit_code;
     }
 
-    if (opts.listScenes) {
-        for (const SceneInfo &info : ListScenes()) {
+    if (opts.list_scenes) {
+        for (const scene_info &info : list_scenes()) {
             printf("%-12.*s %.*s\n", (int)info.name.size(), info.name.data(),
                    (int)info.description.size(), info.description.data());
         }
@@ -185,27 +185,27 @@ int main(int argc, char *argv[]) {
     std::cout << "outfile " << opts.outfile << std::endl;
 
     std::mt19937 rng(opts.seed);
-    std::unique_ptr<Scene> scene = BuildScene(opts.scene, rng);
+    std::unique_ptr<scene> scene = build_scene(opts.scene, rng);
     if (!scene) {
         return 1;
     }
 
-    RenderSurfaceFile rs(opts.xres, opts.yres);
-    if (rs.OpenOutFile(opts.outfile) < 0) {
+    render_surface_file rs(opts.xres, opts.yres);
+    if (rs.open_out_file(opts.outfile) < 0) {
         std::cerr << "error opening output file " << opts.outfile << std::endl;
         return 1;
     }
 
-    TraceMaster master(rs, opts.random ? TileOrder::Random : TileOrder::Sequential, opts.seed);
+    trace_master master(rs, opts.random ? tile_order::random : tile_order::sequential, opts.seed);
 
     std::vector<std::thread> threads;
     threads.reserve(opts.cpus);
     for (int i = 0; i < opts.cpus; i++) {
-        threads.emplace_back(TracerThread, std::cref(rs), std::cref(*scene), std::ref(master));
+        threads.emplace_back(tracer_thread, std::cref(rs), std::cref(*scene), std::ref(master));
     }
 
     // wait for the trace master to hand out and collect every tile
-    master.WaitForDone();
+    master.wait_for_done();
 
     std::cout << "waiting for worker threads to shut down" << std::endl;
     for (auto &t : threads) {

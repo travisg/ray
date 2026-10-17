@@ -24,33 +24,33 @@
 
 #include <drawables/sphere.h>
 
-using Libvec::Vector3d;
+using libvec::vector3d;
 
-Sphere::Sphere(const Libvec::Vector3d &pos, double radius) : m_Center(pos), m_Radius(radius) {}
+sphere::sphere(const libvec::vector3d &pos, double radius) : center_(pos), radius_(radius) {}
 
-std::optional<Hit> Sphere::Intersect(const Ray &ray) const {
-    double radius2 = m_Radius * m_Radius;
+std::optional<hit> sphere::intersect(const ray &r) const {
+    double radius2 = radius_ * radius_;
 
-    Vector3d oc = m_Center - ray.origin;
-    double l2oc = oc.LengthSquared();
+    vector3d oc = center_ - r.origin;
+    double l2oc = oc.length_squared();
     const bool inside = l2oc < radius2;
 
-    double tca = Dot(oc, ray.dir);
+    double tca = dot(oc, r.dir);
     if (!inside && tca < 0) {
         // outside and pointing away from the sphere
         return std::nullopt;
     }
 
-    double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
+    double l2hc = (radius2 - l2oc) / r.dir.length_squared() + (tca * tca);
     if (l2hc <= 0) {
         return std::nullopt;
     }
 
     // from inside the near root is behind the origin; take the far one
-    Hit hit;
-    hit.t = inside ? tca + std::sqrt(l2hc) : tca - std::sqrt(l2hc);
-    hit.pos = ray.origin + ray.dir * hit.t;
-    hit.normal = inside ? m_Center - hit.pos : hit.pos - m_Center;
-    hit.normal.Normalize();
-    return hit;
+    hit h;
+    h.t = inside ? tca + std::sqrt(l2hc) : tca - std::sqrt(l2hc);
+    h.pos = r.origin + r.dir * h.t;
+    h.normal = inside ? center_ - h.pos : h.pos - center_;
+    h.normal.normalize();
+    return h;
 }

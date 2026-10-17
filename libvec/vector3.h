@@ -25,70 +25,66 @@
 #include <cmath>
 #include <ostream>
 
-namespace Libvec {
+namespace libvec {
 
-template <typename T> class Vector3 {
+template <typename T> class vector3 {
   public:
-    constexpr Vector3() = default;
-    // Implicit on purpose: callers write `Vector3d v = 0;`.
-    constexpr Vector3(T v) : x(v), y(v), z(v) {}
-    constexpr Vector3(T x1, T y1, T z1) : x(x1), y(y1), z(z1) {}
+    constexpr vector3() = default;
+    // Implicit on purpose: callers write `vector3d v = 0;`.
+    constexpr vector3(T v) : x(v), y(v), z(v) {}
+    constexpr vector3(T x1, T y1, T z1) : x(x1), y(y1), z(z1) {}
 
-    constexpr T getx() const { return x; }
-    constexpr T gety() const { return y; }
-    constexpr T getz() const { return z; }
+    constexpr vector3 operator+(const vector3 &v) const {
+        return vector3(x + v.x, y + v.y, z + v.z);
+    }
+    constexpr vector3 operator-(const vector3 &v) const {
+        return vector3(x - v.x, y - v.y, z - v.z);
+    }
+    constexpr vector3 operator-() const { return vector3(-x, -y, -z); }
+    constexpr vector3 operator*(const vector3 &v) const {
+        return vector3(x * v.x, y * v.y, z * v.z);
+    }
+    constexpr vector3 operator*(T s) const { return vector3(x * s, y * s, z * s); }
+    constexpr vector3 operator/(T s) const { return vector3(x / s, y / s, z / s); }
 
-    constexpr Vector3 operator+(const Vector3 &v) const {
-        return Vector3(x + v.x, y + v.y, z + v.z);
-    }
-    constexpr Vector3 operator-(const Vector3 &v) const {
-        return Vector3(x - v.x, y - v.y, z - v.z);
-    }
-    constexpr Vector3 operator-() const { return Vector3(-x, -y, -z); }
-    constexpr Vector3 operator*(const Vector3 &v) const {
-        return Vector3(x * v.x, y * v.y, z * v.z);
-    }
-    constexpr Vector3 operator*(T s) const { return Vector3(x * s, y * s, z * s); }
-    constexpr Vector3 operator/(T s) const { return Vector3(x / s, y / s, z / s); }
-
-    constexpr Vector3 &operator+=(const Vector3 &v) {
+    constexpr vector3 &operator+=(const vector3 &v) {
         x += v.x;
         y += v.y;
         z += v.z;
         return *this;
     }
-    constexpr Vector3 &operator-=(const Vector3 &v) {
+    constexpr vector3 &operator-=(const vector3 &v) {
         x -= v.x;
         y -= v.y;
         z -= v.z;
         return *this;
     }
-    constexpr Vector3 &operator*=(const Vector3 &v) {
+    constexpr vector3 &operator*=(const vector3 &v) {
         x *= v.x;
         y *= v.y;
         z *= v.z;
         return *this;
     }
-    constexpr Vector3 &operator*=(T s) {
+    constexpr vector3 &operator*=(T s) {
         x *= s;
         y *= s;
         z *= s;
         return *this;
     }
-    constexpr Vector3 &operator/=(T s) {
+    constexpr vector3 &operator/=(T s) {
         x /= s;
         y /= s;
         z /= s;
         return *this;
     }
 
-    constexpr T LengthSquared() const { return x * x + y * y + z * z; }
-    T Length() const { return std::sqrt(LengthSquared()); }
-    constexpr T Dot(const Vector3 &v) const { return x * v.x + y * v.y + z * v.z; }
+    constexpr T length_squared() const { return x * x + y * y + z * z; }
+    T length() const { return std::sqrt(length_squared()); }
+    constexpr T dot(const vector3 &v) const { return x * v.x + y * v.y + z * v.z; }
 
     // Scales to length n; a zero vector stays zero.
-    void Normalize(T n = T(1)) {
-        T l2 = LengthSquared();
+    void normalize(T n = T(1)) {
+        T l2 = length_squared();
         if (l2 == 0) {
             x = y = z = 0;
             return;
@@ -99,29 +95,27 @@ template <typename T> class Vector3 {
         z *= s;
     }
 
-  private:
+    // the coordinates are the public interface, as in any math library
     T x = 0, y = 0, z = 0;
 };
 
-template <typename T> constexpr Vector3<T> operator*(T s, const Vector3<T> &v) {
+template <typename T> constexpr vector3<T> operator*(T s, const vector3<T> &v) {
     return v * s;
 }
 
-template <typename T> constexpr T Dot(const Vector3<T> &a, const Vector3<T> &b) {
-    return a.Dot(b);
+template <typename T> constexpr T dot(const vector3<T> &a, const vector3<T> &b) {
+    return a.dot(b);
 }
 
-template <typename T> constexpr Vector3<T> Cross(const Vector3<T> &a, const Vector3<T> &b) {
-    return Vector3<T>(a.gety() * b.getz() - a.getz() * b.gety(),
-                      a.getz() * b.getx() - a.getx() * b.getz(),
-                      a.getx() * b.gety() - a.gety() * b.getx());
+template <typename T> constexpr vector3<T> cross(const vector3<T> &a, const vector3<T> &b) {
+    return vector3<T>(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
 }
 
-template <typename T> std::ostream &operator<<(std::ostream &os, const Vector3<T> &v) {
-    return os << "[ " << v.getx() << " " << v.gety() << " " << v.getz() << " ]";
+template <typename T> std::ostream &operator<<(std::ostream &os, const vector3<T> &v) {
+    return os << "[ " << v.x << " " << v.y << " " << v.z << " ]";
 }
 
-using Vector3f = Vector3<float>;
-using Vector3d = Vector3<double>;
+using vector3f = vector3<float>;
+using vector3d = vector3<double>;
 
-} // namespace Libvec
+} // namespace libvec

@@ -23,50 +23,50 @@
 #pragma once
 
 #include "color.h"
-#include <hit.h>
+#include <cpp.h>
 #include <drawables/drawable.h>
+#include <hit.h>
 #include <libvec/vector3.h>
 #include <lights/simple_light.h>
 #include <memory>
 #include <optional>
 #include <vector>
 
-struct Ray;
+struct ray;
 
 // Hits closer than this to a ray origin are the surface the ray left and are
 // ignored, as are occluders this close to the end of a shadow ray.
 inline constexpr double kMinT = 1e-6;
 
-// Drawables, point lights, ambient light and a camera. Built by SceneLibrary.
-class Scene {
+// Drawables, point lights, ambient light and a camera. Built by scene_library.
+class scene {
   public:
-    Scene() = default;
-    Scene(const Scene &) = delete;
-    Scene &operator=(const Scene &) = delete;
+    scene() = default;
+    DISALLOW_COPY_ASSIGN_AND_MOVE(scene);
 
-    void AddDrawable(std::unique_ptr<Drawable> d);
-    void AddLight(const SimpleLight &l);
-    void SetAmbientLight(const colorf &c) { m_AmbientLight = c; }
-    void SetCamera(const Libvec::Vector3d &pos, const Libvec::Vector3d &target);
-    // Drawable::Prepare on every drawable; run once after the last AddDrawable
-    void Prepare();
+    void add_drawable(std::unique_ptr<drawable> d);
+    void add_light(const simple_light &l);
+    void set_ambient_light(const colorf &c) { ambient_light_ = c; }
+    void set_camera(const libvec::vector3d &pos, const libvec::vector3d &target);
+    // drawable::prepare on every drawable; run once after the last add_drawable
+    void prepare();
 
-    // nearest hit with t > kMinT, with Hit::drawable set
-    std::optional<Hit> Intersect(const Ray &ray) const;
+    // nearest hit with t > kMinT, with hit::drawable set
+    std::optional<hit> intersect(const ray &r) const;
     // true for any hit with kMinT < t < maxDistance - kMinT
-    bool DoesIntersect(const Ray &ray, double maxDistance) const;
+    bool does_intersect(const ray &r, double max_distance) const;
 
-    const std::vector<SimpleLight> &GetLightList() const { return m_SimpleLightList; }
-    colorf GetAmbientLight() const { return m_AmbientLight; }
+    const std::vector<simple_light> &lights() const { return lights_; }
+    colorf ambient_light() const { return ambient_light_; }
 
-    const Libvec::Vector3d &GetCamera() const { return m_Camera; }
-    const Libvec::Vector3d &GetTarget() const { return m_Target; }
+    const libvec::vector3d &camera() const { return camera_; }
+    const libvec::vector3d &target() const { return target_; }
 
   private:
-    std::vector<std::unique_ptr<Drawable>> m_DrawableList;
-    std::vector<SimpleLight> m_SimpleLightList;
-    colorf m_AmbientLight;
+    std::vector<std::unique_ptr<drawable>> drawables_;
+    std::vector<simple_light> lights_;
+    colorf ambient_light_;
 
-    Libvec::Vector3d m_Camera;
-    Libvec::Vector3d m_Target;
+    libvec::vector3d camera_;
+    libvec::vector3d target_;
 };

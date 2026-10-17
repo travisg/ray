@@ -24,40 +24,40 @@
 #include <iostream>
 #include <utility>
 
-void Geometry::AddMesh(std::unique_ptr<Mesh> m) {
-    m_Meshes.push_back(std::move(m));
+void geometry::add_mesh(std::unique_ptr<mesh> m) {
+    meshes_.push_back(std::move(m));
 }
 
-void Geometry::AddVert(const Vertex &v) {
-    m_Verts.push_back(v);
+void geometry::add_vert(const vertex &v) {
+    vertices_.push_back(v);
 }
 
-void Geometry::AddNormalVert(const Vertex &v) {
-    m_NormalVerts.push_back(v);
+void geometry::add_normal_vert(const vertex &v) {
+    normals_.push_back(v);
 }
 
-void Geometry::AddTangentVert(const Vertex &v) {
-    m_TangentVerts.push_back(v);
+void geometry::add_tangent_vert(const vertex &v) {
+    tangents_.push_back(v);
 }
 
-void Geometry::AddUVVert(const Vertex &v) {
-    m_UVVerts.push_back(v);
+void geometry::add_uv_vert(const vertex &v) {
+    uvs_.push_back(v);
 }
 
-std::unique_ptr<Mesh> Geometry::CreateMesh() {
-    return std::make_unique<Mesh>(*this);
+std::unique_ptr<mesh> geometry::create_mesh() {
+    return std::make_unique<mesh>(*this);
 }
 
-void Geometry::Dump() const {
-    std::cout << "Geometry at " << (void *)this << std::endl;
+void geometry::dump() const {
+    std::cout << "geometry at " << (void *)this << std::endl;
 
-    std::cout << "\t" << m_Meshes.size() << " meshes" << std::endl;
-    std::cout << "\t" << m_Verts.size() << " vertices" << std::endl;
-    std::cout << "\t" << m_NormalVerts.size() << " normal vertices" << std::endl;
-    std::cout << "\t" << m_TangentVerts.size() << " tangent vertices" << std::endl;
-    std::cout << "\t" << m_UVVerts.size() << " uv vertices" << std::endl;
+    std::cout << "\t" << meshes_.size() << " meshes" << std::endl;
+    std::cout << "\t" << vertices_.size() << " vertices" << std::endl;
+    std::cout << "\t" << normals_.size() << " normal vertices" << std::endl;
+    std::cout << "\t" << tangents_.size() << " tangent vertices" << std::endl;
+    std::cout << "\t" << uvs_.size() << " uv vertices" << std::endl;
 
-    for (const auto &m : m_Meshes) {
-        m->Dump();
+    for (const auto &m : meshes_) {
+        m->dump();
     }
 }

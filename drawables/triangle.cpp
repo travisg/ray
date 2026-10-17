@@ -23,22 +23,22 @@
 #include "triangle.h"
 #include <ray.h>
 
-using Libvec::Vector3d;
+using libvec::vector3d;
 
-// http://graphics.stanford.edu/~mdfisher/Code/Engine/Intersect.cpp.html
+// http://graphics.stanford.edu/~mdfisher/Code/Engine/intersect.cpp.html
 
-Triangle::Triangle(const Libvec::Vector3d &v0, const Libvec::Vector3d &v1,
-                   const Libvec::Vector3d &v2) {
-    m_v[0] = v0;
-    m_v[1] = v1;
-    m_v[2] = v2;
+triangle::triangle(const libvec::vector3d &v0, const libvec::vector3d &v1,
+                   const libvec::vector3d &v2) {
+    v_[0] = v0;
+    v_[1] = v1;
+    v_[2] = v2;
 
-    m_normal = Cross(v1 - v0, v2 - v0);
-    m_normal.Normalize();
+    normal_ = cross(v1 - v0, v2 - v0);
+    normal_.normalize();
 }
 
-std::optional<Hit> Triangle::Intersect(const Ray &ray) const {
-    double denom = Dot(ray.dir, m_normal);
+std::optional<hit> triangle::intersect(const ray &r) const {
+    double denom = dot(r.dir, normal_);
     if (denom >= 0.0) {
         // back face or parallel
         return std::nullopt;
@@ -46,27 +46,27 @@ std::optional<Hit> Triangle::Intersect(const Ray &ray) const {
 
     // t = ((P - P0) . N) / (V . N)
     // P = P0 + tV
-    double t = Dot(m_v[0] - ray.origin, m_normal) / denom;
+    double t = dot(v_[0] - r.origin, normal_) / denom;
     if (t <= 0.0) {
         // behind the origin
         return std::nullopt;
     }
 
-    Hit hit;
-    hit.t = t;
-    hit.pos = ray.origin + ray.dir * t;
-    hit.normal = m_normal;
+    hit h;
+    h.t = t;
+    h.pos = r.origin + r.dir * t;
+    h.normal = normal_;
 
     // barycentric coordinates of the hit within the triangle
-    Vector3d u = m_v[1] - m_v[0];
-    Vector3d v = m_v[2] - m_v[0];
-    Vector3d w = hit.pos - m_v[0];
+    vector3d u = v_[1] - v_[0];
+    vector3d v = v_[2] - v_[0];
+    vector3d w = h.pos - v_[0];
 
-    double uu = Dot(u, u);
-    double uv = Dot(u, v);
-    double vv = Dot(v, v);
-    double wu = Dot(w, u);
-    double wv = Dot(w, v);
+    double uu = dot(u, u);
+    double uv = dot(u, v);
+    double vv = dot(v, v);
+    double wu = dot(w, u);
+    double wv = dot(w, v);
     double D = 1.0 / (uv * uv - uu * vv);
 
     double b1 = (uv * wv - vv * wu) * D;
@@ -78,5 +78,5 @@ std::optional<Hit> Triangle::Intersect(const Ray &ray) const {
         return std::nullopt;
     }
 
-    return hit;
+    return h;
 }

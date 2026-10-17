@@ -25,12 +25,12 @@
 #include <vector>
 
 // Position (x, y, z, w); texture coordinates use x and y.
-struct Vertex {
-    Vertex() = default;
-    Vertex(float inx, float iny, float inz, float inw) : x(inx), y(iny), z(inz), w(inw) {}
-    Vertex(float inu, float inv) : x(inu), y(inv) {}
+struct vertex {
+    vertex() = default;
+    vertex(float inx, float iny, float inz, float inw) : x(inx), y(iny), z(inz), w(inw) {}
+    vertex(float inu, float inv) : x(inu), y(inv) {}
 
     float x = 0, y = 0, z = 0, w = 0;
 };
 
-using VertexList = std::vector<Vertex>;
+using vertex_list = std::vector<vertex>;

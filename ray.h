@@ -24,11 +24,11 @@
 
 #include <libvec/vector3.h>
 
-struct Ray {
-    Ray() = default;
-    Ray(const Libvec::Vector3d &_origin, const Libvec::Vector3d &_dir)
+struct ray {
+    ray() = default;
+    ray(const libvec::vector3d &_origin, const libvec::vector3d &_dir)
         : origin(_origin), dir(_dir) {}
 
-    Libvec::Vector3d origin;
-    Libvec::Vector3d dir;
+    libvec::vector3d origin;
+    libvec::vector3d dir;
 };

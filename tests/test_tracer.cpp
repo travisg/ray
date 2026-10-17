@@ -1,77 +1,77 @@
 #include "check.h"
-#include <render_surface.h>
-#include <scene.h>
-#include <trace_master.h>
-#include <tracer.h>
 #include <drawables/plane.h>
 #include <memory>
+#include <render_surface.h>
+#include <scene.h>
 #include <shaders/default_shader.h>
+#include <trace_master.h>
+#include <tracer.h>
 #include <vector>
 
-using Libvec::Vector3d;
+using libvec::vector3d;
 
 namespace {
 
 // Keeps the rendered pixels in memory.
-class MemorySurface : public RenderSurface {
+class memory_surface : public render_surface {
   public:
-    MemorySurface(int width, int height)
-        : RenderSurface(width, height), m_pixels(size_t(width) * height) {}
+    memory_surface(int width, int height)
+        : render_surface(width, height), pixels_(size_t(width) * height) {}
 
-    void SetXY(int x, int y, colorf color) override { m_pixels[y * Width() + x] = color; }
-    void SetXYRun(int x, int y, int count, const colorf *color) override {
+    void set_xy(int x, int y, colorf color) override { pixels_[y * width() + x] = color; }
+    void set_xy_run(int x, int y, int count, const colorf *color) override {
         for (int i = 0; i < count; i++) {
-            SetXY(x + i, y, color[i]);
+            set_xy(x + i, y, color[i]);
         }
     }
-    const colorf &At(int x, int y) const { return m_pixels[y * Width() + x]; }
+    const colorf &at(int x, int y) const { return pixels_[y * width() + x]; }
 
   private:
-    std::vector<colorf> m_pixels;
+    std::vector<colorf> pixels_;
 };
 
-void Render(const Scene &scene, MemorySurface &surface) {
-    TraceMaster master(surface, TileOrder::Sequential, 1);
-    Tracer tracer(surface, scene, master);
-    tracer.Trace();
-    master.WaitForDone();
+void render(const scene &s, memory_surface &surface) {
+    trace_master master(surface, tile_order::sequential, 1);
+    tracer t(surface, s, master);
+    t.trace();
+    master.wait_for_done();
 }
 
 } // namespace
 
 int main() {
     // a red floor lit from above
-    Scene scene;
-    auto shader = std::make_shared<DefaultShader>();
-    shader->SetDiffuseColor(colorf(1, 0, 0));
-    auto floor = std::make_unique<Plane>(Ray(Vector3d(0, 0, 0), Vector3d(0, 0, 1)));
-    floor->SetShader(shader);
-    scene.AddDrawable(std::move(floor));
-    scene.AddLight(SimpleLight(Vector3d(0, 0, 10), colorf(1, 1, 1), 100));
+    scene s;
+    auto shader = std::make_shared<default_shader>();
+    shader->set_diffuse_color(colorf(1, 0, 0));
+    auto floor = std::make_unique<plane>(ray(vector3d(0, 0, 0), vector3d(0, 0, 1)));
+    floor->set_shader(shader);
+    s.add_drawable(std::move(floor));
+    s.add_light(simple_light(vector3d(0, 0, 10), colorf(1, 1, 1), 100));
 
     // seen from straight above, where the camera's default up vector is degenerate
-    scene.SetCamera(Vector3d(0, 0, 10), Vector3d(0, 0, 0));
-    scene.Prepare();
+    s.set_camera(vector3d(0, 0, 10), vector3d(0, 0, 0));
+    s.prepare();
     {
-        MemorySurface surface(20, 20);
-        Render(scene, surface);
+        memory_surface surface(20, 20);
+        render(s, surface);
         for (int y = 0; y < 20; y++) {
             for (int x = 0; x < 20; x++) {
-                const colorf &c = surface.At(x, y);
+                const colorf &c = surface.at(x, y);
                 CHECK(c.r > 0.5 && c.g == 0 && c.b == 0);
             }
         }
         // brightest directly below the light
-        CHECK(surface.At(10, 10).r > surface.At(0, 0).r);
+        CHECK(surface.at(10, 10).r > surface.at(0, 0).r);
     }
 
     // seen from the side at floor level the floor fills the lower half only
-    scene.SetCamera(Vector3d(10, 0, 0.5), Vector3d(0, 0, 0.5));
+    s.set_camera(vector3d(10, 0, 0.5), vector3d(0, 0, 0.5));
     {
-        MemorySurface surface(20, 20);
-        Render(scene, surface);
-        CHECK(surface.At(10, 2).r == 0);
-        CHECK(surface.At(10, 18).r > 0);
+        memory_surface surface(20, 20);
+        render(s, surface);
+        CHECK(surface.at(10, 2).r == 0);
+        CHECK(surface.at(10, 18).r > 0);
     }
 
     return TEST_RESULT();

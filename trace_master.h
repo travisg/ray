@@ -22,58 +22,58 @@
  */
 #pragma once
 
-#include <render_surface.h>
 #include <array>
 #include <condition_variable>
+#include <cpp.h>
 #include <cstddef>
 #include <cstdint>
 #include <mutex>
+#include <render_surface.h>
 #include <vector>
 
 // Tiles are kWorkUnitSize x kWorkUnitSize pixels, clipped at the image edge.
 inline constexpr int kWorkUnitSize = 16;
 
-struct TraceWorkUnit {
+struct trace_work_unit {
     // inclusive bounds
     int startx = 0, starty = 0;
     int endx = 0, endy = 0;
 
-    // row-major, Width() per row
+    // row-major, width() per row
     std::array<colorf, kWorkUnitSize * kWorkUnitSize> result;
 
-    void SetResult(int x, int y, colorf c) { result[(y - starty) * Width() + (x - startx)] = c; }
+    void set_result(int x, int y, colorf c) { result[(y - starty) * width() + (x - startx)] = c; }
 
-    int Width() const { return endx + 1 - startx; }
-    int Height() const { return endy + 1 - starty; }
+    int width() const { return endx + 1 - startx; }
+    int height() const { return endy + 1 - starty; }
 };
 
-enum class TileOrder { Sequential, Random };
+enum class tile_order { sequential, random };
 
 // Hands out tiles to the tracer threads and writes finished tiles to the surface.
-class TraceMaster {
+class trace_master {
   public:
-    TraceMaster(RenderSurface &surface, TileOrder order, uint32_t seed);
-    TraceMaster(const TraceMaster &) = delete;
-    TraceMaster &operator=(const TraceMaster &) = delete;
+    trace_master(render_surface &surface, tile_order order, uint32_t seed);
+    DISALLOW_COPY_ASSIGN_AND_MOVE(trace_master);
 
     // false once every tile has been issued
-    bool GetWorkUnit(TraceWorkUnit &unit);
-    // the last tile returned wakes WaitForDone
-    void ReturnWorkUnit(const TraceWorkUnit &unit);
-    void WaitForDone();
+    bool get_work_unit(trace_work_unit &unit);
+    // the last tile returned wakes wait_for_done
+    void return_work_unit(const trace_work_unit &unit);
+    void wait_for_done();
 
   private:
-    void FillUnit(uint32_t tile, TraceWorkUnit &unit) const;
+    void fill_unit(uint32_t tile, trace_work_unit &unit) const;
 
-    RenderSurface &m_Surface;
-    const int m_TilesX;
-    const int m_TilesY;
-    std::vector<uint32_t> m_Order; // tile indices in issue order
+    render_surface &surface_;
+    const int tiles_x_;
+    const int tiles_y_;
+    std::vector<uint32_t> order_; // tile indices in issue order
 
-    // guards everything below and the surface writes (RayFile is not thread-safe)
-    std::mutex m_Lock;
-    std::condition_variable m_DoneCond;
-    size_t m_Next = 0;
-    int m_Pending = 0;
-    bool m_Done = false;
+    // guards everything below and the surface writes (ray_file is not thread-safe)
+    std::mutex lock_;
+    std::condition_variable done_cond_;
+    size_t next_ = 0;
+    int pending_ = 0;
+    bool done_ = false;
 };

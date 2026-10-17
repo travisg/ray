@@ -22,17 +22,17 @@
  */
 #pragma once
 
-#include <ray.h>
 #include <drawables/drawable.h>
 #include <libvec/vector3.h>
+#include <ray.h>
 
-class Sphere : public Drawable {
+class sphere : public drawable {
   public:
-    Sphere(const Libvec::Vector3d &pos, double radius);
+    sphere(const libvec::vector3d &pos, double radius);
 
-    std::optional<Hit> Intersect(const Ray &ray) const override;
+    std::optional<hit> intersect(const ray &r) const override;
 
   private:
-    Libvec::Vector3d m_Center;
-    double m_Radius;
+    libvec::vector3d center_;
+    double radius_;
 };

@@ -26,18 +26,18 @@
 #include <libvec/vector3.h>
 
 // Point light. Falloff is stored but the shaders ignore it.
-class SimpleLight {
+class simple_light {
   public:
-    SimpleLight() = default;
-    SimpleLight(const Libvec::Vector3d &pos, colorf color, float falloff)
-        : m_Position(pos), m_Color(color), m_Falloff(falloff) {}
+    simple_light() = default;
+    simple_light(const libvec::vector3d &pos, colorf color, float falloff)
+        : position_(pos), color_(color), falloff_(falloff) {}
 
-    const Libvec::Vector3d &GetPos() const { return m_Position; }
-    colorf GetColor() const { return m_Color; }
-    float GetFalloff() const { return m_Falloff; }
+    const libvec::vector3d &position() const { return position_; }
+    colorf color() const { return color_; }
+    float falloff() const { return falloff_; }
 
   private:
-    Libvec::Vector3d m_Position;
-    colorf m_Color;
-    float m_Falloff = 0;
+    libvec::vector3d position_;
+    colorf color_;
+    float falloff_ = 0;
 };

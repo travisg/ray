@@ -22,19 +22,19 @@
  */
 #pragma once
 
-#include <ray.h>
 #include <libvec/vector3.h>
+#include <ray.h>
 
 #include "drawable.h"
 
 // Single flat triangle; only the front face (counter-clockwise winding) is visible.
-class Triangle : public Drawable {
+class triangle : public drawable {
   public:
-    Triangle(const Libvec::Vector3d &v0, const Libvec::Vector3d &v1, const Libvec::Vector3d &v2);
+    triangle(const libvec::vector3d &v0, const libvec::vector3d &v1, const libvec::vector3d &v2);
 
-    std::optional<Hit> Intersect(const Ray &ray) const override;
+    std::optional<hit> intersect(const ray &r) const override;
 
   private:
-    Libvec::Vector3d m_v[3];
-    Libvec::Vector3d m_normal;
+    libvec::vector3d v_[3];
+    libvec::vector3d normal_;
 };

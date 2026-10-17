@@ -26,35 +26,35 @@
 #include <memory>
 #include <string>
 
-class RenderSurface {
+class render_surface {
   public:
-    RenderSurface(int width, int height);
-    virtual ~RenderSurface() = default;
+    render_surface(int width, int height);
+    virtual ~render_surface() = default;
 
-    int Width() const { return m_Width; }
-    int Height() const { return m_Height; }
+    int width() const { return width_; }
+    int height() const { return height_; }
 
-    virtual void SetXY(int x, int y, colorf color) = 0;
-    virtual void SetXYRun(int x, int y, int count, const colorf *color) = 0;
+    virtual void set_xy(int x, int y, colorf color) = 0;
+    virtual void set_xy_run(int x, int y, int count, const colorf *color) = 0;
 
   private:
-    int m_Width;
-    int m_Height;
+    int width_;
+    int height_;
 };
 
-class RayFile;
+class ray_file;
 
 // Streams pixels straight into a .ray file.
-class RenderSurfaceFile : public RenderSurface {
+class render_surface_file : public render_surface {
   public:
-    RenderSurfaceFile(int width, int height);
-    ~RenderSurfaceFile() override;
+    render_surface_file(int width, int height);
+    ~render_surface_file() override;
 
-    int OpenOutFile(const std::string &name);
+    int open_out_file(const std::string &name);
 
-    void SetXY(int x, int y, colorf color) override;
-    void SetXYRun(int x, int y, int count, const colorf *color) override;
+    void set_xy(int x, int y, colorf color) override;
+    void set_xy_run(int x, int y, int count, const colorf *color) override;
 
   private:
-    std::unique_ptr<RayFile> m_file;
+    std::unique_ptr<ray_file> file_;
 };

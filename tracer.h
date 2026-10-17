@@ -22,29 +22,29 @@
  */
 #pragma once
 
+#include <libvec/vector3.h>
+#include <optional>
 #include <ray.h>
 #include <render_surface.h>
 #include <trace_master.h>
-#include <libvec/vector3.h>
-#include <optional>
 
-class Scene;
+class scene;
 
-// One per worker thread: pulls tiles from the TraceMaster and casts the rays.
-class Tracer {
+// One per worker thread: pulls tiles from the trace_master and casts the rays.
+class tracer {
   public:
-    Tracer(const RenderSurface &surface, const Scene &scene, TraceMaster &master);
+    tracer(const render_surface &surface, const scene &s, trace_master &master);
 
-    void Trace();
+    void trace();
     // nullopt when the ray leaves the scene or the recursion limit is hit
-    std::optional<colorf> Cast(const Ray &ray);
+    std::optional<colorf> cast(const ray &r);
 
   private:
-    const RenderSurface &m_Surface;
-    const Scene &m_Scene;
-    TraceMaster &m_Master;
+    const render_surface &surface_;
+    const scene &scene_;
+    trace_master &master_;
 
-    int m_Depth = 0;
+    int depth_ = 0;
 
     static constexpr int kMaxTraceDepth = 16;
 };

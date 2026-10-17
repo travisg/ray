@@ -24,25 +24,25 @@
 
 #include <ray_file.h>
 
-RenderSurface::RenderSurface(int width, int height) : m_Width(width), m_Height(height) {}
+render_surface::render_surface(int width, int height) : width_(width), height_(height) {}
 
-RenderSurfaceFile::RenderSurfaceFile(int width, int height) : RenderSurface(width, height) {}
+render_surface_file::render_surface_file(int width, int height) : render_surface(width, height) {}
 
-RenderSurfaceFile::~RenderSurfaceFile() = default;
+render_surface_file::~render_surface_file() = default;
 
-int RenderSurfaceFile::OpenOutFile(const std::string &name) {
-    m_file = std::make_unique<RayFile>();
-    return m_file->OpenWrite(name, Width(), Height());
+int render_surface_file::open_out_file(const std::string &name) {
+    file_ = std::make_unique<ray_file>();
+    return file_->open_write(name, width(), height());
 }
 
-void RenderSurfaceFile::SetXY(int x, int y, colorf color) {
-    if (m_file) {
-        m_file->SetXY(x, y, color);
+void render_surface_file::set_xy(int x, int y, colorf color) {
+    if (file_) {
+        file_->set_xy(x, y, color);
     }
 }
 
-void RenderSurfaceFile::SetXYRun(int x, int y, int count, const colorf *color) {
-    if (m_file) {
-        m_file->SetXYRun(x, y, count, color);
+void render_surface_file::set_xy_run(int x, int y, int count, const colorf *color) {
+    if (file_) {
+        file_->set_xy_run(x, y, count, color);
     }
 }

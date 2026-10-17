@@ -27,25 +27,25 @@
 #include <libvec/vector3.h>
 #include <memory>
 
-class Scene;
-class Tracer;
-struct Ray;
+class scene;
+class tracer;
+struct ray;
 
-struct ShaderArgs {
-    const Scene &scene;
-    Tracer &tracer;
-    const Ray &ray;
-    const Hit &hit;
+struct shader_args {
+    const ::scene &scene;
+    ::tracer &tracer;
+    const ::ray &ray;
+    const ::hit &hit;
 };
 
 // One shader instance is shared by every thread and every drawable it is
-// attached to, so Run() must not touch mutable state.
-class Shader {
+// attached to, so run() must not touch mutable state.
+class shader {
   public:
-    Shader() = default;
-    virtual ~Shader() = default;
+    shader() = default;
+    virtual ~shader() = default;
 
-    virtual colorf Run(const ShaderArgs &args) const = 0;
+    virtual colorf run(const shader_args &args) const = 0;
 };
 
-using ShaderPtr = std::shared_ptr<Shader>;
+using shader_ptr = std::shared_ptr<shader>;

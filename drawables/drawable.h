@@ -22,31 +22,31 @@
  */
 #pragma once
 
+#include <cpp.h>
 #include <hit.h>
 #include <libvec/vector3.h>
 #include <optional>
 #include <shaders/shader.h>
 #include <utility>
 
-struct Ray;
+struct ray;
 
-class Drawable {
-  protected:
-    Drawable() = default;
-
+class drawable {
   public:
-    virtual ~Drawable() = default;
-    Drawable(const Drawable &) = delete;
-    Drawable &operator=(const Drawable &) = delete;
+    virtual ~drawable() = default;
+    DISALLOW_COPY_ASSIGN_AND_MOVE(drawable);
 
-    virtual int Prepare() { return 0; }
+    virtual int prepare() { return 0; }
 
-    // ray.dir must be unit length for Hit::t to be a distance
-    virtual std::optional<Hit> Intersect(const Ray &ray) const = 0;
+    // ray.dir must be unit length for hit::t to be a distance
+    virtual std::optional<hit> intersect(const ray &r) const = 0;
 
-    void SetShader(ShaderPtr s) { m_Shader = std::move(s); }
-    const ShaderPtr &GetShader() const { return m_Shader; }
+    void set_shader(shader_ptr s) { shader_ = std::move(s); }
+    const shader_ptr &shader() const { return shader_; }
+
+  protected:
+    drawable() = default;
 
   private:
-    ShaderPtr m_Shader;
+    shader_ptr shader_;
 };

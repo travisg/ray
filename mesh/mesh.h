@@ -27,30 +27,30 @@
 #include <string>
 #include <vector>
 
-class Geometry;
+class geometry;
 
-// A named group of surfaces indexing into the vertex lists of the Geometry
+// A named group of surfaces indexing into the vertex lists of the geometry
 // that owns the mesh.
-class Mesh {
+class mesh {
   public:
-    explicit Mesh(const Geometry &geom);
+    explicit mesh(const geometry &geom);
 
-    void AddSurface(Surface s);
+    void add_surface(surface s);
 
-    void SetName(const std::string &name);
-    const std::string &GetName() const { return m_Name; }
+    void set_name(const std::string &name);
+    const std::string &name() const { return name_; }
 
-    void Dump() const;
+    void dump() const;
 
-    const std::vector<Surface> &GetSurfaceList() const { return m_Surfaces; }
+    const std::vector<surface> &surfaces() const { return surfaces_; }
 
-    const VertexList &GetVertexList() const;
-    const VertexList &GetNormalVertexList() const;
-    const VertexList &GetTangentVertexList() const;
-    const VertexList &GetUVVertexList() const;
+    const vertex_list &vertices() const;
+    const vertex_list &normals() const;
+    const vertex_list &tangents() const;
+    const vertex_list &uvs() const;
 
   private:
-    const Geometry &m_Geom;
-    std::string m_Name = "default";
-    std::vector<Surface> m_Surfaces;
+    const geometry &geometry_;
+    std::string name_ = "default";
+    std::vector<surface> surfaces_;
 };

@@ -22,18 +22,18 @@
  */
 #pragma once
 
-#include <ray.h>
 #include <libvec/vector3.h>
+#include <ray.h>
 
 #include "drawable.h"
 
 // Infinite plane given as a point and its normal; only the front face is visible.
-class Plane : public Drawable {
+class plane : public drawable {
   public:
-    Plane(const Ray &normal);
+    plane(const ray &normal);
 
-    std::optional<Hit> Intersect(const Ray &ray) const override;
+    std::optional<hit> intersect(const ray &r) const override;
 
   private:
-    Ray m_Normal;
+    ray normal_;
 };

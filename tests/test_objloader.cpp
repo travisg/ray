@@ -7,18 +7,18 @@
 int main() {
     // cbox.obj: a cube of 8 vertices, 24 normals and 6 quad faces in one mesh
     {
-        std::unique_ptr<Geometry> g = LoadObjFile(RAY_SOURCE_DIR "/resources/cbox.obj");
+        std::unique_ptr<geometry> g = load_obj_file(RAY_SOURCE_DIR "/resources/cbox.obj");
         CHECK(g != nullptr);
         if (g) {
-            CHECK(g->Vertices().size() == 8);
-            CHECK(g->Normals().size() == 24);
-            CHECK(g->Meshes().size() == 1);
-            if (g->Meshes().size() == 1) {
-                const Mesh *m = g->Meshes()[0].get();
-                CHECK(m->GetName() == "default0");
-                CHECK(m->GetSurfaceList().size() == 6);
-                for (const Surface &s : m->GetSurfaceList()) {
-                    CHECK(s.m_Indexes.size() == 4);
+            CHECK(g->vertices().size() == 8);
+            CHECK(g->normals().size() == 24);
+            CHECK(g->meshes().size() == 1);
+            if (g->meshes().size() == 1) {
+                const mesh *m = g->meshes()[0].get();
+                CHECK(m->name() == "default0");
+                CHECK(m->surfaces().size() == 6);
+                for (const surface &s : m->surfaces()) {
+                    CHECK(s.indexes_.size() == 4);
                 }
             }
         }
@@ -34,23 +34,23 @@ int main() {
                               "v 0 0 1\r\nv 1 0 1\r\nv 0 1 1\r\nv 1 1 1\r\n"
                               "vt 0.5 0.5\r\n"
                               "f 4/1/1 5/1/1 7/1/1 6/1/1\r\n");
-        std::unique_ptr<Geometry> g = LoadObj(in);
+        std::unique_ptr<geometry> g = load_obj(in);
         CHECK(g != nullptr);
         if (g) {
-            CHECK(g->Vertices().size() == 7);
-            CHECK(g->Meshes().size() == 2);
-            if (g->Meshes().size() == 2) {
-                CHECK(g->Meshes()[0]->GetName() == "lid");
-                CHECK(g->Meshes()[0]->GetSurfaceList().size() == 1);
-                CHECK(g->Meshes()[1]->GetName() == "default1");
-                CHECK(g->Meshes()[1]->GetSurfaceList().size() == 1);
-                const Surface &quad = g->Meshes()[1]->GetSurfaceList()[0];
-                CHECK(quad.m_Indexes.size() == 4);
-                CHECK(quad.m_Indexes[0].posIndex == 3);
-                CHECK(quad.m_Indexes[0].uvIndex == 0);
-                CHECK(quad.m_Indexes[0].normIndex == 0);
-                const Surface &tri = g->Meshes()[0]->GetSurfaceList()[0];
-                CHECK(tri.m_Indexes[1].uvIndex == -1);
+            CHECK(g->vertices().size() == 7);
+            CHECK(g->meshes().size() == 2);
+            if (g->meshes().size() == 2) {
+                CHECK(g->meshes()[0]->name() == "lid");
+                CHECK(g->meshes()[0]->surfaces().size() == 1);
+                CHECK(g->meshes()[1]->name() == "default1");
+                CHECK(g->meshes()[1]->surfaces().size() == 1);
+                const surface &quad = g->meshes()[1]->surfaces()[0];
+                CHECK(quad.indexes_.size() == 4);
+                CHECK(quad.indexes_[0].pos_index == 3);
+                CHECK(quad.indexes_[0].uv_index == 0);
+                CHECK(quad.indexes_[0].norm_index == 0);
+                const surface &tri = g->meshes()[0]->surfaces()[0];
+                CHECK(tri.indexes_[1].uv_index == -1);
             }
         }
     }
@@ -58,17 +58,17 @@ int main() {
     // a face without normals, a face before any vertex, and a bad index all fail
     {
         std::istringstream in("v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n");
-        CHECK(LoadObj(in) == nullptr);
+        CHECK(load_obj(in) == nullptr);
     }
     {
         std::istringstream in("f 1 2 3\n");
-        CHECK(LoadObj(in) == nullptr);
+        CHECK(load_obj(in) == nullptr);
     }
     {
         std::istringstream in("v 0 0 0\nv 1 0 0\nv 0 1 0\nvn 0 0 1\nf 1//1 2//1 9//1\n");
-        CHECK(LoadObj(in) == nullptr);
+        CHECK(load_obj(in) == nullptr);
     }
-    CHECK(LoadObjFile(RAY_SOURCE_DIR "/resources/missing.obj") == nullptr);
+    CHECK(load_obj_file(RAY_SOURCE_DIR "/resources/missing.obj") == nullptr);
 
     return TEST_RESULT();
 }

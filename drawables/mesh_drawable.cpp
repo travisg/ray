@@ -28,39 +28,39 @@
 #include <drawables/mesh_drawable.h>
 #include <mesh/geometry.h>
 
-using Libvec::Vector3d;
+using libvec::vector3d;
 
-MeshDrawable::MeshDrawable(std::unique_ptr<Geometry> geom) : m_Geom(std::move(geom)) {}
+mesh_drawable::mesh_drawable(std::unique_ptr<geometry> geom) : geometry_(std::move(geom)) {}
 
-MeshDrawable::~MeshDrawable() = default;
+mesh_drawable::~mesh_drawable() = default;
 
-int MeshDrawable::Prepare() {
+int mesh_drawable::prepare() {
     // center the bounding sphere on the vertex average, radius to the farthest vertex
-    if (m_Geom->Vertices().empty()) {
+    if (geometry_->vertices().empty()) {
         return 0;
     }
 
-    Vector3d avg(0, 0, 0);
+    vector3d avg(0, 0, 0);
     int count = 0;
-    for (const Vertex &v : m_Geom->Vertices()) {
-        avg += Vector3d(v.x, v.y, v.z);
+    for (const vertex &v : geometry_->vertices()) {
+        avg += vector3d(v.x, v.y, v.z);
         count++;
     }
     avg /= count;
 
-    m_BSphere.center = avg;
+    bounding_sphere_.center = avg;
 
     double farthest = 0;
-    for (const Vertex &vert : m_Geom->Vertices()) {
-        Vector3d v(vert.x, vert.y, vert.z);
+    for (const vertex &vert : geometry_->vertices()) {
+        vector3d v(vert.x, vert.y, vert.z);
 
-        double dist = (v - m_BSphere.center).Length();
+        double dist = (v - bounding_sphere_.center).length();
         if (dist > farthest) {
             farthest = dist;
         }
     }
 
-    m_BSphere.radius = farthest;
+    bounding_sphere_.radius = farthest;
 
     std::cout << "mesh bounding sphere center " << avg << " radius " << farthest << std::endl;
 
@@ -69,40 +69,40 @@ int MeshDrawable::Prepare() {
 
 namespace {
 
-std::optional<Hit> TriIntersect(const Ray &ray, const Vector3d &v0, const Vector3d &v1,
-                                const Vector3d &v2, const Vector3d &n0, const Vector3d &n1,
-                                const Vector3d &n2) {
-    Vector3d normal = Cross(v1 - v0, v2 - v0);
+std::optional<hit> tri_intersect(const ray &r, const vector3d &v0, const vector3d &v1,
+                                 const vector3d &v2, const vector3d &n0, const vector3d &n1,
+                                 const vector3d &n2) {
+    vector3d normal = cross(v1 - v0, v2 - v0);
 
     // is the ray pointing at the surface?
-    if (Dot(ray.dir, normal) > 0) {
+    if (dot(r.dir, normal) > 0) {
         return std::nullopt;
     }
 
     // t = ((P - P0) . N) / (V . N)
     // P = P0 + tV
-    double t = (Dot(v0 - ray.origin, normal)) / (Dot(ray.dir, normal));
+    double t = (dot(v0 - r.origin, normal)) / (dot(r.dir, normal));
 
     // is the origin behind the start of the ray
     if (t < 0.0) {
         return std::nullopt;
     }
 
-    Vector3d pos = ray.origin + ray.dir * t;
+    vector3d pos = r.origin + r.dir * t;
 
     // it intersects the plane the triangle is in, now calc the u/v coordinates and see if it's in
     // the triangle
     double uu, uv, vv, wu, wv, D;
 
-    Vector3d u = v1 - v0;
-    Vector3d v = v2 - v0;
+    vector3d u = v1 - v0;
+    vector3d v = v2 - v0;
 
-    uu = Dot(u, u);
-    uv = Dot(u, v);
-    vv = Dot(v, v);
-    Vector3d w = pos - v0;
-    wu = Dot(w, u);
-    wv = Dot(w, v);
+    uu = dot(u, u);
+    uv = dot(u, v);
+    vv = dot(v, v);
+    vector3d w = pos - v0;
+    wu = dot(w, u);
+    wv = dot(w, v);
     D = 1.0 / (uv * uv - uu * vv);
 
     // get and test parametric coords
@@ -115,70 +115,70 @@ std::optional<Hit> TriIntersect(const Ray &ray, const Vector3d &v0, const Vector
         return std::nullopt;
     }
 
-    Hit hit;
-    hit.t = t;
-    hit.pos = pos;
+    hit h;
+    h.t = t;
+    h.pos = pos;
     // lerp the normal from the passed in normal vertexes
-    hit.normal = n0 * (1 - (b1 + b2)) + n1 * b1 + n2 * b2;
-    hit.normal.Normalize();
-    return hit;
+    h.normal = n0 * (1 - (b1 + b2)) + n1 * b1 + n2 * b2;
+    h.normal.normalize();
+    return h;
 }
 
-std::optional<Hit> QuadIntersect(const Ray &ray, const Vector3d &v0, const Vector3d &v1,
-                                 const Vector3d &v2, const Vector3d &v3, const Vector3d &n0,
-                                 const Vector3d &n1, const Vector3d &n2, const Vector3d &n3) {
-    if (auto hit = TriIntersect(ray, v0, v1, v2, n0, n1, n2)) {
-        return hit;
+std::optional<hit> quad_intersect(const ray &r, const vector3d &v0, const vector3d &v1,
+                                  const vector3d &v2, const vector3d &v3, const vector3d &n0,
+                                  const vector3d &n1, const vector3d &n2, const vector3d &n3) {
+    if (auto h = tri_intersect(r, v0, v1, v2, n0, n1, n2)) {
+        return h;
     }
-    return TriIntersect(ray, v2, v3, v0, n2, n3, n0);
+    return tri_intersect(r, v2, v3, v0, n2, n3, n0);
 }
 
-std::optional<Hit> SurfaceIntersect(const Ray &ray, const Mesh &mesh, const Surface &surface) {
+std::optional<hit> surface_intersect(const ray &r, const mesh &m, const surface &sf) {
     // get the vertexes that make up this surface
-    const VertexList &verts = mesh.GetVertexList();
+    const vertex_list &verts = m.vertices();
 
-    const Vertex *vp = &verts[surface.m_Indexes[0].posIndex];
-    Vector3d v0(vp->x, vp->y, vp->z);
-    vp = &verts[surface.m_Indexes[1].posIndex];
-    Vector3d v1(vp->x, vp->y, vp->z);
-    vp = &verts[surface.m_Indexes[2].posIndex];
-    Vector3d v2(vp->x, vp->y, vp->z);
+    const vertex *vp = &verts[sf.indexes_[0].pos_index];
+    vector3d v0(vp->x, vp->y, vp->z);
+    vp = &verts[sf.indexes_[1].pos_index];
+    vector3d v1(vp->x, vp->y, vp->z);
+    vp = &verts[sf.indexes_[2].pos_index];
+    vector3d v2(vp->x, vp->y, vp->z);
 
     // get the normal vertexes
-    const VertexList &nverts = mesh.GetNormalVertexList();
-    vp = &nverts[surface.m_Indexes[0].normIndex];
-    Vector3d n0(vp->x, vp->y, vp->z);
-    vp = &nverts[surface.m_Indexes[1].normIndex];
-    Vector3d n1(vp->x, vp->y, vp->z);
-    vp = &nverts[surface.m_Indexes[2].normIndex];
-    Vector3d n2(vp->x, vp->y, vp->z);
+    const vertex_list &nverts = m.normals();
+    vp = &nverts[sf.indexes_[0].norm_index];
+    vector3d n0(vp->x, vp->y, vp->z);
+    vp = &nverts[sf.indexes_[1].norm_index];
+    vector3d n1(vp->x, vp->y, vp->z);
+    vp = &nverts[sf.indexes_[2].norm_index];
+    vector3d n2(vp->x, vp->y, vp->z);
 
-    if (surface.m_Indexes.size() == 3) {
-        return TriIntersect(ray, v0, v1, v2, n0, n1, n2);
+    if (sf.indexes_.size() == 3) {
+        return tri_intersect(r, v0, v1, v2, n0, n1, n2);
     }
 
-    vp = &verts[surface.m_Indexes[3].posIndex];
-    Vector3d v3(vp->x, vp->y, vp->z);
-    vp = &nverts[surface.m_Indexes[3].normIndex];
-    Vector3d n3(vp->x, vp->y, vp->z);
+    vp = &verts[sf.indexes_[3].pos_index];
+    vector3d v3(vp->x, vp->y, vp->z);
+    vp = &nverts[sf.indexes_[3].norm_index];
+    vector3d n3(vp->x, vp->y, vp->z);
 
-    return QuadIntersect(ray, v0, v1, v2, v3, n0, n1, n2, n3);
+    return quad_intersect(r, v0, v1, v2, v3, n0, n1, n2, n3);
 }
 
 } // namespace
 
-std::optional<Hit> MeshDrawable::Intersect(const Ray &ray) const {
-    if (!m_BSphere.DoesIntersect(ray)) {
+std::optional<hit> mesh_drawable::intersect(const ray &r) const {
+    if (!bounding_sphere_.does_intersect(r)) {
         return std::nullopt;
     }
 
     // nearest surface over every mesh
-    std::optional<Hit> best;
-    for (const auto &m : m_Geom->Meshes()) {
-        for (const Surface &s : m->GetSurfaceList()) {
-            std::optional<Hit> hit = SurfaceIntersect(ray, *m, s);
-            if (hit && (!best || hit->t < best->t)) {
-                best = hit;
+    std::optional<hit> best;
+    for (const auto &m : geometry_->meshes()) {
+        for (const surface &s : m->surfaces()) {
+            std::optional<hit> h = surface_intersect(r, *m, s);
+            if (h && (!best || h->t < best->t)) {
+                best = h;
             }
         }
     }

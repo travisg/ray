@@ -23,26 +23,26 @@
 #pragma once
 
 #include <bounding_sphere.h>
-#include <ray.h>
 #include <drawables/drawable.h>
 #include <libvec/vector3.h>
 #include <memory>
+#include <ray.h>
 
-class Geometry;
+class geometry;
 
-// Triangle/quad mesh loaded from a Geometry, with a bounding-sphere pre-test.
-class MeshDrawable : public Drawable {
+// triangle/quad mesh loaded from a geometry, with a bounding-sphere pre-test.
+class mesh_drawable : public drawable {
   public:
-    explicit MeshDrawable(std::unique_ptr<Geometry> geom);
-    ~MeshDrawable() override;
+    explicit mesh_drawable(std::unique_ptr<geometry> geom);
+    ~mesh_drawable() override;
 
-    // computes the bounding sphere; must run before Intersect
-    int Prepare() override;
+    // computes the bounding sphere; must run before intersect
+    int prepare() override;
 
-    std::optional<Hit> Intersect(const Ray &ray) const override;
+    std::optional<hit> intersect(const ray &r) const override;
 
   private:
-    std::unique_ptr<Geometry> m_Geom;
+    std::unique_ptr<geometry> geometry_;
 
-    BoundingSphere m_BSphere;
+    bounding_sphere bounding_sphere_;
 };

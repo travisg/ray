@@ -1,8 +1,8 @@
 // Compares a render against a reference .ray file channel by channel.
-#include <ray_file.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <ray_file.h>
 #include <vector>
 
 namespace {
@@ -10,12 +10,12 @@ namespace {
 // Sub-visible (an 8-bit step is ~4e-3) yet far above FMA and libm noise.
 constexpr float kTolerance = 1e-3f;
 
-bool Load(const char *path, RayFile &f, std::vector<float> &pixels) {
-    if (f.Open(path) < 0) {
+bool load(const char *path, ray_file &f, std::vector<float> &pixels) {
+    if (f.open(path) < 0) {
         std::fprintf(stderr, "cannot open %s\n", path);
         return false;
     }
-    if (f.ReadIntoBuffer(pixels) < 0) {
+    if (f.read_into_buffer(pixels) < 0) {
         std::fprintf(stderr, "cannot parse %s\n", path);
         return false;
     }
@@ -30,31 +30,31 @@ int main(int argc, char **argv) {
         return 2;
     }
 
-    RayFile a, b;
+    ray_file a, b;
     std::vector<float> pa, pb;
-    if (!Load(argv[1], a, pa) || !Load(argv[2], b, pb)) {
+    if (!load(argv[1], a, pa) || !load(argv[2], b, pb)) {
         return 1;
     }
-    if (a.Width() != b.Width() || a.Height() != b.Height()) {
-        std::fprintf(stderr, "size mismatch: %ux%u vs %ux%u\n", a.Width(), a.Height(), b.Width(),
-                     b.Height());
+    if (a.width() != b.width() || a.height() != b.height()) {
+        std::fprintf(stderr, "size mismatch: %ux%u vs %ux%u\n", a.width(), a.height(), b.width(),
+                     b.height());
         return 1;
     }
 
     size_t bad = 0;
-    float maxDiff = 0;
+    float max_diff = 0;
     for (size_t i = 0; i < pa.size(); i++) {
         float d = std::fabs(pa[i] - pb[i]);
         if (!(d <= kTolerance)) {
             bad++;
         }
-        maxDiff = std::max(maxDiff, d);
+        max_diff = std::max(max_diff, d);
     }
     if (bad) {
         std::fprintf(stderr, "%zu of %zu channels differ by more than %g (max diff %g)\n", bad,
-                     pa.size(), kTolerance, maxDiff);
+                     pa.size(), kTolerance, max_diff);
         return 1;
     }
-    std::printf("%zu channels within %g (max diff %g)\n", pa.size(), kTolerance, maxDiff);
+    std::printf("%zu channels within %g (max diff %g)\n", pa.size(), kTolerance, max_diff);
     return 0;
 }

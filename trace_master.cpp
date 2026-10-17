@@ -27,66 +27,66 @@
 
 namespace {
 
-int DivRoundUp(int x, int d) {
+int div_round_up(int x, int d) {
     return (x + d - 1) / d;
 }
 
 } // namespace
 
-TraceMaster::TraceMaster(RenderSurface &surface, TileOrder order, uint32_t seed)
-    : m_Surface(surface), m_TilesX(DivRoundUp(surface.Width(), kWorkUnitSize)),
-      m_TilesY(DivRoundUp(surface.Height(), kWorkUnitSize)),
-      m_Order(static_cast<size_t>(m_TilesX) * m_TilesY) {
-    std::iota(m_Order.begin(), m_Order.end(), uint32_t{ 0 });
-    if (order == TileOrder::Random) {
+trace_master::trace_master(render_surface &surface, tile_order order, uint32_t seed)
+    : surface_(surface), tiles_x_(div_round_up(surface.width(), kWorkUnitSize)),
+      tiles_y_(div_round_up(surface.height(), kWorkUnitSize)),
+      order_(static_cast<size_t>(tiles_x_) * tiles_y_) {
+    std::iota(order_.begin(), order_.end(), uint32_t{ 0 });
+    if (order == tile_order::random) {
         std::mt19937 rng(seed);
-        std::shuffle(m_Order.begin(), m_Order.end(), rng);
+        std::shuffle(order_.begin(), order_.end(), rng);
     }
-    // with no tiles nothing will ever call ReturnWorkUnit
-    m_Done = m_Order.empty();
+    // with no tiles nothing will ever call return_work_unit
+    done_ = order_.empty();
 }
 
-void TraceMaster::FillUnit(uint32_t tile, TraceWorkUnit &unit) const {
-    int tx = tile % m_TilesX;
-    int ty = tile / m_TilesX;
+void trace_master::fill_unit(uint32_t tile, trace_work_unit &unit) const {
+    int tx = tile % tiles_x_;
+    int ty = tile / tiles_x_;
     unit.startx = tx * kWorkUnitSize;
     unit.starty = ty * kWorkUnitSize;
-    unit.endx = std::min(unit.startx + kWorkUnitSize, m_Surface.Width()) - 1;
-    unit.endy = std::min(unit.starty + kWorkUnitSize, m_Surface.Height()) - 1;
+    unit.endx = std::min(unit.startx + kWorkUnitSize, surface_.width()) - 1;
+    unit.endy = std::min(unit.starty + kWorkUnitSize, surface_.height()) - 1;
 }
 
-bool TraceMaster::GetWorkUnit(TraceWorkUnit &unit) {
+bool trace_master::get_work_unit(trace_work_unit &unit) {
     uint32_t tile;
     {
-        std::lock_guard<std::mutex> guard(m_Lock);
-        if (m_Next == m_Order.size()) {
+        std::lock_guard<std::mutex> guard(lock_);
+        if (next_ == order_.size()) {
             return false;
         }
-        tile = m_Order[m_Next++];
-        m_Pending++;
+        tile = order_[next_++];
+        pending_++;
     }
-    FillUnit(tile, unit);
+    fill_unit(tile, unit);
     return true;
 }
 
-void TraceMaster::ReturnWorkUnit(const TraceWorkUnit &unit) {
-    std::lock_guard<std::mutex> guard(m_Lock);
+void trace_master::return_work_unit(const trace_work_unit &unit) {
+    std::lock_guard<std::mutex> guard(lock_);
 
     const colorf *c = unit.result.data();
-    int runlen = unit.Width();
+    int runlen = unit.width();
     for (int y = unit.starty; y <= unit.endy; y++) {
-        m_Surface.SetXYRun(unit.startx, y, runlen, c);
+        surface_.set_xy_run(unit.startx, y, runlen, c);
         c += runlen;
     }
 
-    m_Pending--;
-    if (m_Next == m_Order.size() && m_Pending == 0) {
-        m_Done = true;
-        m_DoneCond.notify_all();
+    pending_--;
+    if (next_ == order_.size() && pending_ == 0) {
+        done_ = true;
+        done_cond_.notify_all();
     }
 }
 
-void TraceMaster::WaitForDone() {
-    std::unique_lock<std::mutex> lock(m_Lock);
-    m_DoneCond.wait(lock, [this] { return m_Done; });
+void trace_master::wait_for_done() {
+    std::unique_lock<std::mutex> lock(lock_);
+    done_cond_.wait(lock, [this] { return done_; });
 }

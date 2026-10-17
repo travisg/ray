@@ -24,41 +24,41 @@
 #include <scene.h>
 #include <utility>
 
-void Scene::AddDrawable(std::unique_ptr<Drawable> d) {
-    m_DrawableList.push_back(std::move(d));
+void scene::add_drawable(std::unique_ptr<drawable> d) {
+    drawables_.push_back(std::move(d));
 }
 
-void Scene::AddLight(const SimpleLight &l) {
-    m_SimpleLightList.push_back(l);
+void scene::add_light(const simple_light &l) {
+    lights_.push_back(l);
 }
 
-void Scene::SetCamera(const Libvec::Vector3d &pos, const Libvec::Vector3d &target) {
-    m_Camera = pos;
-    m_Target = target;
+void scene::set_camera(const libvec::vector3d &pos, const libvec::vector3d &target) {
+    camera_ = pos;
+    target_ = target;
 }
 
-void Scene::Prepare() {
-    for (auto &d : m_DrawableList) {
-        d->Prepare();
+void scene::prepare() {
+    for (auto &d : drawables_) {
+        d->prepare();
     }
 }
 
-std::optional<Hit> Scene::Intersect(const Ray &ray) const {
-    std::optional<Hit> best;
-    for (const auto &d : m_DrawableList) {
-        std::optional<Hit> hit = d->Intersect(ray);
-        if (hit && hit->t > kMinT && (!best || hit->t < best->t)) {
-            best = hit;
+std::optional<hit> scene::intersect(const ray &r) const {
+    std::optional<hit> best;
+    for (const auto &d : drawables_) {
+        std::optional<hit> h = d->intersect(r);
+        if (h && h->t > kMinT && (!best || h->t < best->t)) {
+            best = h;
             best->drawable = d.get();
         }
     }
     return best;
 }
 
-bool Scene::DoesIntersect(const Ray &ray, double maxDistance) const {
-    for (const auto &d : m_DrawableList) {
-        std::optional<Hit> hit = d->Intersect(ray);
-        if (hit && hit->t > kMinT && hit->t < maxDistance - kMinT) {
+bool scene::does_intersect(const ray &r, double max_distance) const {
+    for (const auto &d : drawables_) {
+        std::optional<hit> h = d->intersect(r);
+        if (h && h->t > kMinT && h->t < max_distance - kMinT) {
             return true;
         }
     }

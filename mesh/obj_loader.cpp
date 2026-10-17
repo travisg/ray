@@ -36,7 +36,7 @@
 namespace {
 
 // Fields between runs of spaces; empty fields are dropped.
-std::vector<std::string_view> SplitSpaces(std::string_view s) {
+std::vector<std::string_view> split_spaces(std::string_view s) {
     std::vector<std::string_view> out;
     size_t pos = 0;
     while (pos < s.size()) {
@@ -55,7 +55,7 @@ std::vector<std::string_view> SplitSpaces(std::string_view s) {
 }
 
 // Fields between slashes; empty fields are kept, so "1//3" is {"1", "", "3"}.
-std::vector<std::string_view> SplitSlashes(std::string_view s) {
+std::vector<std::string_view> split_slashes(std::string_view s) {
     std::vector<std::string_view> out;
     for (;;) {
         size_t slash = s.find('/');
@@ -70,14 +70,14 @@ std::vector<std::string_view> SplitSlashes(std::string_view s) {
 
 // Reads up to count floats from the fields after the directive; missing ones
 // are left untouched. The fields are views into a null-terminated string.
-void ParseFloats(const std::vector<std::string_view> &fields, int count, float *out) {
+void parse_floats(const std::vector<std::string_view> &fields, int count, float *out) {
     for (int i = 0; i < count && i + 1 < (int)fields.size(); i++) {
         out[i] = std::strtof(fields[i + 1].data(), nullptr);
     }
 }
 
 // 1-based .obj index to 0-based; an empty field becomes -1 (absent).
-bool ParseIndex(std::string_view field, int &out) {
+bool parse_index(std::string_view field, int &out) {
     if (field.empty()) {
         out = -1;
         return true;
@@ -91,22 +91,22 @@ bool ParseIndex(std::string_view field, int &out) {
     return true;
 }
 
-bool ValidIndex(int index, size_t count) {
+bool valid_index(int index, size_t count) {
     return index >= 0 && static_cast<size_t>(index) < count;
 }
 
 // Every surface index must point into its list; uv may be absent.
-bool Validate(const Geometry &g) {
-    for (const auto &mesh : g.Meshes()) {
+bool validate(const geometry &g) {
+    for (const auto &mesh : g.meshes()) {
         size_t n = 0;
-        for (const Surface &s : mesh->GetSurfaceList()) {
-            for (const SurfaceIndex &i : s.m_Indexes) {
-                if (!ValidIndex(i.posIndex, g.Vertices().size()) ||
-                    !ValidIndex(i.normIndex, g.Normals().size()) ||
-                    (i.uvIndex != -1 && !ValidIndex(i.uvIndex, g.UVs().size()))) {
-                    std::cerr << "obj: surface " << n << " of mesh '" << mesh->GetName()
-                              << "' has an out of range index (v " << i.posIndex + 1 << " vt "
-                              << i.uvIndex + 1 << " vn " << i.normIndex + 1 << ")" << std::endl;
+        for (const surface &s : mesh->surfaces()) {
+            for (const surface_index &i : s.indexes_) {
+                if (!valid_index(i.pos_index, g.vertices().size()) ||
+                    !valid_index(i.norm_index, g.normals().size()) ||
+                    (i.uv_index != -1 && !valid_index(i.uv_index, g.uvs().size()))) {
+                    std::cerr << "obj: surface " << n << " of mesh '" << mesh->name()
+                              << "' has an out of range index (v " << i.pos_index + 1 << " vt "
+                              << i.uv_index + 1 << " vn " << i.norm_index + 1 << ")" << std::endl;
                     return false;
                 }
             }
@@ -118,10 +118,10 @@ bool Validate(const Geometry &g) {
 
 } // namespace
 
-std::unique_ptr<Geometry> LoadObj(std::istream &in) {
-    auto g = std::make_unique<Geometry>();
-    std::unique_ptr<Mesh> mesh;
-    bool addedSurfaces = true; // a vertex after faces starts a new mesh
+std::unique_ptr<geometry> load_obj(std::istream &in) {
+    auto g = std::make_unique<geometry>();
+    std::unique_ptr<mesh> mesh;
+    bool added_surfaces = true; // a vertex after faces starts a new mesh
     int meshnum = 0;
     std::string nextname = "default0";
 
@@ -138,55 +138,55 @@ std::unique_ptr<Geometry> LoadObj(std::istream &in) {
         std::string_view sv(line);
 
         if (sv.starts_with("v ")) {
-            if (addedSurfaces) {
+            if (added_surfaces) {
                 if (mesh) {
-                    g->AddMesh(std::move(mesh));
+                    g->add_mesh(std::move(mesh));
                 }
-                mesh = g->CreateMesh();
-                addedSurfaces = false;
+                mesh = g->create_mesh();
+                added_surfaces = false;
                 meshnum++;
-                mesh->SetName(nextname);
+                mesh->set_name(nextname);
                 nextname = "default" + std::to_string(meshnum);
             }
-            Vertex v;
-            ParseFloats(SplitSpaces(sv), 3, &v.x);
-            g->AddVert(v);
+            vertex v;
+            parse_floats(split_spaces(sv), 3, &v.x);
+            g->add_vert(v);
         } else if (sv.starts_with("vn ")) {
-            Vertex v;
-            ParseFloats(SplitSpaces(sv), 3, &v.x);
-            g->AddNormalVert(v);
+            vertex v;
+            parse_floats(split_spaces(sv), 3, &v.x);
+            g->add_normal_vert(v);
         } else if (sv.starts_with("vt ")) {
-            Vertex v;
-            ParseFloats(SplitSpaces(sv), 2, &v.x);
-            g->AddUVVert(v);
+            vertex v;
+            parse_floats(split_spaces(sv), 2, &v.x);
+            g->add_uv_vert(v);
         } else if (sv.starts_with("f ")) {
             if (!mesh) {
                 std::cerr << "obj: line " << lineno << ": face before any vertex" << std::endl;
                 return nullptr;
             }
-            addedSurfaces = true;
+            added_surfaces = true;
 
-            std::vector<std::string_view> corners = SplitSpaces(sv);
+            std::vector<std::string_view> corners = split_spaces(sv);
             if (corners.size() < 4 || corners.size() > 5) {
                 std::cerr << "obj: line " << lineno << ": skipping face with " << corners.size() - 1
                           << " vertices" << std::endl;
                 continue;
             }
 
-            Surface s;
+            surface s;
             for (size_t c = 1; c < corners.size(); c++) {
-                std::vector<std::string_view> fields = SplitSlashes(corners[c]);
+                std::vector<std::string_view> fields = split_slashes(corners[c]);
                 int pos = -1, uv = -1, norm = -1;
-                if (!ParseIndex(fields[0], pos) ||
-                    (fields.size() > 1 && !ParseIndex(fields[1], uv)) ||
-                    (fields.size() > 2 && !ParseIndex(fields[2], norm))) {
+                if (!parse_index(fields[0], pos) ||
+                    (fields.size() > 1 && !parse_index(fields[1], uv)) ||
+                    (fields.size() > 2 && !parse_index(fields[2], norm))) {
                     std::cerr << "obj: line " << lineno << ": bad face vertex '" << corners[c]
                               << "'" << std::endl;
                     return nullptr;
                 }
-                s.AddIndex(pos, norm, uv);
+                s.add_index(pos, norm, uv);
             }
-            mesh->AddSurface(std::move(s));
+            mesh->add_surface(std::move(s));
         } else if (sv.starts_with("#  ExternalName: ")) {
             nextname = std::string(sv.substr(17));
 
@@ -194,8 +194,8 @@ std::unique_ptr<Geometry> LoadObj(std::istream &in) {
             std::string name = nextname;
             for (int n = 0;; n++) {
                 bool taken = false;
-                for (const auto &m : g->Meshes()) {
-                    taken = taken || m->GetName() == name;
+                for (const auto &m : g->meshes()) {
+                    taken = taken || m->name() == name;
                 }
                 if (!taken) {
                     break;
@@ -214,21 +214,21 @@ std::unique_ptr<Geometry> LoadObj(std::istream &in) {
     }
 
     // a mesh only counts once it has faces
-    if (mesh && addedSurfaces) {
-        g->AddMesh(std::move(mesh));
+    if (mesh && added_surfaces) {
+        g->add_mesh(std::move(mesh));
     }
 
-    if (!Validate(*g)) {
+    if (!validate(*g)) {
         return nullptr;
     }
     return g;
 }
 
-std::unique_ptr<Geometry> LoadObjFile(const std::string &path) {
+std::unique_ptr<geometry> load_obj_file(const std::string &path) {
     std::ifstream in(path);
     if (!in) {
         std::cerr << "obj: cannot open " << path << std::endl;
         return nullptr;
     }
-    return LoadObj(in);
+    return load_obj(in);
 }

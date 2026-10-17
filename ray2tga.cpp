@@ -30,13 +30,13 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    RayFile file;
-    if (file.Open(argv[1]) < 0) {
+    ray_file file;
+    if (file.open(argv[1]) < 0) {
         std::cerr << "error opening file " << argv[1] << std::endl;
         return 1;
     }
 
-    if (ConvertToTGA(file, argv[2]) < 0) {
+    if (convert_to_tga(file, argv[2]) < 0) {
         std::cerr << "error outputting file " << argv[2] << std::endl;
         return 1;
     }

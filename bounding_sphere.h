@@ -22,31 +22,31 @@
  */
 #pragma once
 
-#include <ray.h>
 #include <libvec/vector3.h>
+#include <ray.h>
 
-// Sphere enclosing a mesh: a cheap reject test before per-triangle intersection.
-struct BoundingSphere {
-    bool DoesIntersect(const Ray &ray) const {
+// sphere enclosing a mesh: a cheap reject test before per-triangle intersection.
+struct bounding_sphere {
+    bool does_intersect(const ray &r) const {
         double radius2 = radius * radius;
 
-        Libvec::Vector3d oc = center - ray.origin;
-        double l2oc = oc.LengthSquared();
+        libvec::vector3d oc = center - r.origin;
+        double l2oc = oc.length_squared();
         if (l2oc < radius2) {
             // origin inside: rays leaving the mesh surface start here
             return true;
         }
 
-        double tca = Dot(oc, ray.dir);
+        double tca = dot(oc, r.dir);
         if (tca < 0) {
             // points away from the sphere
             return false;
         }
 
-        double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
+        double l2hc = (radius2 - l2oc) / r.dir.length_squared() + (tca * tca);
         return l2hc > 0;
     }
 
-    Libvec::Vector3d center;
+    libvec::vector3d center;
     double radius = 0;
 };

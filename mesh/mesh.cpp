@@ -25,33 +25,33 @@
 #include <iostream>
 #include <utility>
 
-Mesh::Mesh(const Geometry &geom) : m_Geom(geom) {}
+mesh::mesh(const geometry &geom) : geometry_(geom) {}
 
-void Mesh::SetName(const std::string &name) {
-    m_Name = name;
+void mesh::set_name(const std::string &name) {
+    name_ = name;
 }
 
-void Mesh::AddSurface(Surface s) {
-    m_Surfaces.push_back(std::move(s));
+void mesh::add_surface(surface s) {
+    surfaces_.push_back(std::move(s));
 }
 
-const VertexList &Mesh::GetVertexList() const {
-    return m_Geom.Vertices();
+const vertex_list &mesh::vertices() const {
+    return geometry_.vertices();
 }
 
-const VertexList &Mesh::GetNormalVertexList() const {
-    return m_Geom.Normals();
+const vertex_list &mesh::normals() const {
+    return geometry_.normals();
 }
 
-const VertexList &Mesh::GetTangentVertexList() const {
-    return m_Geom.Tangents();
+const vertex_list &mesh::tangents() const {
+    return geometry_.tangents();
 }
 
-const VertexList &Mesh::GetUVVertexList() const {
-    return m_Geom.UVs();
+const vertex_list &mesh::uvs() const {
+    return geometry_.uvs();
 }
 
-void Mesh::Dump() const {
-    std::cout << "\t\tMesh '" << m_Name << "'";
-    std::cout << ", " << m_Surfaces.size() << " surfaces" << std::endl;
+void mesh::dump() const {
+    std::cout << "\t\tMesh '" << name_ << "'";
+    std::cout << ", " << surfaces_.size() << " surfaces" << std::endl;
 }

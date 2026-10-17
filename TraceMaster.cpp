@@ -21,158 +21,72 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "TraceMaster.h"
-#include <iostream>
-#include <mutex>
+#include <algorithm>
+#include <numeric>
+#include <random>
 
-TraceMaster::TraceMaster(RenderSurface &surface) : m_Surface(surface) {}
+namespace {
 
-void TraceMaster::SetDone() {
-    m_Done = true;
-    m_DoneCond.notify_all();
+int DivRoundUp(int x, int d) {
+    return (x + d - 1) / d;
+}
+
+} // namespace
+
+TraceMaster::TraceMaster(RenderSurface &surface, TileOrder order, uint32_t seed)
+    : m_Surface(surface), m_TilesX(DivRoundUp(surface.Width(), kWorkUnitSize)),
+      m_TilesY(DivRoundUp(surface.Height(), kWorkUnitSize)),
+      m_Order(static_cast<size_t>(m_TilesX) * m_TilesY) {
+    std::iota(m_Order.begin(), m_Order.end(), uint32_t{ 0 });
+    if (order == TileOrder::Random) {
+        std::mt19937 rng(seed);
+        std::shuffle(m_Order.begin(), m_Order.end(), rng);
+    }
+    // with no tiles nothing will ever call ReturnWorkUnit
+    m_Done = m_Order.empty();
+}
+
+void TraceMaster::FillUnit(uint32_t tile, TraceWorkUnit &unit) const {
+    int tx = tile % m_TilesX;
+    int ty = tile / m_TilesX;
+    unit.startx = tx * kWorkUnitSize;
+    unit.starty = ty * kWorkUnitSize;
+    unit.endx = std::min(unit.startx + kWorkUnitSize, m_Surface.Width()) - 1;
+    unit.endy = std::min(unit.starty + kWorkUnitSize, m_Surface.Height()) - 1;
+}
+
+bool TraceMaster::GetWorkUnit(TraceWorkUnit &unit) {
+    uint32_t tile;
+    {
+        std::lock_guard<std::mutex> guard(m_Lock);
+        if (m_Next == m_Order.size()) {
+            return false;
+        }
+        tile = m_Order[m_Next++];
+        m_Pending++;
+    }
+    FillUnit(tile, unit);
+    return true;
+}
+
+void TraceMaster::ReturnWorkUnit(const TraceWorkUnit &unit) {
+    std::lock_guard<std::mutex> guard(m_Lock);
+
+    const colorf *c = unit.result.data();
+    int runlen = unit.Width();
+    for (int y = unit.starty; y <= unit.endy; y++) {
+        m_Surface.SetXYRun(unit.startx, y, runlen, c);
+        c += runlen;
+    }
+
+    m_Pending--;
+    if (m_Next == m_Order.size() && m_Pending == 0) {
+        m_Done = true;
+        m_DoneCond.notify_all();
+    }
 }
 
 void TraceMaster::WaitForDone() {
     std::unique_lock<std::mutex> lock(m_Lock);
-    while (!m_Done) {
-        m_DoneCond.wait(lock);
-    }
-}
-
-// simple tracer
-TraceMasterSimple::TraceMasterSimple(RenderSurface &surface) : TraceMaster(surface) {}
-
-int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit) {
-    if (m_IssuedLast) {
-        return -1;
-    }
-
-    RenderSurface &surface = GetSurface();
-
-    {
-        std::lock_guard<std::mutex> guard(m_Lock);
-
-        /* dish out another unit, row first */
-        unit.startx = m_Nextx;
-        unit.starty = m_Nexty;
-        unit.endx = unit.startx + kWorkUnitSize - 1;
-        unit.endy = unit.starty + kWorkUnitSize - 1;
-
-        m_PendingCount++;
-
-        /* move to the next block */
-        m_Nextx += kWorkUnitSize;
-        if (m_Nextx >= surface.Width()) {
-            m_Nextx = 0;
-            m_Nexty += kWorkUnitSize;
-        }
-
-        if (m_Nexty >= surface.Height()) {
-            m_IssuedLast = true;
-        }
-    }
-
-    /* trim the result */
-    if (unit.endx >= surface.Width()) {
-        unit.endx = surface.Width() - 1;
-    }
-    if (unit.endy >= surface.Height()) {
-        unit.endy = surface.Height() - 1;
-    }
-
-    return 0;
-}
-
-int TraceMasterSimple::ReturnWorkUnit(TraceWorkUnit &unit) {
-    const colorf *c = unit.result.data();
-
-    {
-        std::lock_guard<std::mutex> guard(m_Lock);
-
-        for (int y = unit.starty; y <= unit.endy; y++) {
-            int runlen = unit.endx + 1 - unit.startx;
-            GetSurface().SetXYRun(unit.startx, y, runlen, c);
-            c += runlen;
-        }
-
-        m_PendingCount--;
-        if (m_IssuedLast && m_PendingCount == 0) {
-            SetDone();
-        }
-    }
-
-    return 0;
-}
-
-inline int roundup(int x, int roundto) {
-    return ((x + roundto - 1) / roundto) * roundto;
-}
-
-// random Tracer
-TraceMasterRandom::TraceMasterRandom(RenderSurface &surface) : TraceMaster(surface) {
-    m_Count = (roundup(surface.Width(), kWorkUnitSize) * roundup(surface.Height(), kWorkUnitSize)) /
-              (kWorkUnitSize * kWorkUnitSize);
-    m_Bitmap.assign(m_Count, false);
-}
-
-int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit) {
-    RenderSurface &surface = GetSurface();
-
-    {
-        std::lock_guard<std::mutex> guard(m_Lock);
-
-        if (m_Count == 0) {
-            return -1;
-        }
-
-        for (;;) {
-            unsigned int x = (lrand48() % surface.Width()) / kWorkUnitSize;
-            unsigned int y = (lrand48() % surface.Height()) / kWorkUnitSize;
-
-            if (m_Bitmap[y * (roundup(surface.Width(), kWorkUnitSize) / kWorkUnitSize) + x] ==
-                false) {
-                m_Bitmap[y * (roundup(surface.Width(), kWorkUnitSize) / kWorkUnitSize) + x] = true;
-                m_Count--;
-
-                unit.startx = x * kWorkUnitSize;
-                unit.starty = y * kWorkUnitSize;
-                unit.endx = unit.startx + kWorkUnitSize - 1;
-                unit.endy = unit.starty + kWorkUnitSize - 1;
-
-                break;
-            }
-        }
-
-        m_PendingCount++;
-    }
-
-    /* trim the result */
-    if (unit.endx >= surface.Width()) {
-        unit.endx = surface.Width() - 1;
-    }
-    if (unit.endy >= surface.Height()) {
-        unit.endy = surface.Height() - 1;
-    }
-
-    return 0;
-}
-
-int TraceMasterRandom::ReturnWorkUnit(TraceWorkUnit &unit) {
-    const colorf *c = unit.result.data();
-
-    {
-        std::lock_guard<std::mutex> guard(m_Lock);
-
-        for (int y = unit.starty; y <= unit.endy; y++) {
-            int runlen = unit.endx + 1 - unit.startx;
-            GetSurface().SetXYRun(unit.startx, y, runlen, c);
-            c += runlen;
-        }
-
-        m_PendingCount--;
-        if (m_Count == 0 && m_PendingCount == 0) {
-            SetDone();
-        }
-    }
-
-    return 0;
+    m_DoneCond.wait(lock, [this] { return m_Done; });
 }

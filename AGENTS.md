@@ -51,7 +51,7 @@ cp build/tests/golden-<scene>.ray tests/golden/<scene>.ray
 ## Run
 
 ```sh
-build/ray [-x 800] [-y 600] [-c N] [-o out.ray] [-r]   # -r = random tile order; --help
+build/ray [-x 800] [-y 600] [-c N] [-o out.ray] [-r] [--seed N]   # -r = random tile order
 build/rayview        # opens ./out.ray (hard-coded) and follows it while ray writes
 ./doit               # ray at 3200x2400 in the background, then rayview
 build/ray2tga out.ray out.tga
@@ -73,13 +73,13 @@ Everything includes from the repo root (`-I.`), so headers are written as
 **Render pipeline (`main.cpp`)**
 
 1. `RenderSurfaceFile` opens the output via `RayFile::OpenWrite`.
-2. A `TraceMaster` (`TraceMasterSimple` = row-major 16x16 `WORKUNITSIZE` chunks,
-   `TraceMasterRandom` = random unissued chunks via bitmap + `lrand48()`) owns
-   the work queue. `GetWorkUnit` fills a `TraceWorkUnit` rectangle;
-   `ReturnWorkUnit` copies its `colorf` result buffer into the surface under
-   `m_Lock` and calls `SetDone` after the last unit comes back.
+2. A `TraceMaster` owns the tile list (`kWorkUnitSize` = 16 pixel squares,
+   row-major, or shuffled with `--seed` when `--random`). `GetWorkUnit` fills a
+   `TraceWorkUnit` rectangle; `ReturnWorkUnit` writes its `colorf` rows to the
+   surface under `m_Lock` (the only thing serializing `RayFile`) and signals
+   done when the last tile comes back.
 3. `--cpus` `std::thread`s each run a `Tracer`, which loops
-   `GetWorkUnit` → trace every pixel → `ReturnWorkUnit` until it gets `< 0`.
+   `GetWorkUnit` → trace every pixel → `ReturnWorkUnit` until it returns false.
 4. `main` blocks in `TraceMaster::WaitForDone`, then joins the threads.
 
 **Ray casting (`Tracer.cpp`)**

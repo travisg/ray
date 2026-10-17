@@ -70,7 +70,7 @@ void Tracer::Trace() {
     float pixpitch = 2.0 / width;
 
     TraceWorkUnit unit;
-    while (m_Master.GetWorkUnit(unit) >= 0) {
+    while (m_Master.GetWorkUnit(unit)) {
         for (int y = unit.starty; y <= unit.endy; y++) {
             for (int x = unit.startx; x <= unit.endx; x++) {
                 Vector3d wing(lin.gety(), -lin.getx(), 0);

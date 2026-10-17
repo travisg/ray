@@ -25,6 +25,8 @@
 #include <RenderSurface.h>
 #include <array>
 #include <condition_variable>
+#include <cstddef>
+#include <cstdint>
 #include <mutex>
 #include <vector>
 
@@ -45,54 +47,33 @@ struct TraceWorkUnit {
     int Height() const { return endy + 1 - starty; }
 };
 
+enum class TileOrder { Sequential, Random };
+
 // Hands out tiles to the tracer threads and writes finished tiles to the surface.
 class TraceMaster {
   public:
-    TraceMaster(RenderSurface &surface);
-    virtual ~TraceMaster() = default;
+    TraceMaster(RenderSurface &surface, TileOrder order, uint32_t seed);
+    TraceMaster(const TraceMaster &) = delete;
+    TraceMaster &operator=(const TraceMaster &) = delete;
 
-    virtual int GetWorkUnit(TraceWorkUnit &) = 0;
-    virtual int ReturnWorkUnit(TraceWorkUnit &) = 0;
-
+    // false once every tile has been issued
+    bool GetWorkUnit(TraceWorkUnit &unit);
+    // the last tile returned wakes WaitForDone
+    void ReturnWorkUnit(const TraceWorkUnit &unit);
     void WaitForDone();
 
-  protected:
-    void SetDone();
-    RenderSurface &GetSurface() { return m_Surface; }
-
-    std::mutex m_Lock;
-
   private:
-    std::condition_variable m_DoneCond;
+    void FillUnit(uint32_t tile, TraceWorkUnit &unit) const;
 
     RenderSurface &m_Surface;
+    const int m_TilesX;
+    const int m_TilesY;
+    std::vector<uint32_t> m_Order; // tile indices in issue order
+
+    // guards everything below and the surface writes (RayFile is not thread-safe)
+    std::mutex m_Lock;
+    std::condition_variable m_DoneCond;
+    size_t m_Next = 0;
+    int m_Pending = 0;
     bool m_Done = false;
-};
-
-// row-major order
-class TraceMasterSimple : public TraceMaster {
-  public:
-    TraceMasterSimple(RenderSurface &surface);
-
-    int GetWorkUnit(TraceWorkUnit &) override;
-    int ReturnWorkUnit(TraceWorkUnit &) override;
-
-  private:
-    int m_Nextx = 0, m_Nexty = 0;
-    bool m_IssuedLast = false;
-    int m_PendingCount = 0;
-};
-
-// random order
-class TraceMasterRandom : public TraceMaster {
-  public:
-    TraceMasterRandom(RenderSurface &surface);
-
-    int GetWorkUnit(TraceWorkUnit &) override;
-    int ReturnWorkUnit(TraceWorkUnit &) override;
-
-  private:
-    std::vector<bool> m_Bitmap;
-    int m_Count;
-    int m_PendingCount = 0;
 };

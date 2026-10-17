@@ -21,12 +21,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <charconv>
+#include <cstdint>
 #include <cstdio>
 #include <ctime>
 #include <functional>
 #include <getopt.h>
 #include <iostream>
-#include <memory>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -35,6 +35,7 @@
 #include <Ray.h>
 #include <RenderSurface.h>
 #include <Scene.h>
+#include <TraceMaster.h>
 #include <Tracer.h>
 
 namespace {
@@ -50,7 +51,10 @@ struct Options {
     int cpus = DefaultCpus();
     std::string outfile = "out.ray";
     bool random = false;
+    uint32_t seed = 1;
 };
+
+enum { kOptSeed = 256 };
 
 void Usage(FILE *fp, const char *argv0) {
     fprintf(fp,
@@ -60,16 +64,17 @@ void Usage(FILE *fp, const char *argv0) {
             "  -c, --cpus N    worker threads (default: hardware threads)\n"
             "  -o, --out FILE  output .ray file (default out.ray)\n"
             "  -r, --random    trace tiles in random order\n"
+            "      --seed N    shuffle seed for --random (default 1)\n"
             "  -h, --help      this message\n",
             argv0);
 }
 
-// Parses a positive integer; false on anything else.
-bool ParsePositive(const char *s, int &out) {
+// Parses an integer in [min, max]; false on anything else.
+template <typename T> bool ParseInt(const char *s, T min, T max, T &out) {
     std::string_view sv(s);
-    int v = 0;
+    T v = 0;
     auto [end, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), v);
-    if (ec != std::errc() || end != sv.data() + sv.size() || v < 1) {
+    if (ec != std::errc() || end != sv.data() + sv.size() || v < min || v > max) {
         return false;
     }
     out = v;
@@ -84,6 +89,7 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
         { "cpus", required_argument, nullptr, 'c' },
         { "out", required_argument, nullptr, 'o' },
         { "random", no_argument, nullptr, 'r' },
+        { "seed", required_argument, nullptr, kOptSeed },
         { "help", no_argument, nullptr, 'h' },
         { nullptr, 0, nullptr, 0 },
     };
@@ -96,7 +102,7 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
             case 'y':
             case 'c': {
                 int &target = c == 'x' ? opts.xres : c == 'y' ? opts.yres : opts.cpus;
-                if (!ParsePositive(optarg, target)) {
+                if (!ParseInt(optarg, 1, INT32_MAX, target)) {
                     fprintf(stderr, "%s: -%c needs a positive integer, got '%s'\n", argv[0], c,
                             optarg);
                     return false;
@@ -108,6 +114,13 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
                 break;
             case 'r':
                 opts.random = true;
+                break;
+            case kOptSeed:
+                if (!ParseInt(optarg, uint32_t{ 0 }, UINT32_MAX, opts.seed)) {
+                    fprintf(stderr, "%s: --seed needs an unsigned integer, got '%s'\n", argv[0],
+                            optarg);
+                    return false;
+                }
                 break;
             case 'h':
                 Usage(stdout, argv[0]);
@@ -125,8 +138,6 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
     return true;
 }
 
-} // namespace
-
 void TracerThread(const RenderSurface &rs, const Scene &scene, TraceMaster &master) {
     time_t start = time(nullptr);
 
@@ -136,6 +147,8 @@ void TracerThread(const RenderSurface &rs, const Scene &scene, TraceMaster &mast
     start = time(nullptr) - start;
     std::cout << "trace end, took " << start << " seconds" << std::endl;
 }
+
+} // namespace
 
 int main(int argc, char *argv[]) {
     Options opts;
@@ -155,21 +168,16 @@ int main(int argc, char *argv[]) {
 
     Scene scene;
 
-    std::unique_ptr<TraceMaster> master;
-    if (opts.random) {
-        master = std::make_unique<TraceMasterRandom>(rs);
-    } else {
-        master = std::make_unique<TraceMasterSimple>(rs);
-    }
+    TraceMaster master(rs, opts.random ? TileOrder::Random : TileOrder::Sequential, opts.seed);
 
     std::vector<std::thread> threads;
     threads.reserve(opts.cpus);
     for (int i = 0; i < opts.cpus; i++) {
-        threads.emplace_back(TracerThread, std::cref(rs), std::cref(scene), std::ref(*master));
+        threads.emplace_back(TracerThread, std::cref(rs), std::cref(scene), std::ref(master));
     }
 
     // wait for the trace master to hand out and collect every tile
-    master->WaitForDone();
+    master.WaitForDone();
 
     std::cout << "waiting for worker threads to shut down" << std::endl;
     for (auto &t : threads) {

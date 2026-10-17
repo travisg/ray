@@ -3,4 +3,4 @@
 cd "$(dirname "$0")" || exit 1
 build/ray --xres 3200 --yres 2400 &
 sleep 1
-build/rayview
+build/rayview out.ray

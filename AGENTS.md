@@ -53,18 +53,16 @@ cp build/tests/golden-<scene>.ray tests/golden/<scene>.ray
 ```sh
 build/ray [-x 800] [-y 600] [-c N] [-o out.ray] [-s SCENE] [-r] [--seed N]
 build/ray --list-scenes
-build/rayview        # opens ./out.ray (hard-coded) and follows it while ray writes
+build/rayview [file.ray]     # default out.ray; follows the file while ray writes it
 ./doit               # ray at 3200x2400 in the background, then rayview
 build/ray2tga out.ray out.tga
 build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in the cwd
 ```
 
-- `rayview` tails the file: short reads sleep and retry until `TYPE_EOF`, so
-  start it any time after `ray` has written the header. Closing the window or
-  pressing `Esc` while `ray` is still rendering blocks in `reader.join()` until
-  `TYPE_EOF` is written. Renders `<= 2048x1600` open a 1:1 window; larger
-  renders open an `800x600` resizable window and scale the full-res streaming
-  texture to fit.
+- `rayview` polls the file every 100 ms until it sees `TYPE_EOF`, waiting up
+  to 10 s for the header, so it can start before or after `ray`. Esc or closing
+  the window exits immediately. Renders up to 2048x1600 open a 1:1 window;
+  larger ones open 800x600 and scale the full-resolution texture to fit.
 
 ## Architecture
 
@@ -134,6 +132,5 @@ then packets of `uint32 type` followed by `RayDataPixel`, `RayDataPixelRun`
 (+ `length` float triples) or `TYPE_EOF`. `RayStreamReader` parses it
 incrementally (`NeedData` at the end of the data so far, `Eof` after the EOF
 packet) and `RayFile::Parse`/`ReadIntoBuffer`, used by `ray2tga` and
-`raysplit`, are built on it. `rayview` still parses the stream itself so it
-can render while the file is growing. Changing the packet layout means
-updating `rayview.cpp` too.
+`raysplit`, are built on it, as is `rayview`, which keeps pumping the reader
+while the file grows.

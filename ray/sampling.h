@@ -23,8 +23,29 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
 #include <libvec/vector3.h>
 #include <numbers>
+
+// The k-th point of the van der Corput sequence in the given base: k's digits reflected
+// about the radix point, so 1, 2, 3, 4 in base 2 give 0.5, 0.25, 0.75, 0.125. Successive
+// points land in the biggest gap left so far, which is what makes the sequence evenly
+// spread for any count. Bases 2 and 3 together are the 2D Halton sequence.
+inline double radical_inverse(uint32_t k, uint32_t base) {
+    double result = 0;
+    double digit = 1.0 / base;
+    while (k > 0) {
+        result += (k % base) * digit;
+        k /= base;
+        digit /= base;
+    }
+    return result;
+}
+
+// fractional part, for shifting a sequence point by an offset and wrapping it into [0, 1)
+inline double fract(double v) {
+    return v - std::floor(v);
+}
 
 // A grid over the unit square with at least n cells, as square as n allows: 64 is 8x8, 50 is
 // 8x7. One random point per cell (stratified sampling) spreads n samples evenly, where n

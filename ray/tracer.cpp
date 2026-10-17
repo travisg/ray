@@ -23,6 +23,7 @@
 
 #include <ray/drawables/drawable.h>
 #include <ray/ray.h>
+#include <ray/sampling.h>
 #include <ray/scene.h>
 #include <ray/shaders/shader.h>
 #include <ray/tracer.h>
@@ -89,13 +90,19 @@ void tracer::trace() {
                           (static_cast<uint64_t>(y) << 32) ^ static_cast<uint64_t>(x)));
 
                 // the ray goes through the pixel's reference point, or when jittering through
-                // a random point within half a pixel of it, so the passes average to an image
-                // centred on the same rays
+                // a point within half a pixel of it, so the passes average to an image centred
+                // on the same rays. The point is the pass's Halton point shifted by an offset
+                // fixed per pixel: evenly spread over the pixel as the passes accumulate, and
+                // not the same pattern in neighbouring pixels.
                 double px = x;
                 double py = y;
                 if (settings_.jitter) {
-                    px += rng_.next_double() - 0.5;
-                    py += rng_.next_double() - 0.5;
+                    const uint64_t shift = mix64(settings_.seed ^ (static_cast<uint64_t>(y) << 32) ^
+                                                 static_cast<uint64_t>(x));
+                    const auto pass = static_cast<uint32_t>(settings_.pass);
+                    px += fract(radical_inverse(pass, 2) + (shift & 0xffffff) * 0x1.0p-24) - 0.5;
+                    py += fract(radical_inverse(pass, 3) + ((shift >> 24) & 0xffffff) * 0x1.0p-24) -
+                          0.5;
                 }
                 vector3d dir = forward + right * ((px - width / 2.0) * pixpitch) +
                                down * ((py - height / 2.0) * pixpitch);

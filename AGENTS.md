@@ -143,7 +143,10 @@ Everything includes from the repo root (`-I.`), so headers are written as
   (about a 90° horizontal field of view). Each pixel reseeds the tracer's
   PCG32 `rng` from `--seed`, the pass number and its coordinates, so a render
   is the same whichever thread drew which tile; on multi-pass renders the ray
-  goes through a random point in the pixel instead of its centre.
+  goes through the pass's 2D Halton point (`radical_inverse` in
+  `ray/sampling.h`, bases 2 and 3), shifted by a per-pixel offset, within half
+  a pixel of the usual ray, so the edge samples spread evenly over the pixel
+  as passes accumulate.
   `render_settings` carries the `--gi`, `--bounces`, `--seed` and pass values
   to the shaders through `tracer::settings()`.
 - `tracer::cast` asks `scene::intersect` for the nearest `hit` (a linear scan

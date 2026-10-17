@@ -3,6 +3,7 @@
 #include <ray/drawables/plane.h>
 #include <ray/drawables/sphere.h>
 #include <ray/framebuffer.h>
+#include <ray/sampling.h>
 #include <ray/scene.h>
 #include <ray/shaders/default_shader.h>
 #include <ray/trace_master.h>
@@ -57,6 +58,14 @@ int main() {
         CHECK(surface.at(10, 2).r == 0);
         CHECK(surface.at(10, 18).r > 0);
     }
+
+    // the Halton sequence: digits reflected about the radix point
+    CHECK(radical_inverse(0, 2) == 0 && radical_inverse(1, 2) == 0.5 &&
+          radical_inverse(2, 2) == 0.25);
+    CHECK(radical_inverse(3, 2) == 0.75 && radical_inverse(4, 2) == 0.125);
+    CHECK(std::fabs(radical_inverse(1, 3) - 1.0 / 3) < 1e-12);
+    CHECK(std::fabs(radical_inverse(3, 3) - 1.0 / 9) < 1e-12);
+    CHECK(fract(1.75) == 0.75 && fract(-0.25) == 0.75);
 
     // passes accumulate into a running mean
     {

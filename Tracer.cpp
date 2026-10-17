@@ -33,39 +33,27 @@ using Libvec::Vector3d;
 Tracer::Tracer(const RenderSurface &surface, const Scene &scene, TraceMaster &tracemaster)
     : m_Surface(surface), m_Scene(scene), m_Master(tracemaster) {}
 
-bool Tracer::Cast(colorf &color, const Ray &ray) {
+std::optional<colorf> Tracer::Cast(const Ray &ray) {
     if (m_Depth == kMaxTraceDepth) {
-        return false;
+        return std::nullopt;
     }
 
-    // find the closest object along the ray
-    const Drawable *d = m_Scene.Intersect(ray);
-    if (!d) {
-        return false;
+    std::optional<Hit> hit = m_Scene.Intersect(ray);
+    if (!hit) {
+        return std::nullopt;
     }
 
-    Vector3d pos;
-    Vector3d normal;
-    d->Intersect(ray, pos, normal);
-
-    const ShaderPtr &s = d->GetShader();
+    const ShaderPtr &s = hit->drawable->GetShader();
     if (!s) {
-        color = 0;
-    } else {
-        ShaderArgs args;
-        args.scene = &m_Scene;
-        args.tracer = this;
-        args.d = d;
-        args.ray = &ray;
-        args.pos = pos;
-        args.normal = normal;
-
-        m_Depth++; // track the level of recursion
-        color = s->Run(args);
-        m_Depth--;
+        return colorf(0);
     }
 
-    return true;
+    ShaderArgs args{ m_Scene, *this, ray, *hit };
+
+    m_Depth++; // track the level of recursion
+    colorf color = s->Run(args);
+    m_Depth--;
+    return color;
 }
 
 void Tracer::Trace() {
@@ -94,12 +82,8 @@ void Tracer::Trace() {
                 Libvec::Vector3d ray = target + wing + head - m_Scene.GetCamera();
                 ray.Normalize();
 
-                colorf color;
-                if (!Cast(color, Ray(m_Scene.GetCamera(), ray))) {
-                    // exited the world
-                    color = 0;
-                }
-                unit.SetResult(x, y, color);
+                // black where the ray exits the world
+                unit.SetResult(x, y, Cast(Ray(m_Scene.GetCamera(), ray)).value_or(colorf(0)));
             }
         }
 

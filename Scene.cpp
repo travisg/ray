@@ -253,45 +253,24 @@ Scene::Scene() : m_AmbientLight(0) {
     m_Target = Libvec::Vector3d(0.0f, 0.0f, 0.0f);
 }
 
-const Drawable *Scene::Intersect(const Ray &ray) const {
-    bool hit = false;
-    Vector3d closestPos = 0;
-    const Drawable *closest = nullptr;
-
+std::optional<Hit> Scene::Intersect(const Ray &ray) const {
+    std::optional<Hit> best;
     for (const auto &d : m_DrawableList) {
-        Vector3d pos;
-        Vector3d normal;
-        if (d->Intersect(ray, pos, normal)) {
-            if (!hit ||
-                (pos - ray.origin).LengthSquared() < (closestPos - ray.origin).LengthSquared()) {
-                closestPos = pos;
-                closest = d.get();
-            }
-            hit = true;
+        std::optional<Hit> hit = d->Intersect(ray);
+        if (hit && (!best || hit->t < best->t)) {
+            best = hit;
+            best->drawable = d.get();
         }
     }
-
-    return hit ? closest : nullptr;
-}
-
-bool Scene::DoesIntersect(const Ray &ray) const {
-    for (const auto &d : m_DrawableList) {
-        if (d->Intersect(ray)) {
-            return true;
-        }
-    }
-
-    return false;
+    return best;
 }
 
 bool Scene::DoesIntersect(const Ray &ray, double maxDistance) const {
     for (const auto &d : m_DrawableList) {
-        Vector3d pos;
-        Vector3d normal;
-        if (d->Intersect(ray, pos, normal) && (ray.origin - pos).Length() < maxDistance) {
+        std::optional<Hit> hit = d->Intersect(ray);
+        if (hit && hit->t < maxDistance) {
             return true;
         }
     }
-
     return false;
 }

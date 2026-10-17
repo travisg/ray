@@ -6,6 +6,7 @@ function(ray_add_test name)
 endfunction()
 
 ray_add_test(test_vector3)
+ray_add_test(test_intersect)
 ray_add_test(test_rayfile)
 ray_add_test(test_objloader)
 target_compile_definitions(test_objloader PRIVATE RAY_SOURCE_DIR="${PROJECT_SOURCE_DIR}")

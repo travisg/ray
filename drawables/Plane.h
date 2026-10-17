@@ -27,13 +27,12 @@
 
 #include "Drawable.h"
 
-// Infinite plane given as a point and its normal.
+// Infinite plane given as a point and its normal; only the front face is visible.
 class Plane : public Drawable {
   public:
     Plane(const Ray &normal);
 
-    bool Intersect(const Ray &ray) const override;
-    bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const override;
+    std::optional<Hit> Intersect(const Ray &ray) const override;
 
   private:
     Ray m_Normal;

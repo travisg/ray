@@ -86,19 +86,16 @@ Everything includes from the repo root (`-I.`), so headers are written as
 
 - `Tracer::Trace` builds the camera basis from `Scene::GetCamera/GetTarget`
   and casts one primary ray per pixel (no multisampling).
-- `Tracer::Cast` asks `Scene::Intersect` for the nearest `Drawable` (linear
-  scan over all drawables using 3-arg `Intersect(ray, pos, normal)`, no
-  acceleration structure), re-intersects the winner for position/normal, then
-  calls the drawable's `Shader::Run(ShaderArgs)`. Shaders recurse by calling
-  `args.tracer->Cast` (reflection in `DefaultShader`); `m_Depth` caps recursion
+- `Tracer::Cast` asks `Scene::Intersect` for the nearest `Hit` (linear scan
+  over all drawables, nearest by `t`, no acceleration structure), then calls
+  the hit drawable's `Shader::Run(ShaderArgs)`. Shaders recurse by calling
+  `args.tracer.Cast` (reflection in `DefaultShader`); `m_Depth` caps recursion
   at `kMaxTraceDepth` (16).
-- Shadow rays use `Scene::DoesIntersect(ray, maxDistance)` (which also calls
-  3-arg `d->Intersect(ray, pos, normal)`).
-- Avoid the 1-arg `Scene::DoesIntersect(ray)` / `Drawable::Intersect(ray)`
-  overload: `MeshDrawable::Intersect(ray)` is a stub that always returns `false`,
-  and `Plane`/`Triangle` 1-arg `Intersect(ray)` only checks `Dot(dir, normal) <= 0`
-  (ignoring `t < 0` and triangle bounds; `Plane`/`Triangle` 3-arg `Intersect`
-  also omits a `t < 0` check).
+- Shadow rays use `Scene::DoesIntersect(ray, maxDistance)`, true for any hit
+  with `t < maxDistance`.
+- `Drawable::Intersect(ray)` returns `std::optional<Hit>` (`t`, `pos`,
+  `normal`); `ray.dir` must be unit length for `t` to be a distance.
+  `Plane`/`Triangle` cull back faces and do not reject `t < 0`.
 
 **Scene (`Scene.cpp`)**
 
@@ -113,8 +110,8 @@ wrapped in a `MeshDrawable` with a bounding-sphere pre-test. Lights are
 
 **Pluggable pieces**
 
-- `drawables/`: `Drawable` interface = `Prepare()`, two `Intersect` overloads,
-  and a `ShaderPtr`. Implementations: `Sphere`, `Plane`, `Triangle`,
+- `drawables/`: `Drawable` interface = `Prepare()`, `Intersect()` and a
+  `ShaderPtr`. Implementations: `Sphere`, `Plane`, `Triangle`,
   `MeshDrawable` (in `drawables/Mesh.h`, distinct from `mesh/Mesh.h`).
   `MeshDrawable` supports triangle (3-index) and quad (4-index) faces and
   requires vertex normals (`vn`) in the `.obj`.

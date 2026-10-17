@@ -30,8 +30,7 @@ class Sphere : public Drawable {
   public:
     Sphere(const Libvec::Vector3d &pos, double radius);
 
-    bool Intersect(const Ray &ray) const override;
-    bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const override;
+    std::optional<Hit> Intersect(const Ray &ray) const override;
 
   private:
     Libvec::Vector3d m_Center;

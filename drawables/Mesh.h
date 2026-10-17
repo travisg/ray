@@ -39,8 +39,7 @@ class MeshDrawable : public Drawable {
     // computes the bounding sphere; must run before Intersect
     int Prepare() override;
 
-    bool Intersect(const Ray &ray) const override;
-    bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const override;
+    std::optional<Hit> Intersect(const Ray &ray) const override;
 
   private:
     std::unique_ptr<Geometry> m_Geom;

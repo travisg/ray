@@ -26,6 +26,7 @@
 #include <RenderSurface.h>
 #include <TraceMaster.h>
 #include <libvec/Vector3.h>
+#include <optional>
 
 class Scene;
 
@@ -35,7 +36,8 @@ class Tracer {
     Tracer(const RenderSurface &surface, const Scene &scene, TraceMaster &master);
 
     void Trace();
-    bool Cast(colorf &color, const Ray &ray);
+    // nullopt when the ray leaves the scene or the recursion limit is hit
+    std::optional<colorf> Cast(const Ray &ray);
 
   private:
     const RenderSurface &m_Surface;

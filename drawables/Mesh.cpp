@@ -63,24 +63,16 @@ int MeshDrawable::Prepare() {
     return 0;
 }
 
-bool MeshDrawable::Intersect(const Ray &ray) const {
-    if (!m_BSphere.DoesIntersect(ray)) {
-        return false;
-    }
-
-    return false;
-}
-
 namespace {
 
-bool TriIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Vector3d &v0,
-                  const Vector3d &v1, const Vector3d &v2, const Vector3d &n0, const Vector3d &n1,
-                  const Vector3d &n2) {
-    normal = Cross(v1 - v0, v2 - v0);
+std::optional<Hit> TriIntersect(const Ray &ray, const Vector3d &v0, const Vector3d &v1,
+                                const Vector3d &v2, const Vector3d &n0, const Vector3d &n1,
+                                const Vector3d &n2) {
+    Vector3d normal = Cross(v1 - v0, v2 - v0);
 
     // is the ray pointing at the surface?
     if (Dot(ray.dir, normal) > 0) {
-        return false;
+        return std::nullopt;
     }
 
     // t = ((P - P0) . N) / (V . N)
@@ -89,10 +81,10 @@ bool TriIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Vector3
 
     // is the origin behind the start of the ray
     if (t < 0.0) {
-        return false;
+        return std::nullopt;
     }
 
-    pos = ray.origin + ray.dir * t;
+    Vector3d pos = ray.origin + ray.dir * t;
 
     // it intersects the plane the triangle is in, now calc the u/v coordinates and see if it's in
     // the triangle
@@ -110,33 +102,34 @@ bool TriIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Vector3
     D = 1.0 / (uv * uv - uu * vv);
 
     // get and test parametric coords
-    double s = (uv * wv - vv * wu) * D;
-    if (s < 0.0 || s > 1.0) { // I is outside T
-        return false;
+    double b1 = (uv * wv - vv * wu) * D;
+    if (b1 < 0.0 || b1 > 1.0) {
+        return std::nullopt;
     }
-    t = (uv * wu - uu * wv) * D;
-    if (t < 0.0 || (s + t) > 1.0) { // I is outside T
-        return false;
+    double b2 = (uv * wu - uu * wv) * D;
+    if (b2 < 0.0 || (b1 + b2) > 1.0) {
+        return std::nullopt;
     }
 
+    Hit hit;
+    hit.t = t;
+    hit.pos = pos;
     // lerp the normal from the passed in normal vertexes
-    normal = n0 * (1 - (s + t)) + n1 * s + n2 * t;
-    normal.Normalize();
-
-    return true;
+    hit.normal = n0 * (1 - (b1 + b2)) + n1 * b1 + n2 * b2;
+    hit.normal.Normalize();
+    return hit;
 }
 
-bool QuadIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Vector3d &v0,
-                   const Vector3d &v1, const Vector3d &v2, const Vector3d &v3, const Vector3d &n0,
-                   const Vector3d &n1, const Vector3d &n2, const Vector3d &n3) {
-    if (TriIntersect(ray, pos, normal, v0, v1, v2, n0, n1, n2)) {
-        return true;
+std::optional<Hit> QuadIntersect(const Ray &ray, const Vector3d &v0, const Vector3d &v1,
+                                 const Vector3d &v2, const Vector3d &v3, const Vector3d &n0,
+                                 const Vector3d &n1, const Vector3d &n2, const Vector3d &n3) {
+    if (auto hit = TriIntersect(ray, v0, v1, v2, n0, n1, n2)) {
+        return hit;
     }
-    return TriIntersect(ray, pos, normal, v2, v3, v0, n2, n3, n0);
+    return TriIntersect(ray, v2, v3, v0, n2, n3, n0);
 }
 
-bool SurfaceIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Mesh &mesh,
-                      const Surface &surface) {
+std::optional<Hit> SurfaceIntersect(const Ray &ray, const Mesh &mesh, const Surface &surface) {
     // get the vertexes that make up this surface
     const VertexList &verts = mesh.GetVertexList();
 
@@ -157,7 +150,7 @@ bool SurfaceIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Mes
     Vector3d n2(vp->x, vp->y, vp->z);
 
     if (surface.m_Indexes.size() == 3) {
-        return TriIntersect(ray, pos, normal, v0, v1, v2, n0, n1, n2);
+        return TriIntersect(ray, v0, v1, v2, n0, n1, n2);
     }
 
     vp = &verts[surface.m_Indexes[3].posIndex];
@@ -165,42 +158,26 @@ bool SurfaceIntersect(const Ray &ray, Vector3d &pos, Vector3d &normal, const Mes
     vp = &nverts[surface.m_Indexes[3].normIndex];
     Vector3d n3(vp->x, vp->y, vp->z);
 
-    return QuadIntersect(ray, pos, normal, v0, v1, v2, v3, n0, n1, n2, n3);
+    return QuadIntersect(ray, v0, v1, v2, v3, n0, n1, n2, n3);
 }
 
 } // namespace
 
-bool MeshDrawable::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const {
+std::optional<Hit> MeshDrawable::Intersect(const Ray &ray) const {
     if (!m_BSphere.DoesIntersect(ray)) {
-        return false;
+        return std::nullopt;
     }
 
-    const Mesh *meshmatch = nullptr;
-    const Surface *surfmatch = nullptr;
-    double matchdist = -1;
-
-    // for every mesh, check every surface
+    // nearest surface over every mesh
+    std::optional<Hit> best;
     for (const auto &m : m_Geom->Meshes()) {
         for (const Surface &s : m->GetSurfaceList()) {
-            if (!SurfaceIntersect(ray, pos, normal, *m, s)) {
-                continue;
-            }
-
-            // surface intersected, lets see if it's the best match
-            double distance = (pos - ray.origin).LengthSquared();
-            if (matchdist < 0 || distance < matchdist) {
-                meshmatch = m.get();
-                surfmatch = &s;
-                matchdist = distance;
+            std::optional<Hit> hit = SurfaceIntersect(ray, *m, s);
+            if (hit && (!best || hit->t < best->t)) {
+                best = hit;
             }
         }
     }
 
-    // rerun the closest match to the caster
-    if (meshmatch) {
-        SurfaceIntersect(ray, pos, normal, *meshmatch, *surfmatch);
-        return true;
-    }
-
-    return false;
+    return best;
 }

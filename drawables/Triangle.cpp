@@ -37,24 +37,18 @@ Triangle::Triangle(const Libvec::Vector3d &v0, const Libvec::Vector3d &v1,
     m_normal.Normalize();
 }
 
-bool Triangle::Intersect(const Ray &ray) const {
-    Vector3d dir = ray.dir;
-    dir.Normalize();
-
-    return Dot(dir, m_normal) <= 0.0;
-}
-
-bool Triangle::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const {
-    if (!Intersect(ray)) {
-        return false;
+std::optional<Hit> Triangle::Intersect(const Ray &ray) const {
+    if (Dot(ray.dir, m_normal) > 0.0) {
+        // back face
+        return std::nullopt;
     }
 
     // t = ((P - P0) . N) / (V . N)
     // P = P0 + tV
-    double t = (Dot(m_v[0] - ray.origin, m_normal)) / (Dot(ray.dir, m_normal));
-
-    pos = ray.origin + ray.dir * t;
-    normal = m_normal;
+    Hit hit;
+    hit.t = (Dot(m_v[0] - ray.origin, m_normal)) / (Dot(ray.dir, m_normal));
+    hit.pos = ray.origin + ray.dir * hit.t;
+    hit.normal = m_normal;
 
     // it intersects the plane the triangle is in, now calc the u/v coordinates and see if it's in
     // the triangle
@@ -66,20 +60,20 @@ bool Triangle::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const 
     uu = Dot(u, u);
     uv = Dot(u, v);
     vv = Dot(v, v);
-    Vector3d w = pos - m_v[0];
+    Vector3d w = hit.pos - m_v[0];
     wu = Dot(w, u);
     wv = Dot(w, v);
     D = 1.0f / (uv * uv - uu * vv);
 
     // get and test parametric coords
-    double s = (uv * wv - vv * wu) * D;
-    if (s < 0.0f || s > 1.0f) { // I is outside T
-        return false;
+    double b1 = (uv * wv - vv * wu) * D;
+    if (b1 < 0.0f || b1 > 1.0f) {
+        return std::nullopt;
     }
-    t = (uv * wu - uu * wv) * D;
-    if (t < 0.0f || (s + t) > 1.0f) { // I is outside T
-        return false;
+    double b2 = (uv * wu - uu * wv) * D;
+    if (b2 < 0.0f || (b1 + b2) > 1.0f) {
+        return std::nullopt;
     }
 
-    return true;
+    return hit;
 }

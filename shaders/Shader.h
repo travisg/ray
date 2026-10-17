@@ -23,21 +23,19 @@
 #pragma once
 
 #include <Color.h>
+#include <Hit.h>
 #include <libvec/Vector3.h>
 #include <memory>
 
-class Drawable;
 class Scene;
 class Tracer;
 struct Ray;
 
 struct ShaderArgs {
-    const Scene *scene;
-    Tracer *tracer;
-    const Drawable *d;
-    const Ray *ray;
-    Libvec::Vector3d pos;
-    Libvec::Vector3d normal;
+    const Scene &scene;
+    Tracer &tracer;
+    const Ray &ray;
+    const Hit &hit;
 };
 
 // One shader instance is shared by every thread and every drawable it is

@@ -28,43 +28,26 @@ using Libvec::Vector3d;
 
 Sphere::Sphere(const Libvec::Vector3d &pos, double radius) : m_Center(pos), m_Radius(radius) {}
 
-bool Sphere::Intersect(const Ray &ray) const {
+std::optional<Hit> Sphere::Intersect(const Ray &ray) const {
     double radius2 = m_Radius * m_Radius;
 
     Vector3d oc = m_Center - ray.origin;
     double tca = Dot(oc, ray.dir);
     if (tca < 0) {
         // points away from the sphere
-        return false;
+        return std::nullopt;
     }
 
     double l2oc = oc.LengthSquared();
     double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
-    return l2hc > 0;
-}
-
-bool Sphere::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const {
-    double radius2 = m_Radius * m_Radius;
-
-    Vector3d oc = m_Center - ray.origin;
-    double tca = Dot(oc, ray.dir);
-    if (tca < 0) {
-        // points away from the sphere
-        return false;
+    if (l2hc <= 0) {
+        return std::nullopt;
     }
 
-    double l2oc = oc.LengthSquared();
-    double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
-    if (l2hc > 0) {
-        double t = tca - std::sqrt(l2hc);
-
-        pos = ray.origin + ray.dir * t;
-
-        normal = pos - m_Center;
-        normal.Normalize();
-
-        return true;
-    }
-
-    return false;
+    Hit hit;
+    hit.t = tca - std::sqrt(l2hc);
+    hit.pos = ray.origin + ray.dir * hit.t;
+    hit.normal = hit.pos - m_Center;
+    hit.normal.Normalize();
+    return hit;
 }

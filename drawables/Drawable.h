@@ -22,7 +22,9 @@
  */
 #pragma once
 
+#include <Hit.h>
 #include <libvec/Vector3.h>
+#include <optional>
 #include <shaders/Shader.h>
 #include <utility>
 
@@ -39,9 +41,8 @@ class Drawable {
 
     virtual int Prepare() { return 0; }
 
-    virtual bool Intersect(const Ray &ray) const = 0;
-    virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos,
-                           Libvec::Vector3d &normal) const = 0;
+    // ray.dir must be unit length for Hit::t to be a distance
+    virtual std::optional<Hit> Intersect(const Ray &ray) const = 0;
 
     void SetShader(ShaderPtr s) { m_Shader = std::move(s); }
     const ShaderPtr &GetShader() const { return m_Shader; }

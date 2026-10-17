@@ -26,9 +26,9 @@
 colorf DebugShader::Run(const ShaderArgs &args) const {
     switch (m_Mode) {
         case MODE_NORMAL:
-            return colorf(args.normal.getx(), args.normal.gety(), args.normal.getz());
+            return colorf(args.hit.normal.getx(), args.hit.normal.gety(), args.hit.normal.getz());
         case MODE_DEPTH:
-            return (args.ray->origin - args.pos).Length();
+            return args.hit.t;
     }
     return 0;
 }

@@ -23,10 +23,12 @@
 #pragma once
 
 #include "Color.h"
+#include <Hit.h>
 #include <drawables/Drawable.h>
 #include <libvec/Vector3.h>
 #include <lights/SimpleLight.h>
 #include <memory>
+#include <optional>
 #include <vector>
 
 struct Ray;
@@ -35,8 +37,9 @@ class Scene {
   public:
     Scene();
 
-    const Drawable *Intersect(const Ray &ray) const;
-    bool DoesIntersect(const Ray &ray) const;
+    // nearest hit by t, with Hit::drawable set
+    std::optional<Hit> Intersect(const Ray &ray) const;
+    // true for any hit with t < maxDistance
     bool DoesIntersect(const Ray &ray, double maxDistance) const;
 
     const std::vector<SimpleLight> &GetLightList() const { return m_SimpleLightList; }

@@ -22,27 +22,35 @@
  */
 #pragma once
 
+#include <cstdint>
 #include <libvec/vector3.h>
 #include <memory>
-#include <ray/bounding_sphere.h>
+#include <ray/bvh.h>
 #include <ray/drawables/drawable.h>
 #include <ray/ray.h>
+#include <vector>
 
 class geometry;
 
-// triangle/quad mesh loaded from a geometry, with a bounding-sphere pre-test.
+// Triangle/quad mesh loaded from a geometry, intersected through a bvh over its faces.
 class mesh_drawable : public drawable {
   public:
     explicit mesh_drawable(std::unique_ptr<geometry> geom);
     ~mesh_drawable() override;
 
-    // computes the bounding sphere; must run before intersect
+    // builds the bvh; must run before intersect
     int prepare() override;
 
     std::optional<hit> intersect(const ray &r) const override;
 
   private:
-    std::unique_ptr<geometry> geometry_;
+    // one bvh primitive: a face of one of the geometry's meshes
+    struct face {
+        uint32_t mesh;
+        uint32_t surface;
+    };
 
-    bounding_sphere bounding_sphere_;
+    std::unique_ptr<geometry> geometry_;
+    std::vector<face> faces_; // in mesh, then surface order, which is the tie-break order
+    bvh bvh_;
 };

@@ -23,7 +23,7 @@
 #include <memory>
 #include <vector>
 
-#include <ray/bounding_sphere.h>
+#include <ray/aabb.h>
 #include <ray/drawables/mesh_drawable.h>
 #include <ray/mesh/geometry.h>
 
@@ -34,32 +34,24 @@ mesh_drawable::mesh_drawable(std::unique_ptr<geometry> geom) : geometry_(std::mo
 mesh_drawable::~mesh_drawable() = default;
 
 int mesh_drawable::prepare() {
-    // center the bounding sphere on the vertex average, radius to the farthest vertex
-    if (geometry_->vertices().empty()) {
-        return 0;
-    }
-
-    vector3d avg(0, 0, 0);
-    int count = 0;
-    for (const vertex &v : geometry_->vertices()) {
-        avg += vector3d(v.x, v.y, v.z);
-        count++;
-    }
-    avg /= count;
-
-    bounding_sphere_.center = avg;
-
-    double farthest = 0;
-    for (const vertex &vert : geometry_->vertices()) {
-        vector3d v(vert.x, vert.y, vert.z);
-
-        double dist = (v - bounding_sphere_.center).length();
-        if (dist > farthest) {
-            farthest = dist;
+    // one box per face, numbered in mesh then surface order
+    faces_.clear();
+    std::vector<aabb> boxes;
+    const auto &meshes = geometry_->meshes();
+    for (uint32_t mi = 0; mi < meshes.size(); mi++) {
+        const vertex_list &verts = meshes[mi]->vertices();
+        const auto &surfaces = meshes[mi]->surfaces();
+        for (uint32_t si = 0; si < surfaces.size(); si++) {
+            aabb box;
+            for (const surface_index &idx : surfaces[si].indexes_) {
+                const vertex &v = verts[idx.pos_index];
+                box.expand(vector3d(v.x, v.y, v.z));
+            }
+            boxes.push_back(box);
+            faces_.push_back({ mi, si });
         }
     }
-
-    bounding_sphere_.radius = farthest;
+    bvh_.build(std::move(boxes));
     return 0;
 }
 
@@ -164,20 +156,19 @@ std::optional<hit> surface_intersect(const ray &r, const mesh &m, const surface 
 } // namespace
 
 std::optional<hit> mesh_drawable::intersect(const ray &r) const {
-    if (!bounding_sphere_.does_intersect(r)) {
-        return std::nullopt;
-    }
-
-    // nearest surface over every mesh
+    // nearest face; equal distances go to the lower face number, as a plain scan would
     std::optional<hit> best;
-    for (const auto &m : geometry_->meshes()) {
-        for (const surface &s : m->surfaces()) {
-            std::optional<hit> h = surface_intersect(r, *m, s);
-            if (h && (!best || h->t < best->t)) {
-                best = h;
-            }
+    uint32_t best_face = 0;
+    const auto &meshes = geometry_->meshes();
+    bvh_.intersect(r, [&](uint32_t fi, double &t_max) {
+        const face &f = faces_[fi];
+        const mesh &m = *meshes[f.mesh];
+        std::optional<hit> h = surface_intersect(r, m, m.surfaces()[f.surface]);
+        if (h && (!best || h->t < best->t || (h->t == best->t && fi < best_face))) {
+            best = h;
+            best_face = fi;
+            t_max = h->t;
         }
-    }
-
+    });
     return best;
 }

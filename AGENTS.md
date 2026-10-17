@@ -3,8 +3,8 @@
 Small multithreaded CPU ray tracer (C++20, CMake). It renders into an
 in-memory framebuffer, writes a PNG or PFM at the end, and can push tiles to
 a tev viewer as they finish. `ctest` covers the vector math, intersections,
-the tracer, the PNG and PFM writers, the tev client, the OBJ loader and a
-golden render of every scene; `./doit` is the eyeball check.
+the tracer, the bvh, the PNG and PFM writers, the tev client, the OBJ loader
+and a golden render of every scene; `./doit` is the eyeball check.
 
 ## Build
 
@@ -56,7 +56,6 @@ ctest --preset clang-lto
 ```sh
 ctest --test-dir build --output-on-failure    # all
 ctest --test-dir build -R test_pfm            # one (or run build/tests/test_pfm)
-ctest --test-dir build -LE slow               # skip the blob golden render
 ```
 
 Tests are plain executables in `tests/` built on `tests/check.h`; CTest runs
@@ -93,7 +92,7 @@ build/ray --list-scenes
 - The root holds only the build files, scripts and docs.
 - `ray/`: the renderer library: `scene*`, `scene_library*`, `tracer*`,
   `trace_master*`, `framebuffer*`, `png*`, `pfm*`, `tev_display*`, `hit.h`,
-  `ray.h`, `color.h`, `bounding_sphere.h`, `cpp.h` (the `DISALLOW_*` class
+  `ray.h`, `color.h`, `aabb.h`, `bvh*`, `cpp.h` (the `DISALLOW_*` class
   macros), and `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry
   containers and the OBJ loader).
 - `tools/`: `ray.cpp`, the renderer's CLI.
@@ -126,8 +125,9 @@ Everything includes from the repo root (`-I.`), so headers are written as
   with +z up (+y when looking along z) and casts one primary ray per pixel
   through an image plane one unit ahead spanning [-1, 1] across its width
   (about a 90° horizontal field of view; no multisampling).
-- `tracer::cast` asks `scene::intersect` for the nearest `hit` (linear scan
-  over all drawables, nearest by `t`, no acceleration structure), then calls
+- `tracer::cast` asks `scene::intersect` for the nearest `hit` (a linear scan
+  over the drawables, nearest by `t`; a `mesh_drawable` walks a `bvh` over its
+  faces, see below), then calls
   the hit drawable's `shader::run(shader_args)`. Shaders recurse by calling
   `args.tracer.cast` (reflection in `default_shader`); `depth_` caps recursion
   at `kMaxTraceDepth` (16).
@@ -147,7 +147,7 @@ camera position/target. Scenes are built by name in `ray/scene_library.cpp`, one
 `Build*` function per entry in the `kScenes` table; `--list-scenes` prints
 them and `--scene NAME` picks one (default `default`). `build_scene` runs
 `scene::prepare()` once at the end, which calls `drawable::prepare()` on every
-drawable (a `mesh_drawable` computes its bounding sphere there). Mesh scenes
+drawable (a `mesh_drawable` builds its bvh there). Mesh scenes
 load `resources/*.obj` relative to the working directory via `load_mesh` →
 `load_obj` → `geometry`. The `spheres` scene draws from the `--seed` RNG.
 Lights are `simple_light` point lights only (`falloff_` is stored but unused
@@ -159,7 +159,11 @@ by shaders).
   `shader_ptr`. Implementations: `sphere`, `plane`, `triangle`,
   `mesh_drawable` (in `ray/drawables/mesh_drawable.h`, distinct from `ray/mesh/mesh.h`).
   `mesh_drawable` supports triangle and quad faces, interpolating the vertex
-  normals the loader requires.
+  normals the loader requires. Its `bvh` (`ray/bvh.h`) is a tree of `aabb`
+  boxes over the faces, median split on the longest centroid axis, leaves of
+  up to 4 faces; `intersect` walks it nearest-box-first with a stack, pruning
+  boxes beyond the best hit, and ties at equal `t` go to the lower face
+  number so the result matches a plain scan.
 - `shaders/`: `shader::run(const shader_args&) -> colorf`. `default_shader`
   does ambient + clamped diffuse + shadows + mirror reflection, starting its
   secondary rays `kBias` (0.001) above the surface; `debug_shader` supports

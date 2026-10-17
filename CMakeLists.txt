@@ -56,6 +56,7 @@ add_library(raycore STATIC
     ray/scene_library.cpp
     ray/tracer.cpp
     ray/trace_master.cpp
+    ray/bvh.cpp
     ray/framebuffer.cpp
     ray/pfm.cpp
     ray/png.cpp

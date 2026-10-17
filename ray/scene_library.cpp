@@ -176,8 +176,7 @@ constexpr scene_entry kScenes[] = {
     { { "dude", "resources/dude.obj" }, build_dude },
     { { "plane-mesh", "resources/plane.obj, a triangulated plane" }, build_plane_mesh },
     { { "csphere", "resources/csphere.obj, a coarse sphere" }, build_csphere },
-    { { "blob", "resources/blob.obj, 13824 quads (slow without an acceleration structure)" },
-      build_blob },
+    { { "blob", "resources/blob.obj, 13824 quads" }, build_blob },
 };
 
 constexpr scene_info kSceneInfos[] = {

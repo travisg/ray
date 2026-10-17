@@ -34,6 +34,10 @@ template <typename T> class vector3 {
     constexpr vector3(T v) : x(v), y(v), z(v) {}
     constexpr vector3(T x1, T y1, T z1) : x(x1), y(y1), z(z1) {}
 
+    // axis 0, 1, 2
+    constexpr T operator[](int axis) const { return axis == 0 ? x : axis == 1 ? y : z; }
+    constexpr T &operator[](int axis) { return axis == 0 ? x : axis == 1 ? y : z; }
+
     constexpr vector3 operator+(const vector3 &v) const {
         return vector3(x + v.x, y + v.y, z + v.z);
     }

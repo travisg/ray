@@ -1,8 +1,8 @@
 # ray
 
 Small multithreaded CPU ray tracer (C++20, CMake) plus three helper tools that
-consume its streaming `.ray` output. No tests exist yet; the check is "it builds
-and `./doit` shows a picture".
+consume its streaming `.ray` output. `ctest` covers the vector math, the `.ray`
+reader/writer, the OBJ loader and a golden render; `./doit` is the eyeball check.
 
 ## Build
 
@@ -29,6 +29,24 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
 - Formatting: `./codestyle <files>` runs `clang-format -i` with the repo's
   `.clang-format` (LLVM base, 4-space indent, attached braces, braces on every
   `if`/`for` body, 100 columns, sorted includes).
+
+## Test
+
+```sh
+ctest --test-dir build --output-on-failure    # all
+ctest --test-dir build -R test_rayfile        # one (or run build/tests/test_rayfile)
+```
+
+Tests are plain executables in `tests/` built on `tests/check.h`; CTest runs
+them. `golden_render_<scene>` renders a scene at 64x48 single-threaded and
+`golden_compare_<scene>` checks every channel against `tests/golden/<scene>.ray`
+within 1e-3. When a change intentionally alters output, re-baseline in the same
+commit:
+
+```sh
+ctest --test-dir build -R golden_render
+cp build/tests/golden-<scene>.ray tests/golden/<scene>.ray
+```
 
 ## Run
 

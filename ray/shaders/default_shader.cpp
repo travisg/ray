@@ -42,17 +42,28 @@ constexpr double kBias = 0.001;
 // hemisphere rays of what each one sees, times the albedo. A ray that escapes sees the
 // scene's ambient colour as a uniform sky; one that lands gets that surface's direct light
 // and, while bounces remain, its own single continuation ray, so a path never branches
-// again after the primary hit. The primary hit's rays take one random point per cell of a
-// grid over the unit square, so no part of the hemisphere is skipped or sampled twice.
+// again after the primary hit. The primary hit's rays take one point per cell of a grid
+// over the unit square, so no part of the hemisphere is skipped or sampled twice; the point
+// in a cell is the pass's Halton point as that cell sees it (sequence_point), so over the
+// passes each cell fills in evenly too and gi x passes rays behave like one large grid
+// however they are split.
 colorf default_shader::indirect_light(const shader_args &args, const vector3d &origin) const {
     const render_settings &settings = args.tracer.settings();
-    const strata grid = stratify(args.tracer.depth() == 1 ? settings.gi_samples : 1);
+    const bool primary = args.tracer.depth() == 1;
+    const strata grid = stratify(primary ? settings.gi_samples : 1);
+    const auto pass = static_cast<uint32_t>(settings.pass);
     colorf sum;
     for (int i = 0; i < grid.x; i++) {
         for (int j = 0; j < grid.y; j++) {
             // two draws in a fixed order: as arguments their order would be the compiler's
-            const double u1 = (i + args.tracer.random()) / grid.x;
-            const double u2 = (j + args.tracer.random()) / grid.y;
+            double u1, u2;
+            if (primary) {
+                u1 = (i + sequence_point(pass, 2, args.tracer.pixel_random())) / grid.x;
+                u2 = (j + sequence_point(pass, 3, args.tracer.pixel_random())) / grid.y;
+            } else {
+                u1 = args.tracer.random();
+                u2 = args.tracer.random();
+            }
             const vector3d dir = cosine_hemisphere(args.hit.normal, u1, u2);
             sum += args.tracer.cast(ray(origin, dir)).value_or(args.scene.ambient_light());
         }

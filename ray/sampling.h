@@ -47,6 +47,17 @@ inline double fract(double v) {
     return v - std::floor(v);
 }
 
+// Point k of a van der Corput sequence as one sampling site sees it: the site starts the
+// sequence at its own index and shifts it by its own offset, both fixed across passes, so
+// the site's points stay evenly spread over the passes while different sites, and the two
+// coordinates of one site, do not share a pattern. One draw from the site's fixed random
+// sequence per call sets both.
+inline double sequence_point(uint32_t k, uint32_t base, double site_random) {
+    const auto start = static_cast<uint32_t>(site_random * 65536.0);
+    const double shift = site_random * 65536.0 - start;
+    return fract(radical_inverse(k + start, base) + shift);
+}
+
 // A grid over the unit square with at least n cells, as square as n allows: 64 is 8x8, 50 is
 // 8x7. One random point per cell (stratified sampling) spreads n samples evenly, where n
 // independent points would clump and leave gaps.

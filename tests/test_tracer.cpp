@@ -66,6 +66,15 @@ int main() {
     CHECK(std::fabs(radical_inverse(1, 3) - 1.0 / 3) < 1e-12);
     CHECK(std::fabs(radical_inverse(3, 3) - 1.0 / 9) < 1e-12);
     CHECK(fract(1.75) == 0.75 && fract(-0.25) == 0.75);
+    // a site's points over 8 passes land in 8 different eighths of [0, 1), from any start
+    // (24313 here; a site value that is a multiple of 1/65536 has no shift)
+    {
+        bool cell[8] = {};
+        for (uint32_t k = 0; k < 8; k++) {
+            cell[static_cast<int>(sequence_point(k, 2, 24313.0 / 65536.0) * 8)] = true;
+        }
+        CHECK(cell[0] && cell[1] && cell[2] && cell[3] && cell[4] && cell[5] && cell[6] && cell[7]);
+    }
 
     // passes accumulate into a running mean
     {

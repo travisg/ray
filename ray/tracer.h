@@ -59,8 +59,11 @@ class tracer {
     const render_settings &settings() const { return settings_; }
     // how many casts deep the shader asking is: 1 at a primary hit
     int depth() const { return depth_; }
-    // uniform in [0, 1), from the current pixel's sequence
+    // uniform in [0, 1), from the current pixel's sequence for this pass
     double random() { return rng_.next_double(); }
+    // uniform in [0, 1), from a sequence that is the same for this pixel in every pass, for
+    // offsets that must not change between passes
+    double pixel_random() { return pixel_rng_.next_double(); }
 
   private:
     const framebuffer &surface_;
@@ -68,6 +71,7 @@ class tracer {
     trace_master &master_;
     const render_settings settings_;
     rng rng_{ 0 };
+    rng pixel_rng_{ 0 };
 
     int depth_ = 0;
 

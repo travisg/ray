@@ -143,10 +143,11 @@ Everything includes from the repo root (`-I.`), so headers are written as
   (about a 90° horizontal field of view). Each pixel reseeds the tracer's
   PCG32 `rng` from `--seed`, the pass number and its coordinates, so a render
   is the same whichever thread drew which tile; on multi-pass renders the ray
-  goes through the pass's 2D Halton point (`radical_inverse` in
-  `ray/sampling.h`, bases 2 and 3), shifted by a per-pixel offset, within half
-  a pixel of the usual ray, so the edge samples spread evenly over the pixel
-  as passes accumulate.
+  goes through the pass's 2D Halton point as the pixel sees it
+  (`sequence_point` in `ray/sampling.h`, bases 2 and 3, started and shifted
+  per pixel from `pixel_random()`, the pixel's pass-independent sequence),
+  within half a pixel of the usual ray, so the edge samples spread evenly
+  over the pixel as passes accumulate.
   `render_settings` carries the `--gi`, `--bounces`, `--seed` and pass values
   to the shaders through `tracer::settings()`.
 - `tracer::cast` asks `scene::intersect` for the nearest `hit` (a linear scan
@@ -198,10 +199,14 @@ by shaders).
   does ambient + clamped diffuse + shadows + mirror reflection, starting its
   secondary rays `kBias` (0.001) above the surface. With `gi_samples` set,
   `indirect_light` replaces the ambient term: `cosine_hemisphere`
-  (`ray/sampling.h`) directions from one random point per cell of a
-  `stratify(gi_samples)` grid, `tracer::cast` for what each sees, the sky
-  for escapes, averaged and scaled by the albedo; the primary hit (depth 1)
-  spends the grid and deeper hits one ray, up to `bounces`.
+  (`ray/sampling.h`) directions from one point per cell of a
+  `stratify(gi_samples)` grid, the pass's Halton point as the cell sees it
+  (`sequence_point`: the sequence started at a random index and shifted by a
+  random offset, both fixed per cell via `tracer::pixel_random()`), so the
+  cells also fill in evenly across passes; `tracer::cast` for what each
+  sees, the sky for escapes, averaged and scaled by the albedo; the primary
+  hit (depth 1) spends the grid and deeper hits one plain random ray, up to
+  `bounces`.
   `debug_shader` supports `mode::normal` and `mode::depth`.
 - `mesh/`: `geometry` (shared vertex/normal/tangent/uv pools) owning `mesh` →
   `surface` index lists; `obj_loader` is the only importer.

@@ -20,7 +20,6 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <iostream>
 #include <ray/mesh/geometry.h>
 #include <ray/mesh/mesh.h>
 #include <utility>
@@ -49,9 +48,4 @@ const vertex_list &mesh::tangents() const {
 
 const vertex_list &mesh::uvs() const {
     return geometry_.uvs();
-}
-
-void mesh::dump() const {
-    std::cout << "\t\tMesh '" << name_ << "'";
-    std::cout << ", " << surfaces_.size() << " surfaces" << std::endl;
 }

@@ -25,7 +25,6 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
-#include <ctime>
 #include <filesystem>
 #include <functional>
 #include <getopt.h>
@@ -231,14 +230,15 @@ void display_thread(std::atomic<bool> &stop, framebuffer &fb, tev_display &displ
     }
 }
 
-void tracer_thread(const render_surface &rs, const scene &s, trace_master &master) {
-    time_t start = time(nullptr);
-
+// Runs one tracer until the tiles run out and adds its busy time to total_us.
+void tracer_thread(const render_surface &rs, const scene &s, trace_master &master,
+                   std::atomic<int64_t> &total_us) {
+    const auto start = std::chrono::steady_clock::now();
     tracer t(rs, s, master);
     t.trace();
-
-    start = time(nullptr) - start;
-    std::cout << "trace end, took " << start << " seconds" << std::endl;
+    total_us += std::chrono::duration_cast<std::chrono::microseconds>(
+                    std::chrono::steady_clock::now() - start)
+                    .count();
 }
 
 } // namespace
@@ -258,9 +258,8 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    printf("xres %d yres %d cpus %d scene %s\n", opts.xres, opts.yres, opts.cpus,
-           opts.scene.c_str());
-    std::cout << "outfile " << opts.outfile << std::endl;
+    printf("rendering %s at %dx%d on %d threads to %s\n", opts.scene.c_str(), opts.xres, opts.yres,
+           opts.cpus, opts.outfile.c_str());
 
     std::mt19937 rng(opts.seed);
     std::unique_ptr<scene> s = build_scene(opts.scene, rng);
@@ -320,19 +319,23 @@ int main(int argc, char *argv[]) {
             std::thread(display_thread, std::ref(stop_display), std::ref(*fb), std::ref(*display));
     }
 
+    const auto start = std::chrono::steady_clock::now();
+    std::atomic<int64_t> thread_us{ 0 };
     std::vector<std::thread> threads;
     threads.reserve(opts.cpus);
     for (int i = 0; i < opts.cpus; i++) {
-        threads.emplace_back(tracer_thread, std::cref(*rs), std::cref(*s), std::ref(master));
+        threads.emplace_back(tracer_thread, std::cref(*rs), std::cref(*s), std::ref(master),
+                             std::ref(thread_us));
     }
 
     // wait for the trace master to hand out and collect every tile
     master.wait_for_done();
-
-    std::cout << "waiting for worker threads to shut down" << std::endl;
     for (auto &t : threads) {
         t.join();
     }
+    const double wall =
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    printf("rendered in %.2f s wall, %.1f s across %d threads\n", wall, thread_us / 1e6, opts.cpus);
     if (display_worker.joinable()) {
         stop_display = true;
         display_worker.join();
@@ -346,8 +349,6 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     }
-
-    std::cout << "shutting down" << std::endl;
 
     // a .ray file gets its EOF packet when `file` closes it
     return 0;

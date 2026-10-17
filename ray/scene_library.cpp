@@ -22,6 +22,7 @@
  */
 #include <ray/scene_library.h>
 
+#include <cstdio>
 #include <iostream>
 #include <ray/drawables/mesh_drawable.h>
 #include <ray/drawables/plane.h>
@@ -61,12 +62,16 @@ template <typename T, typename... Args> void add(scene &s, shader_ptr shader, Ar
 }
 
 std::unique_ptr<mesh_drawable> load_mesh(const std::string &filename) {
-    std::cout << "loading " << filename << std::endl;
     std::unique_ptr<geometry> geom = load_obj_file(filename);
     if (!geom) {
         return nullptr;
     }
-    geom->dump();
+    size_t faces = 0;
+    for (const auto &m : geom->meshes()) {
+        faces += m->surfaces().size();
+    }
+    printf("loaded %s: %zu vertices, %zu faces\n", filename.c_str(), geom->vertices().size(),
+           faces);
     return std::make_unique<mesh_drawable>(std::move(geom));
 }
 

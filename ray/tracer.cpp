@@ -20,7 +20,6 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <iostream>
 
 #include <ray/drawables/drawable.h>
 #include <ray/ray.h>
@@ -93,6 +92,4 @@ void tracer::trace() {
 
         master_.return_work_unit(unit);
     }
-
-    std::cout << "end trace" << std::endl;
 }

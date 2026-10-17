@@ -20,7 +20,6 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -61,9 +60,6 @@ int mesh_drawable::prepare() {
     }
 
     bounding_sphere_.radius = farthest;
-
-    std::cout << "mesh bounding sphere center " << avg << " radius " << farthest << std::endl;
-
     return 0;
 }
 

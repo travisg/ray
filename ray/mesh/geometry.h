@@ -48,8 +48,6 @@ class geometry {
     const vertex_list &tangents() const { return tangents_; }
     const vertex_list &uvs() const { return uvs_; }
 
-    void dump() const;
-
   private:
     std::vector<std::unique_ptr<mesh>> meshes_;
 

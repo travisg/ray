@@ -40,8 +40,6 @@ class mesh {
     void set_name(const std::string &name);
     const std::string &name() const { return name_; }
 
-    void dump() const;
-
     const std::vector<surface> &surfaces() const { return surfaces_; }
 
     const vertex_list &vertices() const;

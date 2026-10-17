@@ -20,7 +20,6 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <iostream>
 #include <ray/mesh/geometry.h>
 #include <utility>
 
@@ -46,18 +45,4 @@ void geometry::add_uv_vert(const vertex &v) {
 
 std::unique_ptr<mesh> geometry::create_mesh() {
     return std::make_unique<mesh>(*this);
-}
-
-void geometry::dump() const {
-    std::cout << "geometry at " << (void *)this << std::endl;
-
-    std::cout << "\t" << meshes_.size() << " meshes" << std::endl;
-    std::cout << "\t" << vertices_.size() << " vertices" << std::endl;
-    std::cout << "\t" << normals_.size() << " normal vertices" << std::endl;
-    std::cout << "\t" << tangents_.size() << " tangent vertices" << std::endl;
-    std::cout << "\t" << uvs_.size() << " uv vertices" << std::endl;
-
-    for (const auto &m : meshes_) {
-        m->dump();
-    }
 }

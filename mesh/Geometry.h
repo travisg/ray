@@ -23,22 +23,26 @@
 #pragma once
 
 #include "Mesh.h"
+#include <memory>
+#include <vector>
 
-// Vertex, normal, tangent and uv pools shared by the meshes loaded from one file.
+// Vertex, normal, tangent and uv pools shared by the meshes loaded from one
+// file. Meshes keep a reference to their geometry, so it is never copied.
 class Geometry {
   public:
     Geometry() = default;
-    ~Geometry();
+    Geometry(const Geometry &) = delete;
+    Geometry &operator=(const Geometry &) = delete;
 
     void AddVert(const Vertex &v);
     void AddNormalVert(const Vertex &v);
     void AddTangentVert(const Vertex &v);
     void AddUVVert(const Vertex &v);
-    void AddMesh(Mesh *m);
+    void AddMesh(std::unique_ptr<Mesh> m);
 
-    Mesh *CreateMesh();
+    std::unique_ptr<Mesh> CreateMesh();
 
-    const MeshList &Meshes() const { return m_Meshes; }
+    const std::vector<std::unique_ptr<Mesh>> &Meshes() const { return m_Meshes; }
     const VertexList &Vertices() const { return m_Verts; }
     const VertexList &Normals() const { return m_NormalVerts; }
     const VertexList &Tangents() const { return m_TangentVerts; }
@@ -47,7 +51,7 @@ class Geometry {
     void Dump() const;
 
   private:
-    MeshList m_Meshes;
+    std::vector<std::unique_ptr<Mesh>> m_Meshes;
 
     VertexList m_Verts;
     VertexList m_NormalVerts;

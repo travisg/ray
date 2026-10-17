@@ -1,5 +1,6 @@
 #include "check.h"
 #include <cstdio>
+#include <memory>
 #include <mesh/Geometry.h>
 #include <mesh/OBJLoader.h>
 
@@ -18,19 +19,19 @@ int main() {
     if (!g) {
         return 1;
     }
+    std::unique_ptr<Geometry> owner(g);
 
     CHECK(g->Vertices().size() == 8);
     CHECK(g->Normals().size() == 24);
 
     CHECK(g->Meshes().size() == 1);
     if (g->Meshes().size() == 1) {
-        const Mesh *m = g->Meshes()[0];
+        const Mesh *m = g->Meshes()[0].get();
         CHECK(m->GetSurfaceList().size() == 6);
-        for (const Surface *s : m->GetSurfaceList()) {
-            CHECK(s->m_Indexes.size() == 4);
+        for (const Surface &s : m->GetSurfaceList()) {
+            CHECK(s.m_Indexes.size() == 4);
         }
     }
 
-    delete g;
     return TEST_RESULT();
 }

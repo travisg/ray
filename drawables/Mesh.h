@@ -33,7 +33,8 @@ class Geometry;
 // Triangle/quad mesh loaded from a Geometry, with a bounding-sphere pre-test.
 class MeshDrawable : public Drawable {
   public:
-    MeshDrawable(std::shared_ptr<Geometry>);
+    explicit MeshDrawable(std::unique_ptr<Geometry> geom);
+    ~MeshDrawable() override;
 
     // computes the bounding sphere; must run before Intersect
     int Prepare() override;
@@ -42,7 +43,7 @@ class MeshDrawable : public Drawable {
     bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const override;
 
   private:
-    std::shared_ptr<Geometry> m_Geom;
+    std::unique_ptr<Geometry> m_Geom;
 
     BoundingSphere m_BSphere;
 };

@@ -34,6 +34,8 @@ class Drawable {
 
   public:
     virtual ~Drawable() = default;
+    Drawable(const Drawable &) = delete;
+    Drawable &operator=(const Drawable &) = delete;
 
     virtual int Prepare() { return 0; }
 

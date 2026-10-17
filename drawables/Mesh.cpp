@@ -30,7 +30,9 @@
 
 using Libvec::Vector3d;
 
-MeshDrawable::MeshDrawable(std::shared_ptr<Geometry> g) : m_Geom(std::move(g)) {}
+MeshDrawable::MeshDrawable(std::unique_ptr<Geometry> geom) : m_Geom(std::move(geom)) {}
+
+MeshDrawable::~MeshDrawable() = default;
 
 int MeshDrawable::Prepare() {
     // center the bounding sphere on the vertex average, radius to the farthest vertex
@@ -178,17 +180,17 @@ bool MeshDrawable::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) co
     double matchdist = -1;
 
     // for every mesh, check every surface
-    for (const Mesh *m : m_Geom->Meshes()) {
-        for (const Surface *s : m->GetSurfaceList()) {
-            if (!SurfaceIntersect(ray, pos, normal, *m, *s)) {
+    for (const auto &m : m_Geom->Meshes()) {
+        for (const Surface &s : m->GetSurfaceList()) {
+            if (!SurfaceIntersect(ray, pos, normal, *m, s)) {
                 continue;
             }
 
             // surface intersected, lets see if it's the best match
             double distance = (pos - ray.origin).LengthSquared();
             if (matchdist < 0 || distance < matchdist) {
-                meshmatch = m;
-                surfmatch = s;
+                meshmatch = m.get();
+                surfmatch = &s;
                 matchdist = distance;
             }
         }

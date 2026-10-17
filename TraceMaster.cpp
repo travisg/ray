@@ -48,9 +48,6 @@ int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit) {
 
     RenderSurface &surface = GetSurface();
 
-    int oldwidth = unit.Width();
-    int oldheight = unit.Height();
-
     {
         std::lock_guard<std::mutex> guard(m_Lock);
 
@@ -82,21 +79,11 @@ int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit) {
         unit.endy = surface.Height() - 1;
     }
 
-    /* allocate a new result array */
-    if (unit.result && (oldwidth != unit.Width() || oldheight != unit.Height())) {
-        delete[] unit.result;
-        unit.result = nullptr;
-    }
-
-    if (!unit.result) {
-        unit.result = new colorf[kWorkUnitSize * kWorkUnitSize];
-    }
-
     return 0;
 }
 
 int TraceMasterSimple::ReturnWorkUnit(TraceWorkUnit &unit) {
-    colorf *c = unit.result;
+    const colorf *c = unit.result.data();
 
     {
         std::lock_guard<std::mutex> guard(m_Lock);
@@ -124,15 +111,7 @@ inline int roundup(int x, int roundto) {
 TraceMasterRandom::TraceMasterRandom(RenderSurface &surface) : TraceMaster(surface) {
     m_Count = (roundup(surface.Width(), kWorkUnitSize) * roundup(surface.Height(), kWorkUnitSize)) /
               (kWorkUnitSize * kWorkUnitSize);
-    m_Bitmap = new bool[m_Count];
-
-    for (int i = 0; i < m_Count; i++) {
-        m_Bitmap[i] = false;
-    }
-}
-
-TraceMasterRandom::~TraceMasterRandom() {
-    delete[] m_Bitmap;
+    m_Bitmap.assign(m_Count, false);
 }
 
 int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit) {
@@ -174,17 +153,11 @@ int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit) {
         unit.endy = surface.Height() - 1;
     }
 
-    /* allocate a new result array */
-    if (unit.result) {
-        delete[] unit.result;
-    }
-    unit.result = new colorf[kWorkUnitSize * kWorkUnitSize];
-
     return 0;
 }
 
 int TraceMasterRandom::ReturnWorkUnit(TraceWorkUnit &unit) {
-    colorf *c = unit.result;
+    const colorf *c = unit.result.data();
 
     {
         std::lock_guard<std::mutex> guard(m_Lock);

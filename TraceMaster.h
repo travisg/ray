@@ -23,24 +23,21 @@
 #pragma once
 
 #include <RenderSurface.h>
+#include <array>
 #include <condition_variable>
 #include <mutex>
+#include <vector>
 
 // Tiles are kWorkUnitSize x kWorkUnitSize pixels, clipped at the image edge.
 inline constexpr int kWorkUnitSize = 16;
 
 struct TraceWorkUnit {
-    TraceWorkUnit() = default;
-    ~TraceWorkUnit() { delete[] result; }
-    TraceWorkUnit(const TraceWorkUnit &) = delete;
-    TraceWorkUnit &operator=(const TraceWorkUnit &) = delete;
-
     // inclusive bounds
     int startx = 0, starty = 0;
     int endx = 0, endy = 0;
 
     // row-major, Width() per row
-    colorf *result = nullptr;
+    std::array<colorf, kWorkUnitSize * kWorkUnitSize> result;
 
     void SetResult(int x, int y, colorf c) { result[(y - starty) * Width() + (x - startx)] = c; }
 
@@ -90,13 +87,12 @@ class TraceMasterSimple : public TraceMaster {
 class TraceMasterRandom : public TraceMaster {
   public:
     TraceMasterRandom(RenderSurface &surface);
-    ~TraceMasterRandom() override;
 
     int GetWorkUnit(TraceWorkUnit &) override;
     int ReturnWorkUnit(TraceWorkUnit &) override;
 
   private:
-    bool *m_Bitmap;
+    std::vector<bool> m_Bitmap;
     int m_Count;
     int m_PendingCount = 0;
 };

@@ -28,20 +28,10 @@ RenderSurface::RenderSurface(int width, int height) : m_Width(width), m_Height(h
 
 RenderSurfaceFile::RenderSurfaceFile(int width, int height) : RenderSurface(width, height) {}
 
-RenderSurfaceFile::~RenderSurfaceFile() {
-    if (m_file) {
-        m_file->Close();
-        delete m_file;
-    }
-}
+RenderSurfaceFile::~RenderSurfaceFile() = default;
 
 int RenderSurfaceFile::OpenOutFile(const std::string &name) {
-    if (m_file) {
-        m_file->Close();
-        delete m_file;
-    }
-
-    m_file = new RayFile();
+    m_file = std::make_unique<RayFile>();
     return m_file->OpenWrite(name, Width(), Height());
 }
 

@@ -1,10 +1,12 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #include <assert.h>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <utility>
 
 #include "Geometry.h"
 #include "Mesh.h"
@@ -90,7 +92,7 @@ static int tokenize(char *str, const char sep, char **tokens, int num_tokens) {
 
 int obj_load(FILE *infp, Geometry **new_geometry) {
     Geometry *g;
-    Mesh *mesh = 0;
+    std::unique_ptr<Mesh> mesh;
     char line[1024];
     bool addedSurfaces = true; // have we started adding surfaces in the current mesh?
     bool seenUnsupp = false;
@@ -110,7 +112,7 @@ int obj_load(FILE *infp, Geometry **new_geometry) {
                 // we have previously been adding surfaces. The start of
                 // more vertexes is a sign we need a new mesh
                 if (mesh) {
-                    g->AddMesh(mesh);
+                    g->AddMesh(std::move(mesh));
                 }
                 mesh = g->CreateMesh();
                 addedSurfaces = false;
@@ -135,13 +137,13 @@ int obj_load(FILE *infp, Geometry **new_geometry) {
             // consume them for now
         } else if (strncmp(line, "vt ", 3) == 0) {
             Vertex v;
-            sscanf(line, "vt %f %f", &v.u, &v.v);
+            sscanf(line, "vt %f %f", &v.x, &v.y);
             g->AddUVVert(v);
         } else if (strncmp(line, "f ", 2) == 0) {
             addedSurfaces = true;
 
             // a surface
-            Surface *s = new Surface;
+            Surface s;
 
             // tokenize the line to pick out the indexes
             char *tokens[16];
@@ -164,10 +166,10 @@ int obj_load(FILE *infp, Geometry **new_geometry) {
                 if (num_subtokens > 2) {
                     normindex = atoi(subtokens[2]);
                 }
-                s->AddIndex(posindex - 1, normindex - 1, uvindex - 1);
+                s.AddIndex(posindex - 1, normindex - 1, uvindex - 1);
             }
 
-            mesh->AddSurface(s);
+            mesh->AddSurface(std::move(s));
         } else if (strncmp(line, "mtllib", 6) == 0) {
             // eat these lines
         } else if (strncmp(line, "usemtl", 6) == 0) {
@@ -192,7 +194,7 @@ int obj_load(FILE *infp, Geometry **new_geometry) {
             bool done = false;
             while (!done) {
                 done = true;
-                for (const Mesh *m : g->Meshes()) {
+                for (const auto &m : g->Meshes()) {
                     if (name == m->GetName()) {
                         // name collision
                         std::ostringstream o;
@@ -217,7 +219,7 @@ int obj_load(FILE *infp, Geometry **new_geometry) {
 
     // add the last mesh to our geometry
     if (mesh && addedSurfaces) {
-        g->AddMesh(mesh);
+        g->AddMesh(std::move(mesh));
     }
 
     *new_geometry = g;

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <Color.h>
+#include <memory>
 #include <string>
 
 class RenderSurface {
@@ -55,5 +56,5 @@ class RenderSurfaceFile : public RenderSurface {
     void SetXYRun(int x, int y, int count, const colorf *color) override;
 
   private:
-    RayFile *m_file = nullptr;
+    std::unique_ptr<RayFile> m_file;
 };

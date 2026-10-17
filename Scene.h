@@ -23,31 +23,31 @@
 #pragma once
 
 #include "Color.h"
+#include <drawables/Drawable.h>
 #include <libvec/Vector3.h>
+#include <lights/SimpleLight.h>
+#include <memory>
 #include <vector>
 
-class Drawable;
 struct Ray;
-class SimpleLight;
 
 class Scene {
   public:
     Scene();
-    ~Scene();
 
     const Drawable *Intersect(const Ray &ray) const;
     bool DoesIntersect(const Ray &ray) const;
     bool DoesIntersect(const Ray &ray, double maxDistance) const;
 
-    const std::vector<SimpleLight *> &GetLightList() const { return m_SimpleLightList; }
+    const std::vector<SimpleLight> &GetLightList() const { return m_SimpleLightList; }
     colorf GetAmbientLight() const { return m_AmbientLight; }
 
     const Libvec::Vector3d &GetCamera() const { return m_Camera; }
     const Libvec::Vector3d &GetTarget() const { return m_Target; }
 
   private:
-    std::vector<Drawable *> m_DrawableList;
-    std::vector<SimpleLight *> m_SimpleLightList;
+    std::vector<std::unique_ptr<Drawable>> m_DrawableList;
+    std::vector<SimpleLight> m_SimpleLightList;
     colorf m_AmbientLight;
 
     Libvec::Vector3d m_Camera;

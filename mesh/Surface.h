@@ -37,5 +37,3 @@ class Surface {
 
     std::vector<SurfaceIndex> m_Indexes;
 };
-
-using SurfaceList = std::vector<Surface *>;

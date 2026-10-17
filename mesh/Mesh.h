@@ -27,37 +27,30 @@
 #include <string>
 #include <vector>
 
-// A named group of surfaces indexing into vertex lists owned by the Geometry
-// that created the mesh.
+class Geometry;
+
+// A named group of surfaces indexing into the vertex lists of the Geometry
+// that owns the mesh.
 class Mesh {
   public:
-    Mesh(const VertexList &posVerts, const VertexList &normalVerts, const VertexList &tangentVerts,
-         const VertexList &uvVerts);
-    ~Mesh();
+    explicit Mesh(const Geometry &geom);
 
-    void AddSurface(Surface *s);
+    void AddSurface(Surface s);
 
     void SetName(const std::string &name);
     const std::string &GetName() const { return m_Name; }
 
     void Dump() const;
 
-    const SurfaceList &GetSurfaceList() const { return m_Surfaces; }
+    const std::vector<Surface> &GetSurfaceList() const { return m_Surfaces; }
 
-    const VertexList &GetVertexList() const { return m_Verts; }
-    const VertexList &GetNormalVertexList() const { return m_NormalVerts; }
-    const VertexList &GetTangentVertexList() const { return m_TangentVerts; }
-    const VertexList &GetUVVertexList() const { return m_UVVerts; }
+    const VertexList &GetVertexList() const;
+    const VertexList &GetNormalVertexList() const;
+    const VertexList &GetTangentVertexList() const;
+    const VertexList &GetUVVertexList() const;
 
   private:
-    std::string m_Name;
-
-    const VertexList &m_Verts;
-    const VertexList &m_NormalVerts;
-    const VertexList &m_TangentVerts;
-    const VertexList &m_UVVerts;
-
-    SurfaceList m_Surfaces;
+    const Geometry &m_Geom;
+    std::string m_Name = "default";
+    std::vector<Surface> m_Surfaces;
 };
-
-using MeshList = std::vector<Mesh *>;

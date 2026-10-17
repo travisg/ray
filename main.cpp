@@ -23,8 +23,10 @@
 #include <charconv>
 #include <cstdio>
 #include <ctime>
+#include <functional>
 #include <getopt.h>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -125,18 +127,14 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
 
 } // namespace
 
-int TracerThread(RenderSurface *rs, Scene *scene, TraceMaster *trace_master) {
+void TracerThread(const RenderSurface &rs, const Scene &scene, TraceMaster &master) {
     time_t start = time(nullptr);
 
-    Tracer *tracer = new Tracer(*rs, *scene, *trace_master);
-    tracer->Trace();
+    Tracer tracer(rs, scene, master);
+    tracer.Trace();
 
     start = time(nullptr) - start;
     std::cout << "trace end, took " << start << " seconds" << std::endl;
-
-    delete tracer;
-
-    return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -149,47 +147,37 @@ int main(int argc, char *argv[]) {
     printf("xres %d yres %d cpus %d\n", opts.xres, opts.yres, opts.cpus);
     std::cout << "outfile " << opts.outfile << std::endl;
 
-    auto *rs = new RenderSurfaceFile(opts.xres, opts.yres);
-
-    if (rs->OpenOutFile(opts.outfile) < 0) {
+    RenderSurfaceFile rs(opts.xres, opts.yres);
+    if (rs.OpenOutFile(opts.outfile) < 0) {
         std::cerr << "error opening output file " << opts.outfile << std::endl;
         return 1;
     }
 
-    /* create the scene */
-    auto *scene = new Scene();
+    Scene scene;
 
-    /* create a tracemaster */
-    TraceMaster *trace_master;
+    std::unique_ptr<TraceMaster> master;
     if (opts.random) {
-        trace_master = new TraceMasterRandom(*rs);
+        master = std::make_unique<TraceMasterRandom>(rs);
     } else {
-        trace_master = new TraceMasterSimple(*rs);
+        master = std::make_unique<TraceMasterSimple>(rs);
     }
 
-    std::vector<std::thread *> threads;
+    std::vector<std::thread> threads;
+    threads.reserve(opts.cpus);
     for (int i = 0; i < opts.cpus; i++) {
-        auto *t = new std::thread(TracerThread, rs, scene, trace_master);
-        threads.push_back(t);
+        threads.emplace_back(TracerThread, std::cref(rs), std::cref(scene), std::ref(*master));
     }
 
-    // wait for the trace master to quit handing out work units
-    trace_master->WaitForDone();
+    // wait for the trace master to hand out and collect every tile
+    master->WaitForDone();
 
-    // wait for the worker threads to complete
     std::cout << "waiting for worker threads to shut down" << std::endl;
-    while (!threads.empty()) {
-        auto *t = threads.back();
-        threads.pop_back();
-        t->join();
-        delete t;
+    for (auto &t : threads) {
+        t.join();
     }
 
     std::cout << "shutting down" << std::endl;
 
-    delete trace_master;
-    delete scene;
-    delete rs;
-
+    // rs closes the output file, which writes the EOF packet
     return 0;
 }

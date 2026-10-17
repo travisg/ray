@@ -31,20 +31,20 @@ using Libvec::Vector3d;
 colorf DefaultShader::Run(const ShaderArgs &args) const {
     colorf color = args.scene->GetAmbientLight();
 
-    for (const SimpleLight *l : args.scene->GetLightList()) {
+    for (const SimpleLight &l : args.scene->GetLightList()) {
         // cast a ray at each light, see if we're in a shadow
         Ray ray;
         ray.origin = args.pos + args.normal * 0.001f;
-        ray.dir = l->GetPos() - ray.origin;
+        ray.dir = l.GetPos() - ray.origin;
         ray.dir.Normalize();
 
-        if (!args.scene->DoesIntersect(ray, (ray.origin - l->GetPos()).Length())) {
-            Vector3d suntosurface = l->GetPos() - args.pos;
+        if (!args.scene->DoesIntersect(ray, (ray.origin - l.GetPos()).Length())) {
+            Vector3d suntosurface = l.GetPos() - args.pos;
             suntosurface.Normalize();
 
             float light = Dot(suntosurface, args.normal);
 
-            color += (l->GetColor() * light) * m_DiffuseColor;
+            color += (l.GetColor() * light) * m_DiffuseColor;
         }
     }
 

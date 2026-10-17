@@ -24,21 +24,13 @@
 
 #include <vector>
 
-// Position (x, y, z, w) or texture coordinate (u, v) over the same storage.
-class Vertex {
-  public:
+// Position (x, y, z, w); texture coordinates use x and y.
+struct Vertex {
     Vertex() = default;
     Vertex(float inx, float iny, float inz, float inw) : x(inx), y(iny), z(inz), w(inw) {}
-    Vertex(float inu, float inv) : x(inu), y(inv), z(0), w(0) {}
+    Vertex(float inu, float inv) : x(inu), y(inv) {}
 
-    union {
-        struct {
-            float x, y, z, w;
-        };
-        struct {
-            float u, v;
-        };
-    };
+    float x = 0, y = 0, z = 0, w = 0;
 };
 
 using VertexList = std::vector<Vertex>;

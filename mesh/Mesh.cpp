@@ -21,25 +21,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "Mesh.h"
+#include "Geometry.h"
 #include <iostream>
+#include <utility>
 
-Mesh::Mesh(const VertexList &posVerts, const VertexList &normalVerts,
-           const VertexList &tangentVerts, const VertexList &uvVerts)
-    : m_Name("default"), m_Verts(posVerts), m_NormalVerts(normalVerts),
-      m_TangentVerts(tangentVerts), m_UVVerts(uvVerts) {}
-
-Mesh::~Mesh() {
-    for (Surface *s : m_Surfaces) {
-        delete s;
-    }
-}
+Mesh::Mesh(const Geometry &geom) : m_Geom(geom) {}
 
 void Mesh::SetName(const std::string &name) {
     m_Name = name;
 }
 
-void Mesh::AddSurface(Surface *s) {
-    m_Surfaces.push_back(s);
+void Mesh::AddSurface(Surface s) {
+    m_Surfaces.push_back(std::move(s));
+}
+
+const VertexList &Mesh::GetVertexList() const {
+    return m_Geom.Vertices();
+}
+
+const VertexList &Mesh::GetNormalVertexList() const {
+    return m_Geom.Normals();
+}
+
+const VertexList &Mesh::GetTangentVertexList() const {
+    return m_Geom.Tangents();
+}
+
+const VertexList &Mesh::GetUVVertexList() const {
+    return m_Geom.UVs();
 }
 
 void Mesh::Dump() const {

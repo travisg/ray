@@ -22,15 +22,10 @@
  */
 #include "Geometry.h"
 #include <iostream>
+#include <utility>
 
-Geometry::~Geometry() {
-    for (Mesh *m : m_Meshes) {
-        delete m;
-    }
-}
-
-void Geometry::AddMesh(Mesh *m) {
-    m_Meshes.push_back(m);
+void Geometry::AddMesh(std::unique_ptr<Mesh> m) {
+    m_Meshes.push_back(std::move(m));
 }
 
 void Geometry::AddVert(const Vertex &v) {
@@ -49,8 +44,8 @@ void Geometry::AddUVVert(const Vertex &v) {
     m_UVVerts.push_back(v);
 }
 
-Mesh *Geometry::CreateMesh() {
-    return new Mesh(m_Verts, m_NormalVerts, m_TangentVerts, m_UVVerts);
+std::unique_ptr<Mesh> Geometry::CreateMesh() {
+    return std::make_unique<Mesh>(*this);
 }
 
 void Geometry::Dump() const {
@@ -62,7 +57,7 @@ void Geometry::Dump() const {
     std::cout << "\t" << m_TangentVerts.size() << " tangent vertices" << std::endl;
     std::cout << "\t" << m_UVVerts.size() << " uv vertices" << std::endl;
 
-    for (const Mesh *m : m_Meshes) {
+    for (const auto &m : m_Meshes) {
         m->Dump();
     }
 }

@@ -24,7 +24,7 @@
 
 #include <Ray.h>
 #include <Scene.h>
-#include <drawables/Mesh.h>
+#include <drawables/MeshDrawable.h>
 #include <drawables/Plane.h>
 #include <drawables/Sphere.h>
 #include <drawables/Triangle.h>
@@ -105,7 +105,11 @@ bool BuildSpheres(Scene &scene, std::mt19937 &rng) {
     std::uniform_real_distribution<double> radius(1, 20);
     std::uniform_real_distribution<double> channel(0, 1);
     for (int i = 0; i < 100; i++) {
-        colorf diffuse(channel(rng), channel(rng), channel(rng));
+        // one draw per statement: argument evaluation order is unspecified
+        const double r = channel(rng);
+        const double g = channel(rng);
+        const double b = channel(rng);
+        const colorf diffuse(r, g, b);
         double x = position(rng);
         double y = position(rng);
         double z = position(rng);

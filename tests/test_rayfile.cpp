@@ -1,5 +1,6 @@
 #include "check.h"
 #include <RayFile.h>
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
@@ -30,8 +31,9 @@ int main() {
         CHECK(f.Height() == 3);
         CHECK(f.GetPixelCount() == 12);
 
-        std::vector<float> buf(12 * 3, -1.0f);
-        CHECK(f.ReadIntoBuffer(buf.data()) == 0);
+        std::vector<float> buf;
+        CHECK(f.ReadIntoBuffer(buf) == 0);
+        CHECK(buf.size() == 12 * 3);
         auto px = [&](int x, int y, int ch) { return buf[(y * 4 + x) * 3 + ch]; };
         CHECK_NEAR(px(0, 0, 0), 0.1f, 1e-6);
         CHECK_NEAR(px(0, 0, 1), 0.2f, 1e-6);
@@ -43,7 +45,7 @@ int main() {
         CHECK(px(1, 1, 0) == 1.5f);
         CHECK(px(3, 1, 2) == 1.5f);
         // row 2 was never written
-        CHECK(px(0, 2, 0) == -1.0f);
+        CHECK(px(0, 2, 0) == 0.0f);
         f.Close();
     }
 
@@ -63,6 +65,77 @@ int main() {
         }
         RayFile f;
         CHECK(f.Open(bad.string()) < 0);
+        fs::remove(bad);
+    }
+
+    // the stream reader stops at an incomplete packet and resumes when the rest arrives
+    {
+        const fs::path grow = fs::temp_directory_path() / "ray-test-stream.ray";
+        const uint32_t header[3] = { kRayHeaderMagic, 4, 1 };
+        const uint32_t run[4] = { TYPE_PIXEL_RUN, 1, 0, 2 };
+        const float rgb[6] = { 1, 2, 3, 4, 5, 6 };
+        const uint32_t eof = TYPE_EOF;
+
+        FILE *w = std::fopen(grow.string().c_str(), "wb");
+        CHECK(w != nullptr);
+        FILE *r = std::fopen(grow.string().c_str(), "rb");
+        CHECK(r != nullptr);
+        if (w && r) {
+            RayStreamReader reader(r);
+            CHECK(reader.ReadHeader() == RayStreamReader::Status::NeedData);
+
+            std::fwrite(header, sizeof(header), 1, w);
+            std::fwrite(run, sizeof(run), 1, w);
+            std::fwrite(rgb, sizeof(float), 3, w); // only the first pixel of the run
+            std::fflush(w);
+            CHECK(reader.ReadHeader() == RayStreamReader::Status::Ok);
+            CHECK(reader.Width() == 4 && reader.Height() == 1);
+            int runs = 0;
+            RayRunCallback count = [&](uint32_t, uint32_t, uint32_t, const float *) { runs++; };
+            CHECK(reader.Pump(count) == RayStreamReader::Status::NeedData);
+            CHECK(runs == 0);
+
+            std::fwrite(rgb + 3, sizeof(float), 3, w);
+            std::fwrite(&eof, sizeof(eof), 1, w);
+            std::fflush(w);
+            uint32_t gotx = 0, gotcount = 0;
+            float got[6] = {};
+            RayRunCallback grab = [&](uint32_t x, uint32_t, uint32_t n, const float *p) {
+                runs++;
+                gotx = x;
+                gotcount = n;
+                std::copy(p, p + 6, got);
+            };
+            CHECK(reader.Pump(grab) == RayStreamReader::Status::Eof);
+            CHECK(runs == 1 && gotx == 1 && gotcount == 2);
+            CHECK(got[0] == 1 && got[5] == 6);
+        }
+        if (w) {
+            std::fclose(w);
+        }
+        if (r) {
+            std::fclose(r);
+        }
+        fs::remove(grow);
+    }
+
+    // a run that overflows the image is an error
+    {
+        const fs::path bad = fs::temp_directory_path() / "ray-test-overflow.ray";
+        FILE *w = std::fopen(bad.string().c_str(), "wb");
+        CHECK(w != nullptr);
+        if (w) {
+            const uint32_t header[3] = { kRayHeaderMagic, 4, 1 };
+            const uint32_t run[4] = { TYPE_PIXEL_RUN, 3, 0, 2 };
+            std::fwrite(header, sizeof(header), 1, w);
+            std::fwrite(run, sizeof(run), 1, w);
+            std::fclose(w);
+        }
+        RayFile f;
+        CHECK(f.Open(bad.string()) == 0);
+        std::vector<float> buf;
+        CHECK(f.ReadIntoBuffer(buf) < 0);
+        f.Close();
         fs::remove(bad);
     }
 

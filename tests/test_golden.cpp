@@ -15,8 +15,7 @@ bool Load(const char *path, RayFile &f, std::vector<float> &pixels) {
         std::fprintf(stderr, "cannot open %s\n", path);
         return false;
     }
-    pixels.assign(f.GetPixelCount() * 3, 0.0f);
-    if (f.ReadIntoBuffer(pixels.data()) < 0) {
+    if (f.ReadIntoBuffer(pixels) < 0) {
         std::fprintf(stderr, "cannot parse %s\n", path);
         return false;
     }

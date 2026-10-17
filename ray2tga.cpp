@@ -21,42 +21,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "RayFile.h"
-#include <inttypes.h>
+#include <cstdio>
 #include <iostream>
 
-#include <errno.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-static void usage(char **argv) {
-    fprintf(stderr, "usage: %s <input file> <output file>\n", argv[0]);
-}
-
 int main(int argc, char **argv) {
-    if (argc < 3) {
-        usage(argv);
-        exit(1);
+    if (argc != 3) {
+        fprintf(stderr, "usage: %s <input file> <output file>\n", argv[0]);
+        return 1;
     }
 
     RayFile file;
-
-    int rc = file.Open(argv[1]);
-    if (rc < 0) {
+    if (file.Open(argv[1]) < 0) {
         std::cerr << "error opening file " << argv[1] << std::endl;
         return 1;
     }
 
-    rc = ConvertToTGA(file, argv[2]);
-    if (rc < 0) {
+    if (ConvertToTGA(file, argv[2]) < 0) {
         std::cerr << "error outputting file " << argv[2] << std::endl;
         return 1;
     }
-
-    file.Close();
 
     return 0;
 }

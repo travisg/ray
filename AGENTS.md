@@ -56,7 +56,7 @@ build/ray --list-scenes
 build/rayview        # opens ./out.ray (hard-coded) and follows it while ray writes
 ./doit               # ray at 3200x2400 in the background, then rayview
 build/ray2tga out.ray out.tga
-build/raysplit out.ray <chunkx> <chunky>   # mmaps to <name>.float, writes tiles
+build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in the cwd
 ```
 
 - `rayview` tails the file: short reads sleep and retry until `TYPE_EOF`, so
@@ -131,9 +131,9 @@ by shaders).
 
 Append-only stream: `RayHeader {magic kRayHeaderMagic ('RAY1'), width, height}`
 then packets of `uint32 type` followed by `RayDataPixel`, `RayDataPixelRun`
-(+ `length` float triples) or `TYPE_EOF`. `RayFile::Parse` and `ReadIntoMmap` are the
-readers used by `ray2tga`/`raysplit` (note: `ReadIntoMmap` has a bug where it
-calls `munmap(buf, *len)` on `float **buf` instead of `*buf`, which fails
-harmlessly on Linux so the mapping stays valid for `raysplit`). `rayview`
-parses the stream itself so it can render while the file is still growing.
-Changing the packet layout means updating `rayview.cpp` too.
+(+ `length` float triples) or `TYPE_EOF`. `RayStreamReader` parses it
+incrementally (`NeedData` at the end of the data so far, `Eof` after the EOF
+packet) and `RayFile::Parse`/`ReadIntoBuffer`, used by `ray2tga` and
+`raysplit`, are built on it. `rayview` still parses the stream itself so it
+can render while the file is growing. Changing the packet layout means
+updating `rayview.cpp` too.

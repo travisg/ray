@@ -33,6 +33,8 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
 - Formatting: `./codestyle <files>` runs `clang-format -i` with the repo's
   `.clang-format` (LLVM base, 4-space indent, attached braces, braces on every
   `if`/`for` body, 100 columns, sorted includes).
+- Lint: `.clang-tidy` (advisory, `WarningsAsErrors` off) is picked up by clangd;
+  `run-clang-tidy -p build $(git ls-files '*.cpp')` runs it over the tree.
 
 ## Test
 

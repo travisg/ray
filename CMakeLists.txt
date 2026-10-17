@@ -51,27 +51,27 @@ if(RAY_LTO)
 endif()
 
 # .ray stream reader/writer, shared by the renderer and the tools.
-add_library(rayfile STATIC RayFile.cpp)
+add_library(rayfile STATIC ray_file.cpp)
 target_include_directories(rayfile PUBLIC ${PROJECT_SOURCE_DIR})
 target_link_libraries(rayfile PUBLIC ray_flags)
 
 # Renderer core: scene, tracing, work distribution, drawables, shaders, meshes.
 add_library(raycore STATIC
-    Scene.cpp
-    SceneLibrary.cpp
-    Tracer.cpp
-    TraceMaster.cpp
-    RenderSurface.cpp
-    drawables/MeshDrawable.cpp
-    drawables/Plane.cpp
-    drawables/Sphere.cpp
-    drawables/Triangle.cpp
-    shaders/DebugShader.cpp
-    shaders/DefaultShader.cpp
-    mesh/Geometry.cpp
-    mesh/Mesh.cpp
-    mesh/OBJLoader.cpp
-    mesh/Surface.cpp
+    scene.cpp
+    scene_library.cpp
+    tracer.cpp
+    trace_master.cpp
+    render_surface.cpp
+    drawables/mesh_drawable.cpp
+    drawables/plane.cpp
+    drawables/sphere.cpp
+    drawables/triangle.cpp
+    shaders/debug_shader.cpp
+    shaders/default_shader.cpp
+    mesh/geometry.cpp
+    mesh/mesh.cpp
+    mesh/obj_loader.cpp
+    mesh/surface.cpp
 )
 target_link_libraries(raycore PUBLIC rayfile Threads::Threads)
 

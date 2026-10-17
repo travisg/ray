@@ -29,7 +29,7 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
 - Portability: the tree must build with Apple's libc++, which lags on
   `std::jthread`, `std::format` and floating-point `std::from_chars`; use
   `std::thread` with explicit joins, `snprintf`/`std::to_string` and `strtof`.
-- `libvec/` is the vendored, header-only vector math (`Vector3.h`).
+- `libvec/` is the vendored, header-only vector math (`vector3.h`).
 - Formatting: `./codestyle <files>` runs `clang-format -i` with the repo's
   `.clang-format` (LLVM base, 4-space indent, attached braces, braces on every
   `if`/`for` body, 100 columns, sorted includes).
@@ -74,8 +74,8 @@ build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in 
 ## Layout
 
 - Top level: `main.cpp` (CLI), `Scene*`, `SceneLibrary*`, `Tracer*`,
-  `TraceMaster*`, `RenderSurface*`, `RayFile*` (the `.ray` format), `Hit.h`,
-  `Ray.h`, `Color.h`, `BoundingSphere.h`, and the tools `rayview.cpp`,
+  `TraceMaster*`, `RenderSurface*`, `RayFile*` (the `.ray` format), `hit.h`,
+  `ray.h`, `color.h`, `bounding_sphere.h`, and the tools `rayview.cpp`,
   `ray2tga.cpp`, `raysplit.cpp`.
 - `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry containers and the
   OBJ loader), `libvec/` (vector math), `tests/` (with `golden/` references),
@@ -84,7 +84,7 @@ build/raysplit out.ray <chunkx> <chunky>   # writes <basename>-<x>.<y> tiles in 
 ## Architecture
 
 Everything includes from the repo root (`-I.`), so headers are written as
-`<drawables/Sphere.h>`, `<libvec/Vector3.h>`, `<Ray.h>`.
+`<drawables/sphere.h>`, `<libvec/vector3.h>`, `<ray.h>`.
 
 **Render pipeline (`main.cpp`)**
 
@@ -98,7 +98,7 @@ Everything includes from the repo root (`-I.`), so headers are written as
    `GetWorkUnit` → trace every pixel → `ReturnWorkUnit` until it returns false.
 4. `main` blocks in `TraceMaster::WaitForDone`, then joins the threads.
 
-**Ray casting (`Tracer.cpp`)**
+**Ray casting (`tracer.cpp`)**
 
 - `Tracer::Trace` builds the camera basis from `Scene::GetCamera/GetTarget`
   with +z up (+y when looking along z) and casts one primary ray per pixel
@@ -118,10 +118,10 @@ Everything includes from the repo root (`-I.`), so headers are written as
   with the normal flipped to face the ray. `Scene` ignores hits with
   `t <= kMinT` (1e-6) so a ray leaving a surface never re-hits it.
 
-**Scene (`Scene.cpp`, `SceneLibrary.cpp`)**
+**Scene (`scene.cpp`, `scene_library.cpp`)**
 
 `Scene` is a container: owned drawables, point lights, ambient colour and a
-camera position/target. Scenes are built by name in `SceneLibrary.cpp`, one
+camera position/target. Scenes are built by name in `scene_library.cpp`, one
 `Build*` function per entry in the `kScenes` table; `--list-scenes` prints
 them and `--scene NAME` picks one (default `default`). `BuildScene` runs
 `Scene::Prepare()` once at the end, which calls `Drawable::Prepare()` on every
@@ -135,7 +135,7 @@ by shaders).
 
 - `drawables/`: `Drawable` interface = `Prepare()`, `Intersect()` and a
   `ShaderPtr`. Implementations: `Sphere`, `Plane`, `Triangle`,
-  `MeshDrawable` (in `drawables/MeshDrawable.h`, distinct from `mesh/Mesh.h`).
+  `MeshDrawable` (in `drawables/mesh_drawable.h`, distinct from `mesh/mesh.h`).
   `MeshDrawable` supports triangle and quad faces, interpolating the vertex
   normals the loader requires.
 - `shaders/`: `Shader::Run(const ShaderArgs&) -> colorf`. `DefaultShader`
@@ -144,11 +144,11 @@ by shaders).
   `MODE_NORMAL` and `MODE_DEPTH`.
 - `mesh/`: `Geometry` (shared vertex/normal/tangent/uv pools) owning `Mesh` →
   `Surface` index lists; `OBJLoader` is the only importer.
-- `Color.h`: `colorf` is double RGB (unclamped, additive); `color32` clamps to
+- `color.h`: `colorf` is double RGB (unclamped, additive); `color32` clamps to
   bytes (used directly as `b, g, r` by `ConvertToTGA` and via packed `rgbx()`
   by `rayview`).
 
-**`.ray` file format (`RayFile.h`)**
+**`.ray` file format (`ray_file.h`)**
 
 Append-only stream: `RayHeader {magic kRayHeaderMagic ('RAY1'), width, height}`
 then packets of `uint32 type` followed by `RayDataPixel`, `RayDataPixelRun`

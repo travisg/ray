@@ -36,8 +36,8 @@
 #include <thread>
 #include <vector>
 
-#include <Color.h>
-#include <RayFile.h>
+#include <color.h>
+#include <ray_file.h>
 
 namespace {
 

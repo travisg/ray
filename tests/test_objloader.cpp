@@ -1,7 +1,7 @@
 #include "check.h"
 #include <memory>
-#include <mesh/Geometry.h>
-#include <mesh/OBJLoader.h>
+#include <mesh/geometry.h>
+#include <mesh/obj_loader.h>
 #include <sstream>
 
 int main() {

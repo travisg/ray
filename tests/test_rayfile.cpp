@@ -1,5 +1,5 @@
 #include "check.h"
-#include <RayFile.h>
+#include <ray_file.h>
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>

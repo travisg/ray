@@ -1,11 +1,11 @@
 #include "check.h"
-#include <RenderSurface.h>
-#include <Scene.h>
-#include <TraceMaster.h>
-#include <Tracer.h>
-#include <drawables/Plane.h>
+#include <render_surface.h>
+#include <scene.h>
+#include <trace_master.h>
+#include <tracer.h>
+#include <drawables/plane.h>
 #include <memory>
-#include <shaders/DefaultShader.h>
+#include <shaders/default_shader.h>
 #include <vector>
 
 using Libvec::Vector3d;

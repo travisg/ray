@@ -34,12 +34,12 @@
 #include <thread>
 #include <vector>
 
-#include <Ray.h>
-#include <RenderSurface.h>
-#include <Scene.h>
-#include <SceneLibrary.h>
-#include <TraceMaster.h>
-#include <Tracer.h>
+#include <ray.h>
+#include <render_surface.h>
+#include <scene.h>
+#include <scene_library.h>
+#include <trace_master.h>
+#include <tracer.h>
 
 namespace {
 

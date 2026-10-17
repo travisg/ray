@@ -1,5 +1,5 @@
 // Compares a render against a reference .ray file channel by channel.
-#include <RayFile.h>
+#include <ray_file.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdio>

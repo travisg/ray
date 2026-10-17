@@ -1,5 +1,5 @@
 #include "check.h"
-#include <libvec/Vector3.h>
+#include <libvec/vector3.h>
 #include <sstream>
 
 using Libvec::Vector3d;

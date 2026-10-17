@@ -22,10 +22,9 @@
  */
 #include <ray/drawables/triangle.h>
 #include <ray/ray.h>
+#include <ray/triangle_hit.h>
 
 using libvec::vector3d;
-
-// http://graphics.stanford.edu/~mdfisher/Code/Engine/intersect.cpp.html
 
 triangle::triangle(const libvec::vector3d &v0, const libvec::vector3d &v1,
                    const libvec::vector3d &v2) {
@@ -38,45 +37,13 @@ triangle::triangle(const libvec::vector3d &v0, const libvec::vector3d &v1,
 }
 
 std::optional<hit> triangle::intersect(const ray &r) const {
-    double denom = dot(r.dir, normal_);
-    if (denom >= 0.0) {
-        // back face or parallel
+    std::optional<triangle_hit> th = intersect_triangle(r, v_[0], v_[1], v_[2], normal_);
+    if (!th) {
         return std::nullopt;
     }
-
-    // t = ((P - P0) . N) / (V . N)
-    // P = P0 + tV
-    double t = dot(v_[0] - r.origin, normal_) / denom;
-    if (t <= 0.0) {
-        // behind the origin
-        return std::nullopt;
-    }
-
     hit h;
-    h.t = t;
-    h.pos = r.origin + r.dir * t;
+    h.t = th->t;
+    h.pos = th->pos;
     h.normal = normal_;
-
-    // barycentric coordinates of the hit within the triangle
-    vector3d u = v_[1] - v_[0];
-    vector3d v = v_[2] - v_[0];
-    vector3d w = h.pos - v_[0];
-
-    double uu = dot(u, u);
-    double uv = dot(u, v);
-    double vv = dot(v, v);
-    double wu = dot(w, u);
-    double wv = dot(w, v);
-    double d = 1.0 / (uv * uv - uu * vv);
-
-    double b1 = (uv * wv - vv * wu) * d;
-    if (b1 < 0.0 || b1 > 1.0) {
-        return std::nullopt;
-    }
-    double b2 = (uv * wu - uu * wv) * d;
-    if (b2 < 0.0 || (b1 + b2) > 1.0) {
-        return std::nullopt;
-    }
-
     return h;
 }

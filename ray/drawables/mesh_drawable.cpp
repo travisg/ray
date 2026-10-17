@@ -26,6 +26,7 @@
 #include <ray/aabb.h>
 #include <ray/drawables/mesh_drawable.h>
 #include <ray/mesh/geometry.h>
+#include <ray/triangle_hit.h>
 
 using libvec::vector3d;
 
@@ -60,54 +61,15 @@ namespace {
 std::optional<hit> tri_intersect(const ray &r, const vector3d &v0, const vector3d &v1,
                                  const vector3d &v2, const vector3d &n0, const vector3d &n1,
                                  const vector3d &n2) {
-    vector3d normal = cross(v1 - v0, v2 - v0);
-
-    // is the ray pointing at the surface?
-    if (dot(r.dir, normal) > 0) {
+    std::optional<triangle_hit> th = intersect_triangle(r, v0, v1, v2, cross(v1 - v0, v2 - v0));
+    if (!th) {
         return std::nullopt;
     }
-
-    // t = ((P - P0) . N) / (V . N)
-    // P = P0 + tV
-    double t = (dot(v0 - r.origin, normal)) / (dot(r.dir, normal));
-
-    // is the origin behind the start of the ray
-    if (t < 0.0) {
-        return std::nullopt;
-    }
-
-    vector3d pos = r.origin + r.dir * t;
-
-    // it intersects the plane the triangle is in, now calc the u/v coordinates and see if it's in
-    // the triangle
-    double uu, uv, vv, wu, wv, d;
-
-    vector3d u = v1 - v0;
-    vector3d v = v2 - v0;
-
-    uu = dot(u, u);
-    uv = dot(u, v);
-    vv = dot(v, v);
-    vector3d w = pos - v0;
-    wu = dot(w, u);
-    wv = dot(w, v);
-    d = 1.0 / (uv * uv - uu * vv);
-
-    // get and test parametric coords
-    double b1 = (uv * wv - vv * wu) * d;
-    if (b1 < 0.0 || b1 > 1.0) {
-        return std::nullopt;
-    }
-    double b2 = (uv * wu - uu * wv) * d;
-    if (b2 < 0.0 || (b1 + b2) > 1.0) {
-        return std::nullopt;
-    }
-
     hit h;
-    h.t = t;
-    h.pos = pos;
-    // lerp the normal from the passed in normal vertexes
-    h.normal = n0 * (1 - (b1 + b2)) + n1 * b1 + n2 * b2;
+    h.t = th->t;
+    h.pos = th->pos;
+    // the normal is interpolated from the vertex normals
+    h.normal = n0 * (1 - (th->b1 + th->b2)) + n1 * th->b1 + n2 * th->b2;
     h.normal.normalize();
     return h;
 }

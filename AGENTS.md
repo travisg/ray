@@ -92,8 +92,8 @@ build/ray --list-scenes
 - The root holds only the build files, scripts and docs.
 - `ray/`: the renderer library: `scene*`, `scene_library*`, `tracer*`,
   `trace_master*`, `framebuffer*`, `png*`, `pfm*`, `tev_display*`, `hit.h`,
-  `ray.h`, `color.h`, `aabb.h`, `bvh*`, `cpp.h` (the `DISALLOW_*` class
-  macros), and `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry
+  `ray.h`, `color.h`, `aabb.h`, `bvh*`, `triangle_hit.h`, `cpp.h` (the
+  `DISALLOW_*` class macros), and `drawables/`, `shaders/`, `lights/`, `mesh/` (geometry
   containers and the OBJ loader).
 - `tools/`: `ray.cpp`, the renderer's CLI.
 - `libvec/` (vector math), `external/` (vendored third-party code), `tests/`
@@ -137,7 +137,10 @@ Everything includes from the repo root (`-I.`), so headers are written as
 - `drawable::intersect(ray)` returns `std::optional<hit>` (`t`, `pos`,
   `normal`); `ray.dir` must be unit length for `t` to be a distance. Planes
   and triangles cull back faces; spheres hit from inside return the far side
-  with the normal flipped to face the ray. `scene` ignores hits with
+  with the normal flipped to face the ray. `triangle_hit.h` is the one
+  ray/triangle test, shared by `triangle` and `mesh_drawable`; it accepts
+  points `kEdgeSlop` outside an edge so a ray through an edge or vertex two
+  triangles share cannot be rejected by both and fall through. `scene` ignores hits with
   `t <= kMinT` (1e-6) so a ray leaving a surface never re-hits it.
 
 **Scene (`ray/scene.cpp`, `ray/scene_library.cpp`)**

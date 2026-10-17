@@ -46,3 +46,11 @@ void geometry::add_uv_vert(const vertex &v) {
 std::unique_ptr<mesh> geometry::create_mesh() {
     return std::make_unique<mesh>(*this);
 }
+
+void geometry::transform(double scale, const libvec::vector3d &offset) {
+    for (vertex &v : vertices_) {
+        v.x = static_cast<float>(v.x * scale + offset.x);
+        v.y = static_cast<float>(v.y * scale + offset.y);
+        v.z = static_cast<float>(v.z * scale + offset.z);
+    }
+}

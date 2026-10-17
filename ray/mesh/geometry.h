@@ -22,6 +22,7 @@
  */
 #pragma once
 
+#include <libvec/vector3.h>
 #include <memory>
 #include <ray/cpp.h>
 #include <ray/mesh/mesh.h>
@@ -41,6 +42,10 @@ class geometry {
     void add_mesh(std::unique_ptr<mesh> m);
 
     std::unique_ptr<mesh> create_mesh();
+
+    // scales every position about the origin, then moves it; normals are unchanged, which a
+    // uniform scale and a translation allow
+    void transform(double scale, const libvec::vector3d &offset);
 
     const std::vector<std::unique_ptr<mesh>> &meshes() const { return meshes_; }
     const vertex_list &vertices() const { return vertices_; }

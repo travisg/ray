@@ -61,11 +61,14 @@ template <typename T, typename... Args> void add(scene &s, shader_ptr shader, Ar
     s.add_drawable(std::move(d));
 }
 
-std::unique_ptr<mesh_drawable> load_mesh(const std::string &filename) {
+// Loads an .obj, scaled about the origin and then moved by offset.
+std::unique_ptr<mesh_drawable> load_mesh(const std::string &filename, double scale = 1.0,
+                                         const vector3d &offset = vector3d(0.0)) {
     std::unique_ptr<geometry> geom = load_obj_file(filename);
     if (!geom) {
         return nullptr;
     }
+    geom->transform(scale, offset);
     size_t faces = 0;
     for (const auto &m : geom->meshes()) {
         faces += m->surfaces().size();
@@ -167,6 +170,46 @@ bool build_blob(scene &s, std::mt19937 &) {
     return build_mesh_scene(s, "blob.obj", colorf(1.0, 0.5, 0.5));
 }
 
+// The 256x256 heightfield of map.obj spans 65536 units; scaled to 16 across, with its
+// relief about 1.6 tall, under one high sun and a little ambient fill.
+constexpr double kMapScale = 1.0 / 4096.0;
+
+bool add_map(scene &s) {
+    auto md = load_mesh("resources/map.obj", kMapScale);
+    if (!md) {
+        return false;
+    }
+    md->set_shader(make_shader(colorf(0.35, 0.5, 0.25), 0.0));
+    s.add_drawable(std::move(md));
+    s.add_light(simple_light(vector3d(40.0, -30.0, 50.0), colorf(1.0, 1.0, 1.0), 100));
+    s.set_ambient_light(colorf(0.15, 0.15, 0.15));
+    return true;
+}
+
+bool build_map(scene &s, std::mt19937 &) {
+    if (!add_map(s)) {
+        return false;
+    }
+    s.set_camera(vector3d(9.0, -9.0, 5.0), vector3d(0.0, 0.0, 0.0));
+    return true;
+}
+
+// The blob, doubled, floating above the map, so its shadow falls on the terrain and the
+// terrain shows in its reflection.
+bool build_map_blob(scene &s, std::mt19937 &) {
+    if (!add_map(s)) {
+        return false;
+    }
+    auto blob = load_mesh("resources/blob.obj", 2.0, vector3d(0.0, 0.0, 3.0));
+    if (!blob) {
+        return false;
+    }
+    blob->set_shader(make_shader(colorf(0.9, 0.3, 0.3), 0.3));
+    s.add_drawable(std::move(blob));
+    s.set_camera(vector3d(8.0, -8.0, 4.5), vector3d(0.0, 0.0, 1.5));
+    return true;
+}
+
 constexpr scene_entry kScenes[] = {
     { { "default", "a shiny sphere in the corner of three coloured walls" }, build_default },
     { { "spheres", "100 random spheres inside a 50-unit sphere, camera inside too" },
@@ -177,11 +220,13 @@ constexpr scene_entry kScenes[] = {
     { { "plane-mesh", "resources/plane.obj, a triangulated plane" }, build_plane_mesh },
     { { "csphere", "resources/csphere.obj, a coarse sphere" }, build_csphere },
     { { "blob", "resources/blob.obj, 13824 quads" }, build_blob },
+    { { "map", "resources/map.obj, a 256x256 heightfield of 131072 triangles" }, build_map },
+    { { "map-blob", "the blob floating above the map" }, build_map_blob },
 };
 
 constexpr scene_info kSceneInfos[] = {
-    kScenes[0].info, kScenes[1].info, kScenes[2].info, kScenes[3].info,
-    kScenes[4].info, kScenes[5].info, kScenes[6].info, kScenes[7].info,
+    kScenes[0].info, kScenes[1].info, kScenes[2].info, kScenes[3].info, kScenes[4].info,
+    kScenes[5].info, kScenes[6].info, kScenes[7].info, kScenes[8].info, kScenes[9].info,
 };
 static_assert(std::size(kSceneInfos) == std::size(kScenes));
 

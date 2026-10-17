@@ -149,7 +149,10 @@ them and `--scene NAME` picks one (default `default`). `build_scene` runs
 `scene::prepare()` once at the end, which calls `drawable::prepare()` on every
 drawable (a `mesh_drawable` builds its bvh there). Mesh scenes
 load `resources/*.obj` relative to the working directory via `load_mesh` →
-`load_obj` → `geometry`. The `spheres` scene draws from the `--seed` RNG.
+`load_obj` → `geometry`; `load_mesh` takes a uniform scale and an offset,
+applied to the positions by `geometry::transform`, which is how `map` fits
+its 65536-unit heightfield into 16 units and `map-blob` lifts the blob above
+it. The `spheres` scene draws from the `--seed` RNG.
 Lights are `simple_light` point lights only (`falloff_` is stored but unused
 by shaders).
 

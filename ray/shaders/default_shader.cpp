@@ -48,8 +48,10 @@ colorf default_shader::indirect_light(const shader_args &args, const vector3d &o
     const int samples = args.tracer.depth() == 1 ? settings.gi_samples : 1;
     colorf sum;
     for (int i = 0; i < samples; i++) {
-        const vector3d dir =
-            cosine_hemisphere(args.hit.normal, args.tracer.random(), args.tracer.random());
+        // two draws in a fixed order: as arguments their order would be the compiler's choice
+        const double u1 = args.tracer.random();
+        const double u2 = args.tracer.random();
+        const vector3d dir = cosine_hemisphere(args.hit.normal, u1, u2);
         sum += args.tracer.cast(ray(origin, dir)).value_or(args.scene.ambient_light());
     }
     return (sum * (1.0 / samples)) * diffuse_color_;

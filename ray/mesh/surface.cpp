@@ -29,5 +29,5 @@ void surface::add_index(int pos_index, int norm_index, int uv_index) {
     i.norm_index = norm_index;
     i.uv_index = uv_index;
 
-    indexes_.push_back(i);
+    indexes.push_back(i);
 }

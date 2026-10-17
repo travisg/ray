@@ -31,9 +31,8 @@ struct surface_index {
 };
 
 // One polygon (3 or 4 vertices) as indices into the owning geometry's lists.
-class surface {
-  public:
-    void add_index(int pos_index, int norm_index, int uv_index);
+struct surface {
+    std::vector<surface_index> indexes;
 
-    std::vector<surface_index> indexes_;
+    void add_index(int pos_index, int norm_index, int uv_index);
 };

@@ -43,7 +43,7 @@ int mesh_drawable::prepare() {
         const auto &surfaces = meshes[mi]->surfaces();
         for (uint32_t si = 0; si < surfaces.size(); si++) {
             aabb box;
-            for (const surface_index &idx : surfaces[si].indexes_) {
+            for (const surface_index &idx : surfaces[si].indexes) {
                 const vertex &v = verts[idx.pos_index];
                 box.expand(vector3d(v.x, v.y, v.z));
             }
@@ -125,29 +125,29 @@ std::optional<hit> surface_intersect(const ray &r, const mesh &m, const surface 
     // get the vertexes that make up this surface
     const vertex_list &verts = m.vertices();
 
-    const vertex *vp = &verts[sf.indexes_[0].pos_index];
+    const vertex *vp = &verts[sf.indexes[0].pos_index];
     vector3d v0(vp->x, vp->y, vp->z);
-    vp = &verts[sf.indexes_[1].pos_index];
+    vp = &verts[sf.indexes[1].pos_index];
     vector3d v1(vp->x, vp->y, vp->z);
-    vp = &verts[sf.indexes_[2].pos_index];
+    vp = &verts[sf.indexes[2].pos_index];
     vector3d v2(vp->x, vp->y, vp->z);
 
     // get the normal vertexes
     const vertex_list &nverts = m.normals();
-    vp = &nverts[sf.indexes_[0].norm_index];
+    vp = &nverts[sf.indexes[0].norm_index];
     vector3d n0(vp->x, vp->y, vp->z);
-    vp = &nverts[sf.indexes_[1].norm_index];
+    vp = &nverts[sf.indexes[1].norm_index];
     vector3d n1(vp->x, vp->y, vp->z);
-    vp = &nverts[sf.indexes_[2].norm_index];
+    vp = &nverts[sf.indexes[2].norm_index];
     vector3d n2(vp->x, vp->y, vp->z);
 
-    if (sf.indexes_.size() == 3) {
+    if (sf.indexes.size() == 3) {
         return tri_intersect(r, v0, v1, v2, n0, n1, n2);
     }
 
-    vp = &verts[sf.indexes_[3].pos_index];
+    vp = &verts[sf.indexes[3].pos_index];
     vector3d v3(vp->x, vp->y, vp->z);
-    vp = &nverts[sf.indexes_[3].norm_index];
+    vp = &nverts[sf.indexes[3].norm_index];
     vector3d n3(vp->x, vp->y, vp->z);
 
     return quad_intersect(r, v0, v1, v2, v3, n0, n1, n2, n3);

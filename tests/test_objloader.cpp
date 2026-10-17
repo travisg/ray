@@ -18,7 +18,7 @@ int main() {
                 CHECK(m->name() == "default0");
                 CHECK(m->surfaces().size() == 6);
                 for (const surface &s : m->surfaces()) {
-                    CHECK(s.indexes_.size() == 4);
+                    CHECK(s.indexes.size() == 4);
                 }
             }
         }
@@ -45,12 +45,12 @@ int main() {
                 CHECK(g->meshes()[1]->name() == "default1");
                 CHECK(g->meshes()[1]->surfaces().size() == 1);
                 const surface &quad = g->meshes()[1]->surfaces()[0];
-                CHECK(quad.indexes_.size() == 4);
-                CHECK(quad.indexes_[0].pos_index == 3);
-                CHECK(quad.indexes_[0].uv_index == 0);
-                CHECK(quad.indexes_[0].norm_index == 0);
+                CHECK(quad.indexes.size() == 4);
+                CHECK(quad.indexes[0].pos_index == 3);
+                CHECK(quad.indexes[0].uv_index == 0);
+                CHECK(quad.indexes[0].norm_index == 0);
                 const surface &tri = g->meshes()[0]->surfaces()[0];
-                CHECK(tri.indexes_[1].uv_index == -1);
+                CHECK(tri.indexes[1].uv_index == -1);
             }
         }
     }

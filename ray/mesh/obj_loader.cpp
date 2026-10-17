@@ -100,7 +100,7 @@ bool validate(const geometry &g) {
     for (const auto &mesh : g.meshes()) {
         size_t n = 0;
         for (const surface &s : mesh->surfaces()) {
-            for (const surface_index &i : s.indexes_) {
+            for (const surface_index &i : s.indexes) {
                 if (!valid_index(i.pos_index, g.vertices().size()) ||
                     !valid_index(i.norm_index, g.normals().size()) ||
                     (i.uv_index != -1 && !valid_index(i.uv_index, g.uvs().size()))) {

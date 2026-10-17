@@ -84,7 +84,9 @@ Everything includes from the repo root (`-I.`), so headers are written as
 **Ray casting (`Tracer.cpp`)**
 
 - `Tracer::Trace` builds the camera basis from `Scene::GetCamera/GetTarget`
-  and casts one primary ray per pixel (no multisampling).
+  with +z up (+y when looking along z) and casts one primary ray per pixel
+  through an image plane one unit ahead spanning [-1, 1] across its width
+  (about a 90° horizontal field of view; no multisampling).
 - `Tracer::Cast` asks `Scene::Intersect` for the nearest `Hit` (linear scan
   over all drawables, nearest by `t`, no acceleration structure), then calls
   the hit drawable's `Shader::Run(ShaderArgs)`. Shaders recurse by calling
@@ -119,7 +121,8 @@ by shaders).
   `MeshDrawable` supports triangle (3-index) and quad (4-index) faces and
   requires vertex normals (`vn`) in the `.obj`.
 - `shaders/`: `Shader::Run(const ShaderArgs&) -> colorf`. `DefaultShader`
-  does ambient + diffuse + shadows + mirror reflection; `DebugShader` supports
+  does ambient + clamped diffuse + shadows + mirror reflection, starting its
+  secondary rays `kBias` (0.001) above the surface; `DebugShader` supports
   `MODE_NORMAL` and `MODE_DEPTH`.
 - `mesh/`: `Geometry` (shared vertex/normal/tangent/uv pools) owning `Mesh` →
   `Surface` index lists; `OBJLoader` is the only importer.

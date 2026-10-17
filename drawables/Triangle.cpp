@@ -57,28 +57,24 @@ std::optional<Hit> Triangle::Intersect(const Ray &ray) const {
     hit.pos = ray.origin + ray.dir * t;
     hit.normal = m_normal;
 
-    // it intersects the plane the triangle is in, now calc the u/v coordinates and see if it's in
-    // the triangle
-    float uu, uv, vv, wu, wv, D;
-
+    // barycentric coordinates of the hit within the triangle
     Vector3d u = m_v[1] - m_v[0];
     Vector3d v = m_v[2] - m_v[0];
-
-    uu = Dot(u, u);
-    uv = Dot(u, v);
-    vv = Dot(v, v);
     Vector3d w = hit.pos - m_v[0];
-    wu = Dot(w, u);
-    wv = Dot(w, v);
-    D = 1.0f / (uv * uv - uu * vv);
 
-    // get and test parametric coords
+    double uu = Dot(u, u);
+    double uv = Dot(u, v);
+    double vv = Dot(v, v);
+    double wu = Dot(w, u);
+    double wv = Dot(w, v);
+    double D = 1.0 / (uv * uv - uu * vv);
+
     double b1 = (uv * wv - vv * wu) * D;
-    if (b1 < 0.0f || b1 > 1.0f) {
+    if (b1 < 0.0 || b1 > 1.0) {
         return std::nullopt;
     }
     double b2 = (uv * wu - uu * wv) * D;
-    if (b2 < 0.0f || (b1 + b2) > 1.0f) {
+    if (b2 < 0.0 || (b1 + b2) > 1.0) {
         return std::nullopt;
     }
 

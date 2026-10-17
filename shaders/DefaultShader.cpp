@@ -24,48 +24,45 @@
 #include <Ray.h>
 #include <Scene.h>
 #include <Tracer.h>
+#include <algorithm>
 #include <lights/SimpleLight.h>
 #include <optional>
 
 using Libvec::Vector3d;
 
+namespace {
+
+// Secondary rays start this far above the surface along its normal.
+constexpr double kBias = 0.001;
+
+} // namespace
+
 colorf DefaultShader::Run(const ShaderArgs &args) const {
     const Hit &hit = args.hit;
+    const Vector3d origin = hit.pos + hit.normal * kBias;
     colorf color = args.scene.GetAmbientLight();
 
     for (const SimpleLight &l : args.scene.GetLightList()) {
-        // cast a ray at each light, see if we're in a shadow
-        Ray ray;
-        ray.origin = hit.pos + hit.normal * 0.001f;
-        ray.dir = l.GetPos() - ray.origin;
-        ray.dir.Normalize();
-
-        if (!args.scene.DoesIntersect(ray, (ray.origin - l.GetPos()).Length())) {
-            Vector3d suntosurface = l.GetPos() - hit.pos;
-            suntosurface.Normalize();
-
-            float light = Dot(suntosurface, hit.normal);
-
-            color += (l.GetColor() * light) * m_DiffuseColor;
+        // shadow ray toward the light
+        Vector3d tolight = l.GetPos() - origin;
+        const double distance = tolight.Length();
+        tolight.Normalize();
+        if (args.scene.DoesIntersect(Ray(origin, tolight), distance)) {
+            continue;
         }
+
+        const double diffuse = std::max(0.0, Dot(tolight, hit.normal));
+        color += (l.GetColor() * diffuse) * m_DiffuseColor;
     }
 
-    // see how much of it is a pure reflection
-    if (m_Shinyness > 0.0f) {
-        Ray ray;
-        ray.origin = hit.pos;
+    if (m_Shinyness > 0.0) {
+        // mirror reflection
+        const double d = Dot(args.ray.dir, hit.normal);
+        const Ray reflected(origin, args.ray.dir - hit.normal * (2.0 * d));
 
-        // calculate the reflection ray
-        float d = Dot(args.ray.dir, hit.normal);
-
-        ray.dir = Vector3d(args.ray.dir.getx() - 2.0 * d * hit.normal.getx(),
-                           args.ray.dir.gety() - 2.0 * d * hit.normal.gety(),
-                           args.ray.dir.getz() - 2.0 * d * hit.normal.getz());
-
-        color *= (1.0f - m_Shinyness);
-
-        if (std::optional<colorf> reflectcolor = args.tracer.Cast(ray)) {
-            color += *reflectcolor * m_Shinyness;
+        color *= (1.0 - m_Shinyness);
+        if (std::optional<colorf> reflection = args.tracer.Cast(reflected)) {
+            color += *reflection * m_Shinyness;
         }
     }
 

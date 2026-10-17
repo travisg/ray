@@ -47,7 +47,7 @@ struct SceneEntry {
     SceneBuilder build;
 };
 
-ShaderPtr MakeShader(colorf diffuse, float shiny) {
+ShaderPtr MakeShader(colorf diffuse, double shiny) {
     auto s = std::make_shared<DefaultShader>();
     s->SetDiffuseColor(diffuse);
     s->SetShinyness(shiny);
@@ -76,7 +76,7 @@ bool BuildMeshScene(Scene &scene, const char *asset, colorf diffuse) {
     if (!md) {
         return false;
     }
-    md->SetShader(MakeShader(diffuse, 0.0f));
+    md->SetShader(MakeShader(diffuse, 0.0));
     scene.AddDrawable(std::move(md));
     scene.AddLight(SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
     scene.AddLight(SimpleLight(Vector3d(0.0, 0.0, 20), colorf(1.0, 1.0, 1.0), 100));
@@ -86,13 +86,13 @@ bool BuildMeshScene(Scene &scene, const char *asset, colorf diffuse) {
 
 bool BuildDefault(Scene &scene, std::mt19937 &) {
     scene.SetAmbientLight(colorf(0.0, 0.0, 0.0));
-    Add<Sphere>(scene, MakeShader(colorf(1.0, 1.0, 1.0), 0.8f), Vector3d(10.0, 10.0, 10.0), 8.0);
+    Add<Sphere>(scene, MakeShader(colorf(1.0, 1.0, 1.0), 0.8), Vector3d(10.0, 10.0, 10.0), 8.0);
     // floor and two walls meeting at the origin
-    Add<Plane>(scene, MakeShader(colorf(1.0, 0.2, 0.2), 0.5f),
+    Add<Plane>(scene, MakeShader(colorf(1.0, 0.2, 0.2), 0.5),
                Ray(Vector3d(0.0, 0.0, 0.0), Vector3d(0.0, 0.0, 1.0)));
-    Add<Plane>(scene, MakeShader(colorf(0.2, 1.0, 0.2), 0.5f),
+    Add<Plane>(scene, MakeShader(colorf(0.2, 1.0, 0.2), 0.5),
                Ray(Vector3d(0.0, 0.0, 0.0), Vector3d(0.0, 1.0, 0.0)));
-    Add<Plane>(scene, MakeShader(colorf(0.2, 0.2, 1.0), 0.5f),
+    Add<Plane>(scene, MakeShader(colorf(0.2, 0.2, 1.0), 0.5),
                Ray(Vector3d(0.0, 0.0, 0.0), Vector3d(1.0, 0.0, 0.0)));
     scene.AddLight(SimpleLight(Vector3d(20.0, 10.0, 20), colorf(1.0, 1.0, 1.0), 100));
     scene.AddLight(SimpleLight(Vector3d(0.0, 0.0, 20), colorf(1.0, 1.0, 1.0), 100));
@@ -109,13 +109,13 @@ bool BuildSpheres(Scene &scene, std::mt19937 &rng) {
         double x = position(rng);
         double y = position(rng);
         double z = position(rng);
-        Add<Sphere>(scene, MakeShader(diffuse, 0.0f), Vector3d(x, y, z), radius(rng));
+        Add<Sphere>(scene, MakeShader(diffuse, 0.0), Vector3d(x, y, z), radius(rng));
     }
     // the enclosing sphere and two planes behind it
-    Add<Sphere>(scene, MakeShader(colorf(1.0, 1.0, 1.0), 0.0f), Vector3d(0.0, 0.0, 0.0), 50.0);
-    Add<Plane>(scene, MakeShader(colorf(1.0, 1.0, 1.0), 0.2f),
+    Add<Sphere>(scene, MakeShader(colorf(1.0, 1.0, 1.0), 0.0), Vector3d(0.0, 0.0, 0.0), 50.0);
+    Add<Plane>(scene, MakeShader(colorf(1.0, 1.0, 1.0), 0.2),
                Ray(Vector3d(0.0, 0.0, -50.0), Vector3d(0.0, 0.0, 1.0)));
-    Add<Plane>(scene, MakeShader(colorf(1.0, 1.0, 1.0), 0.0f),
+    Add<Plane>(scene, MakeShader(colorf(1.0, 1.0, 1.0), 0.0),
                Ray(Vector3d(-50.0, 0.0, 0.0), Vector3d(1.0, 0.0, 0.0)));
     scene.AddLight(SimpleLight(Vector3d(0.0, 0.0, 100.0), colorf(1.0, 0.0, 0.0), 100));
     scene.AddLight(SimpleLight(Vector3d(100.0, 0.0, 5.0), colorf(0.0, 1.0, 0.0), 100));
@@ -128,9 +128,9 @@ bool BuildSpheres(Scene &scene, std::mt19937 &rng) {
 
 bool BuildTriangle(Scene &scene, std::mt19937 &) {
     scene.SetAmbientLight(colorf(0.0, 0.0, 0.2));
-    Add<Triangle>(scene, MakeShader(colorf(0.2, 0.2, 1.0), 0.5f), Vector3d(0.0, 0.0, 10.0),
+    Add<Triangle>(scene, MakeShader(colorf(0.2, 0.2, 1.0), 0.5), Vector3d(0.0, 0.0, 10.0),
                   Vector3d(20.0, 0.0, 0.0), Vector3d(0.0, 20.0, 0.0));
-    Add<Plane>(scene, MakeShader(colorf(1.0, 0.0, 0.0), 0.2f),
+    Add<Plane>(scene, MakeShader(colorf(1.0, 0.0, 0.0), 0.2),
                Ray(Vector3d(0.0, 0.0, -3.0), Vector3d(0.0, 0.0, 1.0)));
     scene.AddLight(SimpleLight(Vector3d(1.0, 100.0, 5.0), colorf(0.0, 0.0, 1.0), 100));
     scene.AddLight(SimpleLight(Vector3d(0.0, 0.0, 20), colorf(1.0, 1.0, 1.0), 100));

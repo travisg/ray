@@ -57,33 +57,37 @@ std::optional<colorf> Tracer::Cast(const Ray &ray) {
 }
 
 void Tracer::Trace() {
-    int width = m_Surface.Width();
-    int height = m_Surface.Height();
+    const int width = m_Surface.Width();
+    const int height = m_Surface.Height();
+    const Vector3d camera = m_Scene.GetCamera();
 
-    Libvec::Vector3d target = m_Scene.GetTarget();
-    target -= m_Scene.GetCamera();
-    target.Normalize();
-    target += m_Scene.GetCamera();
+    // camera basis: forward toward the target, right and down across the image
+    Vector3d forward = m_Scene.GetTarget() - camera;
+    forward.Normalize();
+    Vector3d up(0, 0, 1);
+    Vector3d right = Cross(forward, up);
+    if (right.LengthSquared() < 1e-12) {
+        // looking straight along z
+        up = Vector3d(0, 1, 0);
+        right = Cross(forward, up);
+    }
+    right.Normalize();
+    Vector3d down = Cross(forward, right);
+    down.Normalize();
 
-    Vector3d lin = target - m_Scene.GetCamera();
-
-    float pixpitch = 2.0 / width;
+    // the image plane sits one unit ahead and spans [-1, 1] across its width
+    const double pixpitch = 2.0 / width;
 
     TraceWorkUnit unit;
     while (m_Master.GetWorkUnit(unit)) {
         for (int y = unit.starty; y <= unit.endy; y++) {
             for (int x = unit.startx; x <= unit.endx; x++) {
-                Vector3d wing(lin.gety(), -lin.getx(), 0);
-                Vector3d head = Cross(lin, wing);
-
-                wing.Normalize((x - width / 2.0) * pixpitch);
-                head.Normalize((y - height / 2.0) * pixpitch);
-
-                Libvec::Vector3d ray = target + wing + head - m_Scene.GetCamera();
-                ray.Normalize();
+                Vector3d dir = forward + right * ((x - width / 2.0) * pixpitch) +
+                               down * ((y - height / 2.0) * pixpitch);
+                dir.Normalize();
 
                 // black where the ray exits the world
-                unit.SetResult(x, y, Cast(Ray(m_Scene.GetCamera(), ray)).value_or(colorf(0)));
+                unit.SetResult(x, y, Cast(Ray(camera, dir)).value_or(colorf(0)));
             }
         }
 

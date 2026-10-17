@@ -1,44 +1,43 @@
 # ray
 
-Small multithreaded CPU ray tracer (C++, GNU make) plus three helper tools that
-consume its streaming `.ray` output. No tests exist; the check is "it builds and
-`./doit` shows a picture".
+Small multithreaded CPU ray tracer (C++20, CMake) plus three helper tools that
+consume its streaming `.ray` output. No tests exist yet; the check is "it builds
+and `./doit` shows a picture".
 
 ## Build
 
 ```sh
-make -j$(nproc)          # all four targets: ray rayview ray2tga raysplit
-make ray.do              # one target (the .do suffix is the per-target goal)
-make clean               # objects/deps for all targets
-make spotless            # rm -rf build-*
-NOECHO= make             # echo the compiler command lines
-WITH_LTO=true make       # -flto
-WITH_PROFILE=1 make      # -pg
+cmake -S . -B build -G Ninja           # configure; RelWithDebInfo (-O2 -g, asserts on)
+cmake --build build                    # ray, ray2tga, raysplit, rayview (if SDL2 is found)
+cmake --build build --target rayview   # one target
+cmake --build build -v                 # echo the compiler command lines
+cmake --build build --target clean     # objects only; rm -rf build for a full reset
 ```
 
-- Objects go in `build-<target>/`; the top-level `ray`, `rayview`, `ray2tga`,
-  `raysplit` are symlinks the build creates. Each link also gets `.lst` /
-  `.debug.lst` objdump listings.
-- `compile.mk` invokes `$(CC)` (not `$(CXX)`) to compile `.cpp` files and link,
-  relying on `-lstdc++` in `LDLIBS`. `makefile` includes `compile.mk` once per
-  target without resetting `LDLIBS`, so later targets inherit earlier libraries.
+Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
+(-march=native), `RAY_LTO`, `RAY_PROFILE` (-pg), `RAY_WERROR`, `RAY_BUILD_TESTS`
+(default ON). `-DCMAKE_BUILD_TYPE=Debug` for -O0 -g.
+
+- Binaries land in `build/`; nothing is written to the source tree.
+  `build/compile_commands.json` is generated and `.clangd` points clangd at it.
+- Sources are listed explicitly in `CMakeLists.txt`: `raycore` is the renderer,
+  `rayfile` the `.ray` reader/writer the tools share. A new source file goes there.
+- Dependencies: a C++20 compiler, CMake >= 3.20, pthreads, `boost_program_options`
+  (`main.cpp` only), SDL2 (`rayview` only; missing SDL2 skips that target).
+  macOS: `-DCMAKE_PREFIX_PATH=/opt/local` or `/opt/homebrew` if SDL2 isn't found.
 - `libvec` is a symlink to `../libvec`, a sibling checkout with its own git repo.
   The build fails without it. Don't edit it from here unless the task is about it.
-- External deps: `boost_program_options`, `SDL2` (rayview only), pthreads.
-- `tinyxml/` is compiled into `ray` but nothing references it yet.
-- `testread.cpp`, `DisplayWindow.cpp`, `DisplayWindow.h`, and `sdl.h` are legacy
-  files (SDL 1.2 era) not compiled in any target.
 - Formatting: `./codestyle <files>` runs astyle (4-space indent, `-A4`). Match
   the existing style by hand if astyle is missing.
 
 ## Run
 
 ```sh
-./ray [--xres 800] [--yres 600] [-c 8] [-o out.ray] [-r 1]  # -r 1 = random chunk order
-./rayview            # opens ./out.ray (hard-coded) and follows it while ray writes
+build/ray [--xres 800] [--yres 600] [-c 8] [-o out.ray] [-r 1]  # -r 1 = random chunk order
+build/rayview        # opens ./out.ray (hard-coded) and follows it while ray writes
 ./doit               # ray at 3200x2400 in the background, then rayview
-./ray2tga out.ray out.tga
-./raysplit out.ray <chunkx> <chunky>   # mmaps to <name>.float, writes tiles
+build/ray2tga out.ray out.tga
+build/raysplit out.ray <chunkx> <chunky>   # mmaps to <name>.float, writes tiles
 ```
 
 - Note on `-r` (`main.cpp`): `bool random` is uninitialized on the stack and
@@ -55,9 +54,7 @@ WITH_PROFILE=1 make      # -pg
 ## Architecture
 
 Everything includes from the repo root (`-I.`), so headers are written as
-`<drawables/Sphere.h>`, `<libvec/Vector3.h>`, `<Ray.h>`. Each subdirectory
-has a `rules.mk` that appends to `OBJS` via `GET_LOCAL_DIR`; a new source file
-in a subdirectory goes there, while top-level sources go in `makefile`.
+`<drawables/Sphere.h>`, `<libvec/Vector3.h>`, `<Ray.h>`.
 
 **Render pipeline (`main.cpp`)**
 
@@ -120,9 +117,9 @@ wrapped in a `MeshDrawable` with a bounding-sphere pre-test. Lights are
 
 **`.ray` file format (`RayFile.h`)**
 
-Append-only stream: `RayHeader {magic 'RAY1', width, height}` then packets of
-`uint32 type` followed by `RayDataPixel`, `RayDataPixelRun` (+ `length`
-float triples) or `TYPE_EOF`. `RayFile::Parse` and `ReadIntoMmap` are the
+Append-only stream: `RayHeader {magic kRayHeaderMagic ('RAY1'), width, height}`
+then packets of `uint32 type` followed by `RayDataPixel`, `RayDataPixelRun`
+(+ `length` float triples) or `TYPE_EOF`. `RayFile::Parse` and `ReadIntoMmap` are the
 readers used by `ray2tga`/`raysplit` (note: `ReadIntoMmap` has a bug where it
 calls `munmap(buf, *len)` on `float **buf` instead of `*buf`, which fails
 harmlessly on Linux so the mapping stays valid for `raysplit`). `rayview`

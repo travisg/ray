@@ -247,7 +247,7 @@ int main(int /* argc */, char ** /* argv */) {
         fprintf(stderr, "ray file corrupt\n");
         return 1;
     }
-    if (header.magic != RAY_HEADER_MAGIC) {
+    if (header.magic != kRayHeaderMagic) {
         fprintf(stderr, "ray file corrupt\n");
         return 1;
     }

@@ -1,13 +1,21 @@
-build-*
+# build output
+build/
+build-*/
+
+# editor and tool caches
 *.swp
 *~
 tags
 TAGS
-ray
-ray2tga
-rayview
-raysplit
-out.ray
+cscope.out
+gmon.out
+.cache/
+compile_commands.json
+.vscode/
+
+# render output
+*.ray
+!tests/golden/*.ray
 *.tga
-*.out
+*.float
 *.orig

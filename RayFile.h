@@ -23,12 +23,13 @@
 #ifndef __RAYFILE_H
 #define __RAYFILE_H
 
-#include <inttypes.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 #include <string>
 #include "Color.h"
 
-#define RAY_HEADER_MAGIC 'RAY1'
+// 'RAY1' stored little-endian: the file starts with the bytes 31 59 41 52.
+constexpr uint32_t kRayHeaderMagic = 0x52415931;
 
 struct RayHeader {
     uint32_t magic;
@@ -49,12 +50,14 @@ struct RayDataPixel {
     float r, g, b;
 };
 
+// Followed by length float triples.
 struct RayDataPixelRun {
     uint32_t x;
     uint32_t y;
     uint32_t length;
-    float val[];
 };
+
+static_assert(sizeof(RayHeader) == 12 && sizeof(RayDataPixel) == 20 && sizeof(RayDataPixelRun) == 12);
 
 class RayFile {
 public:

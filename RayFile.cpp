@@ -59,7 +59,7 @@ int RayFile::Open(const std::string &name)
         return -1;
     }
 
-    if (header.magic != RAY_HEADER_MAGIC) {
+    if (header.magic != kRayHeaderMagic) {
         Close();
         return -1;
     }
@@ -88,7 +88,7 @@ int RayFile::OpenWrite(const std::string &name, uint32_t width, uint32_t height)
     m_width = width;
     m_height = height;
 
-    header.magic = RAY_HEADER_MAGIC;
+    header.magic = kRayHeaderMagic;
     header.width = m_width;
     header.height = m_height;
 

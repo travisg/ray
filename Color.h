@@ -20,51 +20,53 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __COLOR_H
-#define __COLOR_H
+#pragma once
 
-#include <cstdlib>
-#include <libvec/Random.h>
 #include <ostream>
 
-struct color32;
 struct colorf;
 
+// 8-bit RGB, with packed accessors for display and file output.
 struct color32 {
-  public:
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
+    unsigned char r = 0;
+    unsigned char g = 0;
+    unsigned char b = 0;
 
-    color32() {}
+    color32() = default;
     color32(int c) : r(c), g(c), b(c) {}
     color32(const colorf &c);
 
-    operator unsigned int() { return xrgb(); }
-
-    unsigned int xrgb() { return ((r << 16) | (g << 8) | (b)); }
-    unsigned int xbgr() { return ((b << 16) | (g << 8) | (r)); }
-    unsigned int rgbx() { return ((r << 24) | (g << 16) | (b << 8)); }
-    unsigned int bgrx() { return ((b << 24) | (g << 16) | (r << 8)); }
+    unsigned int xrgb() const { return (r << 16) | (g << 8) | b; }
+    unsigned int xbgr() const { return (b << 16) | (g << 8) | r; }
+    unsigned int rgbx() const { return (r << 24) | (g << 16) | (b << 8); }
+    unsigned int bgrx() const { return (b << 24) | (g << 16) | (r << 8); }
 };
 
+// Unclamped linear RGB; converting to color32 clamps to [0, 1].
 struct colorf {
-  public:
-    double r;
-    double g;
-    double b;
+    double r = 0;
+    double g = 0;
+    double b = 0;
 
-    colorf() {}
+    colorf() = default;
     colorf(double _r, double _g, double _b) : r(_r), g(_g), b(_b) {}
     colorf(double c) : r(c), g(c), b(c) {}
 
-    colorf operator*(double f);
-    colorf operator*(const colorf &c);
+    colorf operator*(double f) const { return colorf(r * f, g * f, b * f); }
+    colorf operator*(const colorf &c) const { return colorf(r * c.r, g * c.g, b * c.b); }
 
-    colorf &operator+=(const colorf &c);
-    colorf &operator*=(double f);
-
-    static colorf RandColor();
+    colorf &operator+=(const colorf &c) {
+        r += c.r;
+        g += c.g;
+        b += c.b;
+        return *this;
+    }
+    colorf &operator*=(double f) {
+        r *= f;
+        g *= f;
+        b *= f;
+        return *this;
+    }
 };
 
 inline color32::color32(const colorf &c) {
@@ -73,37 +75,7 @@ inline color32::color32(const colorf &c) {
     b = (c.b < 0.0f) ? 0 : ((c.b > 1.0f) ? 255 : ((unsigned char)(255.0 * c.b)));
 }
 
-inline colorf &colorf::operator+=(const colorf &c) {
-    r += c.r;
-    g += c.g;
-    b += c.b;
-
-    return *this;
-}
-
-inline colorf &colorf::operator*=(double f) {
-    r *= f;
-    g *= f;
-    b *= f;
-
-    return *this;
-}
-
-inline colorf colorf::operator*(double f) {
-    return colorf(r * f, g * f, b * f);
-}
-
-inline colorf colorf::operator*(const colorf &c) {
-    return colorf(r * c.r, g * c.g, b * c.b);
-}
-
 inline std::ostream &operator<<(std::ostream &os, const colorf &c) {
     os << "< " << c.r << " " << c.g << " " << c.b << " >";
     return os;
 }
-
-inline colorf colorf::RandColor() {
-    return colorf(Libvec::Random(), Libvec::Random(), Libvec::Random());
-}
-
-#endif

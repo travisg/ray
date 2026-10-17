@@ -20,16 +20,13 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <cstdlib>
-#include <math.h>
+#include <cmath>
 
 #include <drawables/Sphere.h>
 
 using Libvec::Vector3d;
 
 Sphere::Sphere(const Libvec::Vector3d &pos, double radius) : m_Center(pos), m_Radius(radius) {}
-
-Sphere::~Sphere() {}
 
 bool Sphere::Intersect(const Ray &ray) const {
     double radius2 = m_Radius * m_Radius;
@@ -43,11 +40,7 @@ bool Sphere::Intersect(const Ray &ray) const {
 
     double l2oc = oc.LengthSquared();
     double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
-    if (l2hc > 0) {
-        return true;
-    }
-
-    return false;
+    return l2hc > 0;
 }
 
 bool Sphere::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const {
@@ -63,12 +56,10 @@ bool Sphere::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const {
     double l2oc = oc.LengthSquared();
     double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
     if (l2hc > 0) {
-        double t = tca - sqrt(l2hc);
+        double t = tca - std::sqrt(l2hc);
 
-        // calculate position
         pos = ray.origin + ray.dir * t;
 
-        // radius ray
         normal = pos - m_Center;
         normal.Normalize();
 

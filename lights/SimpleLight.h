@@ -20,20 +20,17 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __SIMPLE_LIGHT_H
-#define __SIMPLE_LIGHT_H
+#pragma once
 
-#include "Light.h"
 #include <Color.h>
 #include <libvec/Vector3.h>
 
-class SimpleLight : public Light {
+// Point light. Falloff is stored but the shaders ignore it.
+class SimpleLight {
   public:
-    SimpleLight() {}
+    SimpleLight() = default;
     SimpleLight(const Libvec::Vector3d &pos, colorf color, float falloff)
         : m_Position(pos), m_Color(color), m_Falloff(falloff) {}
-
-    virtual ~SimpleLight() {}
 
     const Libvec::Vector3d &GetPos() const { return m_Position; }
     colorf GetColor() const { return m_Color; }
@@ -42,7 +39,5 @@ class SimpleLight : public Light {
   private:
     Libvec::Vector3d m_Position;
     colorf m_Color;
-    float m_Falloff;
+    float m_Falloff = 0;
 };
-
-#endif

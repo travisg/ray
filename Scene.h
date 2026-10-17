@@ -20,8 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __SCENE_H
-#define __SCENE_H
+#pragma once
 
 #include "Color.h"
 #include <libvec/Vector3.h>
@@ -34,13 +33,13 @@ class SimpleLight;
 class Scene {
   public:
     Scene();
-    virtual ~Scene();
+    ~Scene();
 
-    const Drawable *Intersect(const Ray &ray);
-    bool DoesIntersect(const Ray &ray);
-    bool DoesIntersect(const Ray &ray, double maxDistance);
+    const Drawable *Intersect(const Ray &ray) const;
+    bool DoesIntersect(const Ray &ray) const;
+    bool DoesIntersect(const Ray &ray, double maxDistance) const;
 
-    const std::vector<SimpleLight *> GetLightList() const { return m_SimpleLightList; }
+    const std::vector<SimpleLight *> &GetLightList() const { return m_SimpleLightList; }
     colorf GetAmbientLight() const { return m_AmbientLight; }
 
     const Libvec::Vector3d &GetCamera() const { return m_Camera; }
@@ -48,12 +47,9 @@ class Scene {
 
   private:
     std::vector<Drawable *> m_DrawableList;
-    ;
     std::vector<SimpleLight *> m_SimpleLightList;
     colorf m_AmbientLight;
 
     Libvec::Vector3d m_Camera;
     Libvec::Vector3d m_Target;
 };
-
-#endif

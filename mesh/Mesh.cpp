@@ -29,9 +29,8 @@ Mesh::Mesh(const VertexList &posVerts, const VertexList &normalVerts,
       m_TangentVerts(tangentVerts), m_UVVerts(uvVerts) {}
 
 Mesh::~Mesh() {
-    for (SurfaceListIterator surface_i = m_Surfaces.begin(); surface_i != m_Surfaces.end();
-         surface_i++) {
-        delete *surface_i;
+    for (Surface *s : m_Surfaces) {
+        delete s;
     }
 }
 

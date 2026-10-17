@@ -20,20 +20,20 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DRAWABLE_H
-#define __DRAWABLE_H
+#pragma once
 
 #include <libvec/Vector3.h>
 #include <shaders/Shader.h>
+#include <utility>
 
 struct Ray;
 
 class Drawable {
   protected:
-    Drawable();
+    Drawable() = default;
 
   public:
-    virtual ~Drawable();
+    virtual ~Drawable() = default;
 
     virtual int Prepare() { return 0; }
 
@@ -41,11 +41,9 @@ class Drawable {
     virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos,
                            Libvec::Vector3d &normal) const = 0;
 
-    void SetShader(ShaderPtr s) { m_Shader = s; }
-    ShaderPtr GetShader() const { return m_Shader; }
+    void SetShader(ShaderPtr s) { m_Shader = std::move(s); }
+    const ShaderPtr &GetShader() const { return m_Shader; }
 
   private:
     ShaderPtr m_Shader;
 };
-
-#endif

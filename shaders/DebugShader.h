@@ -20,27 +20,23 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DEBUG_SHADER_H
-#define __DEBUG_SHADER_H
+#pragma once
 
 #include "Color.h"
 #include "Shader.h"
 
+// Visualizes the surface normal or the hit distance instead of shading.
 class DebugShader : public Shader {
   public:
-    DebugShader();
-    virtual ~DebugShader();
-
-    virtual colorf Run(const ShaderArgs &args);
-
     enum DebugMode {
         MODE_NORMAL = 0,
         MODE_DEPTH,
     };
-    void SetMode(DebugMode _mode) { mode = _mode; }
+
+    colorf Run(const ShaderArgs &args) const override;
+
+    void SetMode(DebugMode mode) { m_Mode = mode; }
 
   private:
-    DebugMode mode;
+    DebugMode m_Mode = MODE_NORMAL;
 };
-
-#endif

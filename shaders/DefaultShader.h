@@ -20,18 +20,16 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DEFAULT_SHADER_H
-#define __DEFAULT_SHADER_H
+#pragma once
 
 #include "Color.h"
 #include "Shader.h"
 
+// Ambient + diffuse point lights with shadow rays, plus a mirror reflection
+// weighted by shininess.
 class DefaultShader : public Shader {
   public:
-    DefaultShader();
-    virtual ~DefaultShader();
-
-    virtual colorf Run(const ShaderArgs &args);
+    colorf Run(const ShaderArgs &args) const override;
 
     void SetShinyness(float shiny) {
         if (shiny > 1.0f) {
@@ -45,8 +43,6 @@ class DefaultShader : public Shader {
     void SetDiffuseColor(colorf diffuse) { m_DiffuseColor = diffuse; }
 
   private:
-    float m_Shinyness;
-    colorf m_DiffuseColor;
+    float m_Shinyness = 0.0f;
+    colorf m_DiffuseColor = colorf(1.0, 1.0, 1.0);
 };
-
-#endif

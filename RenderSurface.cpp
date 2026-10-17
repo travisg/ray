@@ -21,18 +21,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <RenderSurface.h>
-#include <cstdio>
-#include <inttypes.h>
-#include <iostream>
 
 #include <RayFile.h>
 
 RenderSurface::RenderSurface(int width, int height) : m_Width(width), m_Height(height) {}
 
-RenderSurface::~RenderSurface() {}
-
-RenderSurfaceFile::RenderSurfaceFile(int width, int height)
-    : RenderSurface(width, height), m_file(NULL) {}
+RenderSurfaceFile::RenderSurfaceFile(int width, int height) : RenderSurface(width, height) {}
 
 RenderSurfaceFile::~RenderSurfaceFile() {
     if (m_file) {

@@ -20,35 +20,15 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <iostream>
-
 #include "DebugShader.h"
 #include <Ray.h>
-#include <Scene.h>
-#include <Tracer.h>
-#include <lights/SimpleLight.h>
 
-using Libvec::Vector3d;
-
-DebugShader::DebugShader() : mode(MODE_NORMAL) {}
-
-DebugShader::~DebugShader() {}
-
-colorf DebugShader::Run(const ShaderArgs &args) {
-    //  std::cout << "DebugShader Run" << std::endl;
-
-    colorf color;
-    switch (mode) {
+colorf DebugShader::Run(const ShaderArgs &args) const {
+    switch (m_Mode) {
         case MODE_NORMAL:
-            color = colorf(args.normal.getx(), args.normal.gety(), args.normal.getz());
-            break;
+            return colorf(args.normal.getx(), args.normal.gety(), args.normal.getz());
         case MODE_DEPTH:
-            color = (args.ray->origin - args.pos).Length();
-            break;
-        default:
-            color = 0;
+            return (args.ray->origin - args.pos).Length();
     }
-
-    //  std::cout << "debug shader color " << color << std::endl;
-    return color;
+    return 0;
 }

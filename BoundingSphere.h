@@ -20,13 +20,12 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __BOUNDING_SPHERE_H
-#define __BOUNDING_SPHERE_H
+#pragma once
 
 #include <Ray.h>
 #include <libvec/Vector3.h>
 
-/* simple bounding sphere implementation */
+// Sphere enclosing a mesh: a cheap reject test before per-triangle intersection.
 struct BoundingSphere {
     bool DoesIntersect(const Ray &ray) const {
         double radius2 = radius * radius;
@@ -40,15 +39,9 @@ struct BoundingSphere {
 
         double l2oc = oc.LengthSquared();
         double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
-        if (l2hc > 0) {
-            return true;
-        }
-
-        return false;
+        return l2hc > 0;
     }
 
     Libvec::Vector3d center;
-    double radius;
+    double radius = 0;
 };
-
-#endif

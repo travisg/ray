@@ -20,24 +20,21 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __PLANE_H
-#define __PLANE_H
+#pragma once
 
 #include <Ray.h>
 #include <libvec/Vector3.h>
 
 #include "Drawable.h"
 
+// Infinite plane given as a point and its normal.
 class Plane : public Drawable {
   public:
     Plane(const Ray &normal);
-    virtual ~Plane();
 
-    virtual bool Intersect(const Ray &ray) const;
-    virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const;
+    bool Intersect(const Ray &ray) const override;
+    bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const override;
 
   private:
     Ray m_Normal;
 };
-
-#endif

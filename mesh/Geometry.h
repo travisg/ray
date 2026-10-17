@@ -20,14 +20,14 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __GEOMETRY_H
-#define __GEOMETRY_H
+#pragma once
 
 #include "Mesh.h"
 
+// Vertex, normal, tangent and uv pools shared by the meshes loaded from one file.
 class Geometry {
   public:
-    Geometry();
+    Geometry() = default;
     ~Geometry();
 
     void AddVert(const Vertex &v);
@@ -38,25 +38,19 @@ class Geometry {
 
     Mesh *CreateMesh();
 
-    MeshListIteratorConst ListIterator() const { return m_Meshes.begin(); }
-    MeshListIteratorConst ListEnd() const { return m_Meshes.end(); }
-
-    VertexListIteratorConst VertexListIterator() const { return m_Verts.begin(); }
-    VertexListIteratorConst VertexListEnd() const { return m_Verts.end(); }
-
-    VertexListIteratorConst NormalVertexListIterator() const { return m_NormalVerts.begin(); }
-    VertexListIteratorConst NormalVertexListEnd() const { return m_NormalVerts.end(); }
+    const MeshList &Meshes() const { return m_Meshes; }
+    const VertexList &Vertices() const { return m_Verts; }
+    const VertexList &Normals() const { return m_NormalVerts; }
+    const VertexList &Tangents() const { return m_TangentVerts; }
+    const VertexList &UVs() const { return m_UVVerts; }
 
     void Dump() const;
 
   private:
     MeshList m_Meshes;
 
-    // shared verts
     VertexList m_Verts;
     VertexList m_NormalVerts;
     VertexList m_TangentVerts;
     VertexList m_UVVerts;
 };
-
-#endif

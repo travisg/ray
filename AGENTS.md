@@ -93,8 +93,7 @@ Everything includes from the repo root (`-I.`), so headers are written as
   `args.tracer->Cast` (reflection in `DefaultShader`); `m_Depth` caps recursion
   at `kMaxTraceDepth` (16).
 - Shadow rays use `Scene::DoesIntersect(ray, maxDistance)` (which also calls
-  3-arg `d->Intersect(ray, pos, normal)`). `ray.light = true` is set on shadow
-  rays in `DefaultShader`, though nothing in active code reads it.
+  3-arg `d->Intersect(ray, pos, normal)`).
 - Avoid the 1-arg `Scene::DoesIntersect(ray)` / `Drawable::Intersect(ray)`
   overload: `MeshDrawable::Intersect(ray)` is a stub that always returns `false`,
   and `Plane`/`Triangle` 1-arg `Intersect(ray)` only checks `Dot(dir, normal) <= 0`
@@ -110,8 +109,7 @@ loader. Every drawable must have `Prepare()` called before rendering; for
 `MeshDrawable`, `Prepare()` computes `m_BSphere` (omitting it leaves radius 0).
 Meshes are loaded with `LoadMesh("resources/*.obj")` → `obj_load` → `Geometry`,
 wrapped in a `MeshDrawable` with a bounding-sphere pre-test. Lights are
-`SimpleLight` point lights only (`m_Falloff` is stored but unused by shaders);
-`lights/Light.h` is an empty base.
+`SimpleLight` point lights only (`m_Falloff` is stored but unused by shaders).
 
 **Pluggable pieces**
 

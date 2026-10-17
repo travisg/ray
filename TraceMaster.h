@@ -20,39 +20,39 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __TRACEMASTER_H
-#define __TRACEMASTER_H
+#pragma once
 
 #include <RenderSurface.h>
 #include <condition_variable>
 #include <mutex>
 
+// Tiles are kWorkUnitSize x kWorkUnitSize pixels, clipped at the image edge.
+inline constexpr int kWorkUnitSize = 16;
+
 struct TraceWorkUnit {
-    TraceWorkUnit() : startx(0), starty(0), endx(0), endy(0), result(0) {}
-    ~TraceWorkUnit() {
-        if (result) {
-            delete[] result;
-        }
-    }
+    TraceWorkUnit() = default;
+    ~TraceWorkUnit() { delete[] result; }
+    TraceWorkUnit(const TraceWorkUnit &) = delete;
+    TraceWorkUnit &operator=(const TraceWorkUnit &) = delete;
 
-    int startx, starty;
-    int endx, endy;
+    // inclusive bounds
+    int startx = 0, starty = 0;
+    int endx = 0, endy = 0;
 
-    /* array, rows first */
-    colorf *result;
+    // row-major, Width() per row
+    colorf *result = nullptr;
 
-    /* some accessors */
     void SetResult(int x, int y, colorf c) { result[(y - starty) * Width() + (x - startx)] = c; }
-    colorf GetResult(int x, int y) { return result[(y - starty) * Width() + (x - startx)]; }
 
     int Width() const { return endx + 1 - startx; }
     int Height() const { return endy + 1 - starty; }
 };
 
+// Hands out tiles to the tracer threads and writes finished tiles to the surface.
 class TraceMaster {
   public:
     TraceMaster(RenderSurface &surface);
-    virtual ~TraceMaster();
+    virtual ~TraceMaster() = default;
 
     virtual int GetWorkUnit(TraceWorkUnit &) = 0;
     virtual int ReturnWorkUnit(TraceWorkUnit &) = 0;
@@ -60,7 +60,6 @@ class TraceMaster {
     void WaitForDone();
 
   protected:
-    bool Isdone() const { return m_Done; }
     void SetDone();
     RenderSurface &GetSurface() { return m_Surface; }
 
@@ -70,36 +69,34 @@ class TraceMaster {
     std::condition_variable m_DoneCond;
 
     RenderSurface &m_Surface;
-    bool m_Done;
+    bool m_Done = false;
 };
 
-// simple tracemaster that breaks the work into chunks and hands them out in order
+// row-major order
 class TraceMasterSimple : public TraceMaster {
   public:
     TraceMasterSimple(RenderSurface &surface);
-    virtual ~TraceMasterSimple();
 
-    virtual int GetWorkUnit(TraceWorkUnit &);
-    virtual int ReturnWorkUnit(TraceWorkUnit &);
+    int GetWorkUnit(TraceWorkUnit &) override;
+    int ReturnWorkUnit(TraceWorkUnit &) override;
 
   private:
-    int m_Nextx, m_Nexty;
-    bool m_IssuedLast;
-    int m_PendingCount;
+    int m_Nextx = 0, m_Nexty = 0;
+    bool m_IssuedLast = false;
+    int m_PendingCount = 0;
 };
 
+// random order
 class TraceMasterRandom : public TraceMaster {
   public:
     TraceMasterRandom(RenderSurface &surface);
-    virtual ~TraceMasterRandom();
+    ~TraceMasterRandom() override;
 
-    virtual int GetWorkUnit(TraceWorkUnit &);
-    virtual int ReturnWorkUnit(TraceWorkUnit &);
+    int GetWorkUnit(TraceWorkUnit &) override;
+    int ReturnWorkUnit(TraceWorkUnit &) override;
 
   private:
     bool *m_Bitmap;
     int m_Count;
-    int m_PendingCount;
+    int m_PendingCount = 0;
 };
-
-#endif

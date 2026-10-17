@@ -20,8 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __DRAWABLE_MESH_H
-#define __DRAWABLE_MESH_H
+#pragma once
 
 #include <BoundingSphere.h>
 #include <Ray.h>
@@ -31,20 +30,19 @@
 
 class Geometry;
 
+// Triangle/quad mesh loaded from a Geometry, with a bounding-sphere pre-test.
 class MeshDrawable : public Drawable {
   public:
     MeshDrawable(std::shared_ptr<Geometry>);
-    virtual ~MeshDrawable();
 
-    virtual int Prepare();
+    // computes the bounding sphere; must run before Intersect
+    int Prepare() override;
 
-    virtual bool Intersect(const Ray &ray) const;
-    virtual bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const;
+    bool Intersect(const Ray &ray) const override;
+    bool Intersect(const Ray &ray, Libvec::Vector3d &pos, Libvec::Vector3d &normal) const override;
 
   private:
     std::shared_ptr<Geometry> m_Geom;
 
     BoundingSphere m_BSphere;
 };
-
-#endif

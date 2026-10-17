@@ -20,8 +20,6 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <iostream>
-
 #include "DefaultShader.h"
 #include <Ray.h>
 #include <Scene.h>
@@ -30,43 +28,26 @@
 
 using Libvec::Vector3d;
 
-DefaultShader::DefaultShader() : m_Shinyness(0.0f), m_DiffuseColor(1.0f, 1.0f, 1.0f) {}
-
-DefaultShader::~DefaultShader() {}
-
-colorf DefaultShader::Run(const ShaderArgs &args) {
-    //  std::cout << "DefaultShader Run" << std::endl;
-
+colorf DefaultShader::Run(const ShaderArgs &args) const {
     colorf color = args.scene->GetAmbientLight();
-    std::vector<SimpleLight *> lightList = args.scene->GetLightList();
 
-    for (std::vector<SimpleLight *>::const_iterator i = lightList.begin(); i != lightList.end();
-         i++) {
-        const SimpleLight *l = *i;
-
+    for (const SimpleLight *l : args.scene->GetLightList()) {
         // cast a ray at each light, see if we're in a shadow
         Ray ray;
         ray.origin = args.pos + args.normal * 0.001f;
         ray.dir = l->GetPos() - ray.origin;
         ray.dir.Normalize();
-        ray.light = true;
 
-        //      std::cout << "casting ray back to light" << std::endl;
         if (!args.scene->DoesIntersect(ray, (ray.origin - l->GetPos()).Length())) {
             Vector3d suntosurface = l->GetPos() - args.pos;
             suntosurface.Normalize();
 
-            //          std::cout << "does not intersect" << std::endl;
-
             float light = Dot(suntosurface, args.normal);
-
-            // calculate falloff
 
             color += (l->GetColor() * light) * m_DiffuseColor;
         }
     }
 
-    //  std::cout << "color " << color << std::endl;
     // see how much of it is a pure reflection
     if (m_Shinyness > 0.0f) {
         Ray ray;
@@ -90,6 +71,5 @@ colorf DefaultShader::Run(const ShaderArgs &args) {
         }
     }
 
-    //  std::cout << "default shader color " << color << std::endl;
     return color;
 }

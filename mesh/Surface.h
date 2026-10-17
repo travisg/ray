@@ -20,8 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __SURFACE_H
-#define __SURFACE_H
+#pragma once
 
 #include <vector>
 
@@ -31,19 +30,12 @@ struct SurfaceIndex {
     int uvIndex;
 };
 
-typedef std::vector<SurfaceIndex> SurfaceIndexList;
-typedef std::vector<SurfaceIndex>::iterator SurfaceIndexListIterator;
-typedef std::vector<SurfaceIndex>::const_iterator SurfaceIndexListIteratorConst;
-
+// One polygon (3 or 4 vertices) as indices into the owning geometry's lists.
 class Surface {
   public:
     void AddIndex(int posIndex, int normIndex, int uvIndex);
 
-    SurfaceIndexList m_Indexes;
+    std::vector<SurfaceIndex> m_Indexes;
 };
 
-typedef std::vector<Surface *> SurfaceList;
-typedef std::vector<Surface *>::iterator SurfaceListIterator;
-typedef std::vector<Surface *>::const_iterator SurfaceListIteratorConst;
-
-#endif
+using SurfaceList = std::vector<Surface *>;

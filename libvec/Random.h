@@ -27,10 +27,13 @@
 
 namespace Libvec {
 
-inline double Random() { return drand48(); }
-inline double Random(double low, double high) { return (drand48() * (high - low)) + low; }
-
+inline double Random() {
+    return drand48();
+}
+inline double Random(double low, double high) {
+    return (drand48() * (high - low)) + low;
 }
 
-#endif
+} // namespace Libvec
 
+#endif

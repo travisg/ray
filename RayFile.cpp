@@ -27,8 +27,6 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-RayFile::RayFile() : m_fp(NULL), m_write(false), m_width(0), m_height(0) {}
-
 RayFile::~RayFile() {
     Close();
 }
@@ -60,9 +58,6 @@ int RayFile::Open(const std::string &name) {
     m_width = header.width;
     m_height = header.height;
 
-    //  std::cout << __PRETTY_FUNCTION__ << " width " << m_width << " height " << m_height <<
-    //  std::endl;
-
     return 0;
 }
 
@@ -89,9 +84,6 @@ int RayFile::OpenWrite(const std::string &name, uint32_t width, uint32_t height)
 
     fwrite(&header, sizeof(header), 1, m_fp);
 
-    //  std::cout << __PRETTY_FUNCTION__ << " width " << m_width << " height " << m_height <<
-    //  std::endl;
-
     return 0;
 }
 
@@ -104,7 +96,7 @@ void RayFile::Close() {
         }
 
         fclose(m_fp);
-        m_fp = NULL;
+        m_fp = nullptr;
         m_write = false;
     }
 }
@@ -127,7 +119,6 @@ void RayFile::SetXY(int x, int y, colorf color) {
 }
 
 void RayFile::SetXYRun(int x, int y, int count, const colorf *color) {
-    //  std::cout << __PRETTY_FUNCTION__ << " " << x << " " << y << " " << count << std::endl;
     if (m_fp && m_write) {
         uint32_t type = TYPE_PIXEL_RUN;
 
@@ -153,7 +144,6 @@ void RayFile::SetXYRun(int x, int y, int count, const colorf *color) {
 }
 
 void RayFile::SetXYRun(int x, int y, int count, const float *color) {
-    //  std::cout << __PRETTY_FUNCTION__ << " " << x << " " << y << " " << count << std::endl;
     if (m_fp && m_write) {
         uint32_t type = TYPE_PIXEL_RUN;
 
@@ -278,7 +268,7 @@ int ReadIntoMmap(RayFile &file, const std::string &mmapfile, float **buf, uint64
         goto err;
     }
 
-    *buf = (float *)mmap(NULL, *len * sizeof(float), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    *buf = (float *)mmap(nullptr, *len * sizeof(float), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (!buf) {
         goto err;
     }

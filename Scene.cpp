@@ -38,12 +38,12 @@
 using Libvec::Vector3d;
 
 static MeshDrawable *LoadMesh(const std::string &filename) {
-    Geometry *g;
+    Geometry *g = nullptr;
     std::cout << "loading " << filename << std::endl;
     FILE *fp = fopen(filename.c_str(), "r");
     if (!fp) {
         std::cerr << "error opening file " << filename << std::endl;
-        return NULL;
+        return nullptr;
     }
 
     int err = obj_load(fp, &g);
@@ -51,7 +51,7 @@ static MeshDrawable *LoadMesh(const std::string &filename) {
 
     if (err < 0) {
         std::cerr << "error loading mesh" << std::endl;
-        return NULL;
+        return nullptr;
     }
 
     g->Dump();
@@ -269,19 +269,15 @@ Scene::~Scene() {
     }
 }
 
-const Drawable *Scene::Intersect(const Ray &ray) {
+const Drawable *Scene::Intersect(const Ray &ray) const {
     bool hit = false;
     Vector3d closestPos = 0;
-    Drawable *closest = NULL;
+    const Drawable *closest = nullptr;
 
-    for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin();
-         i != m_DrawableList.end(); i++) {
-        Drawable *d = *i;
-
+    for (const Drawable *d : m_DrawableList) {
         Vector3d pos;
         Vector3d normal;
         if (d->Intersect(ray, pos, normal)) {
-            //              std::cout << "collision ray " << ray << " pos " << pos << std::endl;
             if (!hit ||
                 (pos - ray.origin).LengthSquared() < (closestPos - ray.origin).LengthSquared()) {
                 closestPos = pos;
@@ -291,18 +287,11 @@ const Drawable *Scene::Intersect(const Ray &ray) {
         }
     }
 
-    if (hit) {
-        return closest;
-    }
-
-    return NULL;
+    return hit ? closest : nullptr;
 }
 
-bool Scene::DoesIntersect(const Ray &ray) {
-    for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin();
-         i != m_DrawableList.end(); i++) {
-        Drawable *d = *i;
-
+bool Scene::DoesIntersect(const Ray &ray) const {
+    for (const Drawable *d : m_DrawableList) {
         if (d->Intersect(ray)) {
             return true;
         }
@@ -311,17 +300,12 @@ bool Scene::DoesIntersect(const Ray &ray) {
     return false;
 }
 
-bool Scene::DoesIntersect(const Ray &ray, double maxDistance) {
-    for (std::vector<Drawable *>::const_iterator i = m_DrawableList.begin();
-         i != m_DrawableList.end(); i++) {
-        Drawable *d = *i;
-
+bool Scene::DoesIntersect(const Ray &ray, double maxDistance) const {
+    for (const Drawable *d : m_DrawableList) {
         Vector3d pos;
         Vector3d normal;
-        if (d->Intersect(ray, pos, normal)) {
-            if ((ray.origin - pos).Length() < maxDistance) {
-                return true;
-            }
+        if (d->Intersect(ray, pos, normal) && (ray.origin - pos).Length() < maxDistance) {
+            return true;
         }
     }
 

@@ -24,11 +24,7 @@
 #include <iostream>
 #include <mutex>
 
-#define WORKUNITSIZE 16
-
-TraceMaster::TraceMaster(RenderSurface &surface) : m_Surface(surface), m_Done(false) {}
-
-TraceMaster::~TraceMaster() {}
+TraceMaster::TraceMaster(RenderSurface &surface) : m_Surface(surface) {}
 
 void TraceMaster::SetDone() {
     m_Done = true;
@@ -43,10 +39,7 @@ void TraceMaster::WaitForDone() {
 }
 
 // simple tracer
-TraceMasterSimple::TraceMasterSimple(RenderSurface &surface)
-    : TraceMaster(surface), m_Nextx(0), m_Nexty(0), m_IssuedLast(false), m_PendingCount(0) {}
-
-TraceMasterSimple::~TraceMasterSimple() {}
+TraceMasterSimple::TraceMasterSimple(RenderSurface &surface) : TraceMaster(surface) {}
 
 int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit) {
     if (m_IssuedLast) {
@@ -64,16 +57,16 @@ int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit) {
         /* dish out another unit, row first */
         unit.startx = m_Nextx;
         unit.starty = m_Nexty;
-        unit.endx = unit.startx + WORKUNITSIZE - 1;
-        unit.endy = unit.starty + WORKUNITSIZE - 1;
+        unit.endx = unit.startx + kWorkUnitSize - 1;
+        unit.endy = unit.starty + kWorkUnitSize - 1;
 
         m_PendingCount++;
 
         /* move to the next block */
-        m_Nextx += WORKUNITSIZE;
+        m_Nextx += kWorkUnitSize;
         if (m_Nextx >= surface.Width()) {
             m_Nextx = 0;
-            m_Nexty += WORKUNITSIZE;
+            m_Nexty += kWorkUnitSize;
         }
 
         if (m_Nexty >= surface.Height()) {
@@ -92,11 +85,11 @@ int TraceMasterSimple::GetWorkUnit(TraceWorkUnit &unit) {
     /* allocate a new result array */
     if (unit.result && (oldwidth != unit.Width() || oldheight != unit.Height())) {
         delete[] unit.result;
-        unit.result = 0;
+        unit.result = nullptr;
     }
 
     if (!unit.result) {
-        unit.result = new colorf[WORKUNITSIZE * WORKUNITSIZE];
+        unit.result = new colorf[kWorkUnitSize * kWorkUnitSize];
     }
 
     return 0;
@@ -108,8 +101,6 @@ int TraceMasterSimple::ReturnWorkUnit(TraceWorkUnit &unit) {
     {
         std::lock_guard<std::mutex> guard(m_Lock);
 
-        //      std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << "
-        //      " << unit.endy << std::endl;
         for (int y = unit.starty; y <= unit.endy; y++) {
             int runlen = unit.endx + 1 - unit.startx;
             GetSurface().SetXYRun(unit.startx, y, runlen, c);
@@ -130,10 +121,9 @@ inline int roundup(int x, int roundto) {
 }
 
 // random Tracer
-TraceMasterRandom::TraceMasterRandom(RenderSurface &surface)
-    : TraceMaster(surface), m_PendingCount(0) {
-    m_Count = (roundup(surface.Width(), WORKUNITSIZE) * roundup(surface.Height(), WORKUNITSIZE)) /
-              (WORKUNITSIZE * WORKUNITSIZE);
+TraceMasterRandom::TraceMasterRandom(RenderSurface &surface) : TraceMaster(surface) {
+    m_Count = (roundup(surface.Width(), kWorkUnitSize) * roundup(surface.Height(), kWorkUnitSize)) /
+              (kWorkUnitSize * kWorkUnitSize);
     m_Bitmap = new bool[m_Count];
 
     for (int i = 0; i < m_Count; i++) {
@@ -156,20 +146,18 @@ int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit) {
         }
 
         for (;;) {
-            unsigned int x = (lrand48() % surface.Width()) / WORKUNITSIZE;
-            unsigned int y = (lrand48() % surface.Height()) / WORKUNITSIZE;
+            unsigned int x = (lrand48() % surface.Width()) / kWorkUnitSize;
+            unsigned int y = (lrand48() % surface.Height()) / kWorkUnitSize;
 
-            // printf("trying with x %u y %u\n", x, y);
-
-            if (m_Bitmap[y * (roundup(surface.Width(), WORKUNITSIZE) / WORKUNITSIZE) + x] ==
+            if (m_Bitmap[y * (roundup(surface.Width(), kWorkUnitSize) / kWorkUnitSize) + x] ==
                 false) {
-                m_Bitmap[y * (roundup(surface.Width(), WORKUNITSIZE) / WORKUNITSIZE) + x] = true;
+                m_Bitmap[y * (roundup(surface.Width(), kWorkUnitSize) / kWorkUnitSize) + x] = true;
                 m_Count--;
 
-                unit.startx = x * WORKUNITSIZE;
-                unit.starty = y * WORKUNITSIZE;
-                unit.endx = unit.startx + WORKUNITSIZE - 1;
-                unit.endy = unit.starty + WORKUNITSIZE - 1;
+                unit.startx = x * kWorkUnitSize;
+                unit.starty = y * kWorkUnitSize;
+                unit.endx = unit.startx + kWorkUnitSize - 1;
+                unit.endy = unit.starty + kWorkUnitSize - 1;
 
                 break;
             }
@@ -190,7 +178,7 @@ int TraceMasterRandom::GetWorkUnit(TraceWorkUnit &unit) {
     if (unit.result) {
         delete[] unit.result;
     }
-    unit.result = new colorf[WORKUNITSIZE * WORKUNITSIZE];
+    unit.result = new colorf[kWorkUnitSize * kWorkUnitSize];
 
     return 0;
 }
@@ -201,8 +189,6 @@ int TraceMasterRandom::ReturnWorkUnit(TraceWorkUnit &unit) {
     {
         std::lock_guard<std::mutex> guard(m_Lock);
 
-        // std::cout << "return " << unit.startx << " " << unit.starty << " " << unit.endx << " " <<
-        // unit.endy << std::endl;
         for (int y = unit.starty; y <= unit.endy; y++) {
             int runlen = unit.endx + 1 - unit.startx;
             GetSurface().SetXYRun(unit.startx, y, runlen, c);
@@ -210,7 +196,6 @@ int TraceMasterRandom::ReturnWorkUnit(TraceWorkUnit &unit) {
         }
 
         m_PendingCount--;
-        // printf("count %d pendingcount %d\n", m_Count, m_PendingCount);
         if (m_Count == 0 && m_PendingCount == 0) {
             SetDone();
         }

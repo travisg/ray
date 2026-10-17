@@ -61,19 +61,16 @@ add_library(raycore STATIC
     Tracer.cpp
     TraceMaster.cpp
     RenderSurface.cpp
-    drawables/Drawable.cpp
     drawables/Mesh.cpp
     drawables/Plane.cpp
     drawables/Sphere.cpp
     drawables/Triangle.cpp
-    shaders/Shader.cpp
     shaders/DebugShader.cpp
     shaders/DefaultShader.cpp
     mesh/Geometry.cpp
     mesh/Mesh.cpp
     mesh/OBJLoader.cpp
     mesh/Surface.cpp
-    mesh/Vertex.cpp
 )
 target_link_libraries(raycore PUBLIC rayfile Threads::Threads)
 

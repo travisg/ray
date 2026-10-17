@@ -23,9 +23,11 @@
 #include "Geometry.h"
 #include <iostream>
 
-Geometry::Geometry() {}
-
-Geometry::~Geometry() {}
+Geometry::~Geometry() {
+    for (Mesh *m : m_Meshes) {
+        delete m;
+    }
+}
 
 void Geometry::AddMesh(Mesh *m) {
     m_Meshes.push_back(m);
@@ -60,7 +62,7 @@ void Geometry::Dump() const {
     std::cout << "\t" << m_TangentVerts.size() << " tangent vertices" << std::endl;
     std::cout << "\t" << m_UVVerts.size() << " uv vertices" << std::endl;
 
-    for (MeshListIteratorConst i = m_Meshes.begin(); i != m_Meshes.end(); i++) {
-        (*i)->Dump();
+    for (const Mesh *m : m_Meshes) {
+        m->Dump();
     }
 }

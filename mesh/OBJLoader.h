@@ -1,8 +1,5 @@
-#ifndef __OBJLOADER_H
-#define __OBJLOADER_H
+#pragma once
 
 #include "Geometry.h"
 
 int obj_load(FILE *infp, Geometry **new_geometry);
-
-#endif

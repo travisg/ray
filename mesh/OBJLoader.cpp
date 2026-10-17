@@ -192,8 +192,8 @@ int obj_load(FILE *infp, Geometry **new_geometry) {
             bool done = false;
             while (!done) {
                 done = true;
-                for (MeshListIteratorConst i = g->ListIterator(); i != g->ListEnd(); i++) {
-                    if (name == (*i)->GetName()) {
+                for (const Mesh *m : g->Meshes()) {
+                    if (name == m->GetName()) {
                         // name collision
                         std::ostringstream o;
                         o << n;

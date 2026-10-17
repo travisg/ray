@@ -1,6 +1,5 @@
 #include "check.h"
 #include <cstdio>
-#include <iterator>
 #include <mesh/Geometry.h>
 #include <mesh/OBJLoader.h>
 
@@ -20,13 +19,12 @@ int main() {
         return 1;
     }
 
-    CHECK(std::distance(g->VertexListIterator(), g->VertexListEnd()) == 8);
-    CHECK(std::distance(g->NormalVertexListIterator(), g->NormalVertexListEnd()) == 24);
+    CHECK(g->Vertices().size() == 8);
+    CHECK(g->Normals().size() == 24);
 
-    const auto meshes = std::distance(g->ListIterator(), g->ListEnd());
-    CHECK(meshes == 1);
-    if (meshes == 1) {
-        const Mesh *m = *g->ListIterator();
+    CHECK(g->Meshes().size() == 1);
+    if (g->Meshes().size() == 1) {
+        const Mesh *m = g->Meshes()[0];
         CHECK(m->GetSurfaceList().size() == 6);
         for (const Surface *s : m->GetSurfaceList()) {
             CHECK(s->m_Indexes.size() == 4);

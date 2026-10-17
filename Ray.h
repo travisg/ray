@@ -20,20 +20,15 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __RAY_H
-#define __RAY_H
+#pragma once
 
 #include <libvec/Vector3.h>
 
 struct Ray {
-    Ray() : light(false) {}
+    Ray() = default;
     Ray(const Libvec::Vector3d &_origin, const Libvec::Vector3d &_dir)
-        : origin(_origin), dir(_dir), light(false) {}
+        : origin(_origin), dir(_dir) {}
 
     Libvec::Vector3d origin;
     Libvec::Vector3d dir;
-
-    bool light;
 };
-
-#endif

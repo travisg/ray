@@ -20,15 +20,14 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __VERTEX_H
-#define __VERTEX_H
+#pragma once
 
 #include <vector>
 
+// Position (x, y, z, w) or texture coordinate (u, v) over the same storage.
 class Vertex {
   public:
-    Vertex() {}
-    ~Vertex() {}
+    Vertex() = default;
     Vertex(float inx, float iny, float inz, float inw) : x(inx), y(iny), z(inz), w(inw) {}
     Vertex(float inu, float inv) : x(inu), y(inv), z(0), w(0) {}
 
@@ -40,12 +39,6 @@ class Vertex {
             float u, v;
         };
     };
-
-    static Vertex EmptyVertex;
 };
 
-typedef std::vector<Vertex> VertexList;
-typedef std::vector<Vertex>::iterator VertexListIterator;
-typedef std::vector<Vertex>::const_iterator VertexListIteratorConst;
-
-#endif
+using VertexList = std::vector<Vertex>;

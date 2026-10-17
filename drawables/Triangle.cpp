@@ -20,8 +20,6 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#include <iostream>
-
 #include "Triangle.h"
 #include <Ray.h>
 
@@ -37,24 +35,13 @@ Triangle::Triangle(const Libvec::Vector3d &v0, const Libvec::Vector3d &v1,
 
     m_normal = Cross(v1 - v0, v2 - v0);
     m_normal.Normalize();
-
-    std::cout << "Triangle: normal " << v0 << " " << m_normal << std::endl;
 }
 
-Triangle::~Triangle() {}
-
 bool Triangle::Intersect(const Ray &ray) const {
-    //  std::cout << ray.dir << std::endl;
     Vector3d dir = ray.dir;
     dir.Normalize();
 
-    if (Dot(dir, m_normal) > 0.0) {
-        return false;
-    }
-
-    //  std::cout << "intersected" << std::endl;
-
-    return true;
+    return Dot(dir, m_normal) <= 0.0;
 }
 
 bool Triangle::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const {
@@ -64,10 +51,8 @@ bool Triangle::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const 
 
     // t = ((P - P0) . N) / (V . N)
     // P = P0 + tV
-
     double t = (Dot(m_v[0] - ray.origin, m_normal)) / (Dot(ray.dir, m_normal));
 
-    // calculate the intersection point
     pos = ray.origin + ray.dir * t;
     normal = m_normal;
 
@@ -95,8 +80,6 @@ bool Triangle::Intersect(const Ray &ray, Vector3d &pos, Vector3d &normal) const 
     if (t < 0.0f || (s + t) > 1.0f) { // I is outside T
         return false;
     }
-
-    //  std::cout << "s " << s << " t " << t << std::endl;
 
     return true;
 }

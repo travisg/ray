@@ -22,13 +22,12 @@
  */
 #include <charconv>
 #include <cstdio>
-#include <cstdlib>
+#include <ctime>
 #include <getopt.h>
 #include <iostream>
 #include <string>
 #include <string_view>
 #include <thread>
-#include <time.h>
 #include <vector>
 
 #include <Ray.h>
@@ -127,12 +126,12 @@ bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
 } // namespace
 
 int TracerThread(RenderSurface *rs, Scene *scene, TraceMaster *trace_master) {
-    time_t start = time(NULL);
+    time_t start = time(nullptr);
 
     Tracer *tracer = new Tracer(*rs, *scene, *trace_master);
     tracer->Trace();
 
-    start = time(NULL) - start;
+    start = time(nullptr) - start;
     std::cout << "trace end, took " << start << " seconds" << std::endl;
 
     delete tracer;
@@ -141,8 +140,6 @@ int TracerThread(RenderSurface *rs, Scene *scene, TraceMaster *trace_master) {
 }
 
 int main(int argc, char *argv[]) {
-    srand(time(NULL));
-
     Options opts;
     int exitCode = 0;
     if (!ParseOptions(argc, argv, opts, exitCode)) {

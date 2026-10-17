@@ -20,8 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __RENDER_SURFACE_H
-#define __RENDER_SURFACE_H
+#pragma once
 
 #include <Color.h>
 #include <string>
@@ -29,51 +28,32 @@
 class RenderSurface {
   public:
     RenderSurface(int width, int height);
-    virtual ~RenderSurface();
-
-    //  int OpenOutFile(const std::string &name);
+    virtual ~RenderSurface() = default;
 
     int Width() const { return m_Width; }
     int Height() const { return m_Height; }
 
     virtual void SetXY(int x, int y, colorf color) = 0;
     virtual void SetXYRun(int x, int y, int count, const colorf *color) = 0;
-    //  colorf GetXY(int x, int y) const { return m_Buffer[y * m_Width + x]; }
-
-#if 0
-    class RenderSurfaceNotifyReceiver {
-    public:
-        virtual ~RenderSurfaceNotifyReceiver() {}
-        virtual void RenderNotify(int width, int height) = 0;
-    };
-
-    void SetNotification(RenderSurfaceNotifyReceiver *notify);
-
-    int WriteTGAFile(std::string filename);
-#endif
 
   private:
     int m_Width;
     int m_Height;
-    //  colorf *m_Buffer;
-    //  RenderSurfaceNotifyReceiver *m_Notify;
-    //  FILE *m_fp;
 };
 
 class RayFile;
 
+// Streams pixels straight into a .ray file.
 class RenderSurfaceFile : public RenderSurface {
   public:
     RenderSurfaceFile(int width, int height);
-    virtual ~RenderSurfaceFile();
+    ~RenderSurfaceFile() override;
 
     int OpenOutFile(const std::string &name);
 
-    virtual void SetXY(int x, int y, colorf color);
-    virtual void SetXYRun(int x, int y, int count, const colorf *color);
+    void SetXY(int x, int y, colorf color) override;
+    void SetXYRun(int x, int y, int count, const colorf *color) override;
 
   private:
-    RayFile *m_file;
+    RayFile *m_file = nullptr;
 };
-
-#endif

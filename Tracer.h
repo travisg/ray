@@ -20,8 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __TRACER_H
-#define __TRACER_H
+#pragma once
 
 #include <Ray.h>
 #include <RenderSurface.h>
@@ -30,23 +29,20 @@
 
 class Scene;
 
+// One per worker thread: pulls tiles from the TraceMaster and casts the rays.
 class Tracer {
   public:
-    Tracer(RenderSurface &surface, Scene &scene, TraceMaster &master);
-    virtual ~Tracer();
+    Tracer(const RenderSurface &surface, const Scene &scene, TraceMaster &master);
 
     void Trace();
     bool Cast(colorf &color, const Ray &ray);
 
   private:
-    RenderSurface &m_Surface;
-
-    Scene &m_Scene;
+    const RenderSurface &m_Surface;
+    const Scene &m_Scene;
     TraceMaster &m_Master;
 
-    int m_Depth;
+    int m_Depth = 0;
 
-    static const int kMaxTraceDepth = 16;
+    static constexpr int kMaxTraceDepth = 16;
 };
-
-#endif

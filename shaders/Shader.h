@@ -20,8 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __SHADER_H
-#define __SHADER_H
+#pragma once
 
 #include <Color.h>
 #include <libvec/Vector3.h>
@@ -33,7 +32,7 @@ class Tracer;
 struct Ray;
 
 struct ShaderArgs {
-    Scene *scene;
+    const Scene *scene;
     Tracer *tracer;
     const Drawable *d;
     const Ray *ray;
@@ -41,14 +40,14 @@ struct ShaderArgs {
     Libvec::Vector3d normal;
 };
 
+// One shader instance is shared by every thread and every drawable it is
+// attached to, so Run() must not touch mutable state.
 class Shader {
   public:
-    Shader() {}
-    virtual ~Shader() {}
+    Shader() = default;
+    virtual ~Shader() = default;
 
-    virtual colorf Run(const ShaderArgs &args) = 0;
+    virtual colorf Run(const ShaderArgs &args) const = 0;
 };
 
-typedef std::shared_ptr<Shader> ShaderPtr;
-
-#endif
+using ShaderPtr = std::shared_ptr<Shader>;

@@ -20,8 +20,7 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef __RAYFILE_H
-#define __RAYFILE_H
+#pragma once
 
 #include "Color.h"
 #include <cstdint>
@@ -62,7 +61,7 @@ static_assert(sizeof(RayHeader) == 12 && sizeof(RayDataPixel) == 20 &&
 
 class RayFile {
   public:
-    RayFile();
+    RayFile() = default;
     ~RayFile();
 
     int Open(const std::string &name);
@@ -82,15 +81,13 @@ class RayFile {
     /* read routines */
     int ReadIntoBuffer(float *buf); // up to the caller to make sure it's big enough
 
-    // return a pointer to a mmapped file
-
     /* read the file in, parsing it, calling back on every pixel */
     int Parse(int (*callback)(RayFile &, void *, int x, int y, const float rgb[3]), void *arg);
 
   private:
-    FILE *m_fp;
-    bool m_write;
-    uint32_t m_width, m_height;
+    FILE *m_fp = nullptr;
+    bool m_write = false;
+    uint32_t m_width = 0, m_height = 0;
 };
 
 /* support routines */
@@ -99,5 +96,3 @@ int ReadIntoMmap(RayFile &file, const std::string &mmapfile, float **buf, uint64
 
 /* TGA */
 int ConvertToTGA(RayFile &file, const std::string &filename);
-
-#endif

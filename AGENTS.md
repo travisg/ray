@@ -22,8 +22,8 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
   `build/compile_commands.json` is generated and `.clangd` points clangd at it.
 - Sources are listed explicitly in `CMakeLists.txt`: `raycore` is the renderer,
   `rayfile` the `.ray` reader/writer the tools share. A new source file goes there.
-- Dependencies: a C++20 compiler, CMake >= 3.20, pthreads, `boost_program_options`
-  (`main.cpp` only), SDL2 (`rayview` only; missing SDL2 skips that target).
+- Dependencies: a C++20 compiler, CMake >= 3.20, pthreads, SDL2 (`rayview` only;
+  missing SDL2 skips that target).
   macOS: `-DCMAKE_PREFIX_PATH=/opt/local` or `/opt/homebrew` if SDL2 isn't found.
 - `libvec/` is the vendored, header-only vector math (`Vector3.h`, `Random.h`).
 - Formatting: `./codestyle <files>` runs `clang-format -i` with the repo's
@@ -33,17 +33,13 @@ Configure-time options, passed as `-D<name>=ON`: `RAY_NATIVE_ARCH`
 ## Run
 
 ```sh
-build/ray [--xres 800] [--yres 600] [-c 8] [-o out.ray] [-r 1]  # -r 1 = random chunk order
+build/ray [-x 800] [-y 600] [-c N] [-o out.ray] [-r]   # -r = random tile order; --help
 build/rayview        # opens ./out.ray (hard-coded) and follows it while ray writes
 ./doit               # ray at 3200x2400 in the background, then rayview
 build/ray2tga out.ray out.tga
 build/raysplit out.ray <chunkx> <chunky>   # mmaps to <name>.float, writes tiles
 ```
 
-- Note on `-r` (`main.cpp`): `bool random` is uninitialized on the stack and
-  configured with `implicit_value(false)` (no `default_value`), so bare `-r`
-  sets `random = false` and `-r 1` / `--random=1` is required to enable
-  `TraceMasterRandom`.
 - `rayview` tails the file: short reads sleep and retry until `TYPE_EOF`, so
   start it any time after `ray` has written the header. Closing the window or
   pressing `Esc` while `ray` is still rendering blocks in `reader.join()` until

@@ -20,25 +20,113 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+#include <charconv>
 #include <cstdio>
+#include <cstdlib>
+#include <getopt.h>
 #include <iostream>
+#include <string>
+#include <string_view>
 #include <thread>
 #include <time.h>
+#include <vector>
 
 #include <Ray.h>
 #include <RenderSurface.h>
 #include <Scene.h>
 #include <Tracer.h>
 
-#include <boost/program_options/option.hpp>
-#include <boost/program_options/options_description.hpp>
-#include <boost/program_options/parsers.hpp>
-#include <boost/program_options/variables_map.hpp>
+namespace {
 
-namespace po = boost::program_options;
+int DefaultCpus() {
+    unsigned n = std::thread::hardware_concurrency();
+    return n == 0 ? 1 : static_cast<int>(n);
+}
+
+struct Options {
+    int xres = 800;
+    int yres = 600;
+    int cpus = DefaultCpus();
+    std::string outfile = "out.ray";
+    bool random = false;
+};
+
+void Usage(FILE *fp, const char *argv0) {
+    fprintf(fp,
+            "usage: %s [options]\n"
+            "  -x, --xres N    image width (default 800)\n"
+            "  -y, --yres N    image height (default 600)\n"
+            "  -c, --cpus N    worker threads (default: hardware threads)\n"
+            "  -o, --out FILE  output .ray file (default out.ray)\n"
+            "  -r, --random    trace tiles in random order\n"
+            "  -h, --help      this message\n",
+            argv0);
+}
+
+// Parses a positive integer; false on anything else.
+bool ParsePositive(const char *s, int &out) {
+    std::string_view sv(s);
+    int v = 0;
+    auto [end, ec] = std::from_chars(sv.data(), sv.data() + sv.size(), v);
+    if (ec != std::errc() || end != sv.data() + sv.size() || v < 1) {
+        return false;
+    }
+    out = v;
+    return true;
+}
+
+// Returns true to render; otherwise exitCode holds the status to exit with.
+bool ParseOptions(int argc, char **argv, Options &opts, int &exitCode) {
+    static const option kLongOptions[] = {
+        { "xres", required_argument, nullptr, 'x' },
+        { "yres", required_argument, nullptr, 'y' },
+        { "cpus", required_argument, nullptr, 'c' },
+        { "out", required_argument, nullptr, 'o' },
+        { "random", no_argument, nullptr, 'r' },
+        { "help", no_argument, nullptr, 'h' },
+        { nullptr, 0, nullptr, 0 },
+    };
+
+    exitCode = 1;
+    int c;
+    while ((c = getopt_long(argc, argv, "x:y:c:o:rh", kLongOptions, nullptr)) != -1) {
+        switch (c) {
+            case 'x':
+            case 'y':
+            case 'c': {
+                int &target = c == 'x' ? opts.xres : c == 'y' ? opts.yres : opts.cpus;
+                if (!ParsePositive(optarg, target)) {
+                    fprintf(stderr, "%s: -%c needs a positive integer, got '%s'\n", argv[0], c,
+                            optarg);
+                    return false;
+                }
+                break;
+            }
+            case 'o':
+                opts.outfile = optarg;
+                break;
+            case 'r':
+                opts.random = true;
+                break;
+            case 'h':
+                Usage(stdout, argv[0]);
+                exitCode = 0;
+                return false;
+            default:
+                Usage(stderr, argv[0]);
+                return false;
+        }
+    }
+    if (optind != argc) {
+        fprintf(stderr, "%s: unexpected argument '%s'\n", argv[0], argv[optind]);
+        return false;
+    }
+    return true;
+}
+
+} // namespace
 
 int TracerThread(RenderSurface *rs, Scene *scene, TraceMaster *trace_master) {
-    //  std::cout << "TracerThread start" << std::endl;
     time_t start = time(NULL);
 
     Tracer *tracer = new Tracer(*rs, *scene, *trace_master);
@@ -49,57 +137,41 @@ int TracerThread(RenderSurface *rs, Scene *scene, TraceMaster *trace_master) {
 
     delete tracer;
 
-    //  std::cout << "TracerThread end" << std::endl;
-
     return 0;
 }
 
 int main(int argc, char *argv[]) {
     srand(time(NULL));
 
-    int xres, yres, cpus;
-    std::string outfile;
-    bool random;
-
-    // deal with options
-    po::options_description desc("Allowed options");
-    desc.add_options()("help,h", "help message")("xres", po::value<int>(&xres)->default_value(800),
-                                                 "x resolution")(
-        "yres", po::value<int>(&yres)->default_value(600),
-        "y resolution")("cpus,c", po::value<int>(&cpus)->default_value(8), "number cpus")(
-        "out,o", po::value<std::string>(&outfile)->default_value(std::string("out.ray")),
-        "output file")("random,r", po::value<bool>(&random)->implicit_value(false),
-                       "random trace order");
-
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
-
-    if (vm.count("help")) {
-        std::cout << desc << std::endl;
-        return 1;
+    Options opts;
+    int exitCode = 0;
+    if (!ParseOptions(argc, argv, opts, exitCode)) {
+        return exitCode;
     }
 
-    printf("xres %d yres %d cpus %d\n", xres, yres, cpus);
-    std::cout << "outfile " << outfile << std::endl;
+    printf("xres %d yres %d cpus %d\n", opts.xres, opts.yres, opts.cpus);
+    std::cout << "outfile " << opts.outfile << std::endl;
 
-    auto *rs = new RenderSurfaceFile(xres, yres);
+    auto *rs = new RenderSurfaceFile(opts.xres, opts.yres);
 
-    rs->OpenOutFile(outfile);
+    if (rs->OpenOutFile(opts.outfile) < 0) {
+        std::cerr << "error opening output file " << opts.outfile << std::endl;
+        return 1;
+    }
 
     /* create the scene */
     auto *scene = new Scene();
 
     /* create a tracemaster */
     TraceMaster *trace_master;
-    if (random) {
+    if (opts.random) {
         trace_master = new TraceMasterRandom(*rs);
     } else {
         trace_master = new TraceMasterSimple(*rs);
     }
 
     std::vector<std::thread *> threads;
-    for (int i = 0; i < cpus; i++) {
+    for (int i = 0; i < opts.cpus; i++) {
         auto *t = new std::thread(TracerThread, rs, scene, trace_master);
         threads.push_back(t);
     }
@@ -115,10 +187,6 @@ int main(int argc, char *argv[]) {
         t->join();
         delete t;
     }
-
-    //  std::cout << "writing output file..." << std::flush;
-    //  gRenderSurface->WriteTGAFile("foo.tga");
-    //  std::cout << "done" << std::endl;
 
     std::cout << "shutting down" << std::endl;
 

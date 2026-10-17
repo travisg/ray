@@ -77,11 +77,8 @@ add_library(raycore STATIC
 )
 target_link_libraries(raycore PUBLIC rayfile Threads::Threads)
 
-# Until main.cpp moves off boost::program_options.
-find_package(Boost REQUIRED COMPONENTS program_options)
-
 add_executable(ray main.cpp)
-target_link_libraries(ray PRIVATE raycore Boost::program_options)
+target_link_libraries(ray PRIVATE raycore)
 
 add_executable(ray2tga ray2tga.cpp)
 target_link_libraries(ray2tga PRIVATE rayfile)

@@ -33,6 +33,10 @@
 
 struct Ray;
 
+// Hits closer than this to a ray origin are the surface the ray left and are
+// ignored, as are occluders this close to the end of a shadow ray.
+inline constexpr double kMinT = 1e-6;
+
 // Drawables, point lights, ambient light and a camera. Built by SceneLibrary.
 class Scene {
   public:
@@ -47,9 +51,9 @@ class Scene {
     // Drawable::Prepare on every drawable; run once after the last AddDrawable
     void Prepare();
 
-    // nearest hit by t, with Hit::drawable set
+    // nearest hit with t > kMinT, with Hit::drawable set
     std::optional<Hit> Intersect(const Ray &ray) const;
-    // true for any hit with t < maxDistance
+    // true for any hit with kMinT < t < maxDistance - kMinT
     bool DoesIntersect(const Ray &ray, double maxDistance) const;
 
     const std::vector<SimpleLight> &GetLightList() const { return m_SimpleLightList; }

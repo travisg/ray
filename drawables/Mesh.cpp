@@ -36,6 +36,10 @@ MeshDrawable::~MeshDrawable() = default;
 
 int MeshDrawable::Prepare() {
     // center the bounding sphere on the vertex average, radius to the farthest vertex
+    if (m_Geom->Vertices().empty()) {
+        return 0;
+    }
+
     Vector3d avg(0, 0, 0);
     int count = 0;
     for (const Vertex &v : m_Geom->Vertices()) {

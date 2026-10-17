@@ -47,7 +47,7 @@ std::optional<Hit> Scene::Intersect(const Ray &ray) const {
     std::optional<Hit> best;
     for (const auto &d : m_DrawableList) {
         std::optional<Hit> hit = d->Intersect(ray);
-        if (hit && (!best || hit->t < best->t)) {
+        if (hit && hit->t > kMinT && (!best || hit->t < best->t)) {
             best = hit;
             best->drawable = d.get();
         }
@@ -58,7 +58,7 @@ std::optional<Hit> Scene::Intersect(const Ray &ray) const {
 bool Scene::DoesIntersect(const Ray &ray, double maxDistance) const {
     for (const auto &d : m_DrawableList) {
         std::optional<Hit> hit = d->Intersect(ray);
-        if (hit && hit->t < maxDistance) {
+        if (hit && hit->t > kMinT && hit->t < maxDistance - kMinT) {
             return true;
         }
     }

@@ -23,6 +23,14 @@ int main() {
         CHECK(!s.Intersect(Ray(Vector3d(0, 0, 0), Vector3d(0, 0, -1))));
         // parallel miss
         CHECK(!s.Intersect(Ray(Vector3d(5, 0, 0), Vector3d(0, 0, 1))));
+        // from inside: the far side, with the normal facing back in
+        auto inner = s.Intersect(Ray(Vector3d(0, 0, 10), Vector3d(0, 0, 1)));
+        CHECK(inner.has_value());
+        if (inner) {
+            CHECK_NEAR(inner->t, 1.0, 1e-9);
+            CHECK_NEAR(inner->pos.getz(), 11.0, 1e-9);
+            CHECK_NEAR(inner->normal.getz(), -1.0, 1e-9);
+        }
     }
 
     // plane z = 0 facing +z
@@ -38,6 +46,10 @@ int main() {
         }
         // back face
         CHECK(!p.Intersect(Ray(Vector3d(0, 0, -5), Vector3d(0, 0, 1))));
+        // behind the origin
+        CHECK(!p.Intersect(Ray(Vector3d(0, 0, -5), Vector3d(0, 0, -1))));
+        // parallel
+        CHECK(!p.Intersect(Ray(Vector3d(0, 0, 5), Vector3d(1, 0, 0))));
     }
 
     // triangle in the z = 0 plane, counter-clockwise so it faces +z
@@ -53,6 +65,8 @@ int main() {
         CHECK(!t.Intersect(Ray(Vector3d(8, 8, 5), Vector3d(0, 0, -1))));
         // back face
         CHECK(!t.Intersect(Ray(Vector3d(1, 1, -5), Vector3d(0, 0, 1))));
+        // behind the origin
+        CHECK(!t.Intersect(Ray(Vector3d(1, 1, -5), Vector3d(0, 0, -1))));
     }
 
     // a scene reports the nearest hit and which drawable it came from
@@ -78,6 +92,11 @@ int main() {
         }
         CHECK(scene.DoesIntersect(Ray(Vector3d(0, 0, 0), Vector3d(0, 0, 1)), 15));
         CHECK(!scene.DoesIntersect(Ray(Vector3d(0, 0, 0), Vector3d(0, 0, 1)), 5));
+        // an occluder exactly at the end of the shadow ray does not count
+        CHECK(!scene.DoesIntersect(Ray(Vector3d(5, 0, 0), Vector3d(0, 0, 1)), 20));
+        CHECK(scene.DoesIntersect(Ray(Vector3d(5, 0, 0), Vector3d(0, 0, 1)), 25));
+        // a hit at the origin itself is ignored
+        CHECK(!scene.Intersect(Ray(Vector3d(0, 0, 20), Vector3d(0, 0, 1))));
     }
 
     return TEST_RESULT();

@@ -38,16 +38,23 @@ Triangle::Triangle(const Libvec::Vector3d &v0, const Libvec::Vector3d &v1,
 }
 
 std::optional<Hit> Triangle::Intersect(const Ray &ray) const {
-    if (Dot(ray.dir, m_normal) > 0.0) {
-        // back face
+    double denom = Dot(ray.dir, m_normal);
+    if (denom >= 0.0) {
+        // back face or parallel
         return std::nullopt;
     }
 
     // t = ((P - P0) . N) / (V . N)
     // P = P0 + tV
+    double t = Dot(m_v[0] - ray.origin, m_normal) / denom;
+    if (t <= 0.0) {
+        // behind the origin
+        return std::nullopt;
+    }
+
     Hit hit;
-    hit.t = (Dot(m_v[0] - ray.origin, m_normal)) / (Dot(ray.dir, m_normal));
-    hit.pos = ray.origin + ray.dir * hit.t;
+    hit.t = t;
+    hit.pos = ray.origin + ray.dir * t;
     hit.normal = m_normal;
 
     // it intersects the plane the triangle is in, now calc the u/v coordinates and see if it's in

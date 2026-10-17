@@ -93,8 +93,10 @@ Everything includes from the repo root (`-I.`), so headers are written as
 - Shadow rays use `Scene::DoesIntersect(ray, maxDistance)`, true for any hit
   with `t < maxDistance`.
 - `Drawable::Intersect(ray)` returns `std::optional<Hit>` (`t`, `pos`,
-  `normal`); `ray.dir` must be unit length for `t` to be a distance.
-  `Plane`/`Triangle` cull back faces and do not reject `t < 0`.
+  `normal`); `ray.dir` must be unit length for `t` to be a distance. Planes
+  and triangles cull back faces; spheres hit from inside return the far side
+  with the normal flipped to face the ray. `Scene` ignores hits with
+  `t <= kMinT` (1e-6) so a ray leaving a surface never re-hits it.
 
 **Scene (`Scene.cpp`, `SceneLibrary.cpp`)**
 

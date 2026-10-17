@@ -31,13 +31,18 @@ struct BoundingSphere {
         double radius2 = radius * radius;
 
         Libvec::Vector3d oc = center - ray.origin;
+        double l2oc = oc.LengthSquared();
+        if (l2oc < radius2) {
+            // origin inside: rays leaving the mesh surface start here
+            return true;
+        }
+
         double tca = Dot(oc, ray.dir);
         if (tca < 0) {
             // points away from the sphere
             return false;
         }
 
-        double l2oc = oc.LengthSquared();
         double l2hc = (radius2 - l2oc) / ray.dir.LengthSquared() + (tca * tca);
         return l2hc > 0;
     }
